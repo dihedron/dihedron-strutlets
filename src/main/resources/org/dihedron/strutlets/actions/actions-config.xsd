@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2012-2013, Andrea Funto' - All rights reserved. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="value" type="xs:normalizedString">
+		<xs:annotation>
+			<xs:documentation>the value of an action's configuration parameter</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="event">
+		<xs:annotation>
+			<xs:documentation>an event identifier</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>			
+			<xs:simpleContent>
+				<xs:extension base="xs:normalizedString">			
+					<xs:attribute name="namespace" type="xs:normalizedString"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>	
+	<xs:element name="events">
+		<xs:annotation>
+			<xs:documentation>a set of events</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="event" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>	
+	<xs:element name="result">
+		<xs:annotation>
+			<xs:documentation>an action's result specification</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:normalizedString">
+					<xs:attribute name="state" default="same">
+						<xs:simpleType>
+							<xs:restriction base="xs:normalizedString">
+								<xs:enumeration value="default"/>
+								<xs:enumeration value="maximised"/>
+								<xs:enumeration value="minimised"/>
+								<xs:enumeration value="pop_up"/>
+								<xs:enumeration value="same"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="mode" default="same">
+						<xs:simpleType>
+							<xs:restriction base="xs:normalizedString">
+								<xs:enumeration value="edit"/>
+								<xs:enumeration value="view"/>
+								<xs:enumeration value="help"/>
+								<xs:enumeration value="same"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="id" type="xs:normalizedString" default="success"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="parameters">
+		<xs:annotation>
+			<xs:documentation>a set of initialization parameters</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="parameter" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="parameter">
+		<xs:annotation>
+			<xs:documentation>an initialization parameter</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="key"/>
+				<xs:element ref="value"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="methods">
+		<xs:annotation>
+			<xs:documentation>a set of action's methods</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="method" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="method">
+		<xs:annotation>
+			<xs:documentation>an action method</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="events" minOccurs="0" maxOccurs="1" />
+				<xs:element ref="result" maxOccurs="unbounded" />
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:normalizedString" default="execute"/>
+			<xs:attribute name="semantics" default="read/write">
+				<xs:simpleType>
+					<xs:restriction base="xs:normalizedString">
+						<xs:enumeration value="read/write"/>
+						<xs:enumeration value="read-only"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>			
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="key" type="xs:normalizedString">
+		<xs:annotation>
+			<xs:documentation>the key of an action's configuration parameter</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="interceptors" type="xs:normalizedString">
+		<xs:annotation>
+			<xs:documentation>the name of an interceptor stack</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="configuration">
+		<xs:annotation>
+			<xs:documentation>the root element for actions configuration</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="actions" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="package" type="xs:normalizedString">
+		<xs:annotation>
+			<xs:documentation>the Java package for actions</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="class" type="xs:normalizedString">
+		<xs:annotation>
+			<xs:documentation>the Java class of an action</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="actions">
+		<xs:annotation>
+			<xs:documentation>a set of actions sharing a common Java package and an interceptor stack</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="package" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="interceptors" minOccurs="0" maxOccurs="1"/>
+				<xs:element ref="action" minOccurs="1" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:normalizedString" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="action">
+		<xs:annotation>
+			<xs:documentation>an action, with its methods and results</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="class" minOccurs="0"/>
+				<xs:element ref="parameters" minOccurs="0"/>
+				<xs:element ref="methods"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:normalizedString" use="required"/>
+		</xs:complexType>
+	</xs:element>
+
+    <xs:complexType name="event"></xs:complexType>
+</xs:schema>

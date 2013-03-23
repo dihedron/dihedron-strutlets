@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Strutlets - A Model-View-Controller framework for JSR-286 portlets</TITLE>
+  </HEAD>
+  <BODY>
+  	<h2>1. Abstract</h2>
+    <p>    
+    The <b>Strutlets</b> project is an attempt to create a simple development
+    framework for JSR-286 compliant portlets; it is heavily inspired by Struts2,
+    from which it borrows part of its name (Struts2 + Portlet yields Strutlets).
+    </p>
+    <h2>2. Description</h2>
+    <p>
+    The strutlets library implements the MVC pattern the Struts2 way: it sports 
+    a single controller portlet that receives all incoming requests and translates 
+    them into action method invocations; then it retrieves the action result and
+    based on an XML configuration file, on annotations or on educated guesses it
+    decides which JSP will render the view part.
+    </p> 
+    <p>
+    The framework emulates the interceptors logic of its senior counterpart, by 
+    providing an invocation process that flows through a stack of interceptors, 
+    each of which can work on the request and response objects, manipulate 
+    parameters, add value to the processing, perform additional tasks such as
+    reporting or profiling.
+    </p>
+    <h2>3. How to use the framework</h2>
+    <h3>3.1 Setting up the portlet(s) </h3>
+    <p>
+    In order to set up the controller portlet, the following steps should be taken:
+    <ol>
+    <li>add the strutlets-X.Y.Z.jar file and its dependencies to the project's
+    WEB-INF/lib directory;</li>
+    <li>set the action controller portlet as the portlet class in the portlet.xml,
+    as follows:
+    <pre>
+		&lt;portlet&gt;
+			&lt;portlet-name>controller&lt;/portlet-name&gt;
+			&lt;display-name>Demo Action Controller&lt;/display-name&gt;
+			&lt;portlet-class>org.dihedron.strutlets.ActionController&lt;/portlet-class&gt;
+			[...]
+		&lt;/portlet&gt;
+    </pre>
+    </li>
+    <li>specify the additional parameters, as detailed in section 3.2</li>    
+    </ol>
+    </p>
+    The portlet is ready to be deployed even without specifying any parameter.
+    <h3>3.2 Adding the initialisation parameters</h3>
+    <p>The portlet is highly configurable. It currently supports the following 
+    parameters:
+    <ul>
+    <li></li>
+    </ul>
+  </BODY>
+</HTML>
