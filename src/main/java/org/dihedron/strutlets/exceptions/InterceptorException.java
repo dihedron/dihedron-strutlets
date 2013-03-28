@@ -17,25 +17,25 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strutlets.actions;
+package org.dihedron.strutlets.exceptions;
 
 
 /**
- * Class of exceptions thrown by the {@code Reflector}.
+ * Class of exceptions thrown by the {@code Interceptor}s.
  * 
  * @author Andrea Funto'
  */
-public class ActionException extends Exception {
+public class InterceptorException extends StrutletsException {
 
 	/**
 	 * Serial version id. 
 	 */
-	private static final long serialVersionUID = 8902276931178671537L;
-	
+	private static final long serialVersionUID = 3059665510838061449L;
+
 	/**
 	 * Constructor. 
 	 */
-	public ActionException() {
+	public InterceptorException() {
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class ActionException extends Exception {
 	 * @param message
 	 *   the exception message.
 	 */
-	public ActionException(String message) {
+	public InterceptorException(String message) {
 		super(message);
 	}
 
@@ -54,7 +54,7 @@ public class ActionException extends Exception {
 	 * @param cause
 	 *   the exception's root cause.
 	 */
-	public ActionException(Throwable cause) {
+	public InterceptorException(Throwable cause) {
 		super(cause);
 	}
 
@@ -64,7 +64,7 @@ public class ActionException extends Exception {
 	 * @param cause
 	 *   the exception's root cause.
 	 */
-	public ActionException(String message, Throwable cause) {
+	public InterceptorException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

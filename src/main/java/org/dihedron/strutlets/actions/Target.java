@@ -50,6 +50,11 @@ public class Target {
 	public static final Semantics DEFAULT_METHOD_SEMANTICS = Semantics.READ_WRITE;
 	
 	/**
+	 * The default pattern used to make up JSP URLs for automagic Actions.
+	 */
+	public static final String DEFAULT_PATH_PATTERN = "${rootdir}/${action}/${method}/${result}.jsp";
+	
+	/**
 	 * The character separating action and method names in the target id.
 	 */
 	public static final String METHOD_SEPARATOR = "!";
@@ -195,6 +200,11 @@ public class Target {
 	 * The directory where JSP pages for auto-configured actions are to be located.
 	 */
 	private String rootHtmlDirectory = "/";
+	
+	/**
+	 * The pattern used to create JSP URLs.
+	 */
+	private String htmlPathPattern = DEFAULT_PATH_PATTERN;
 	
 	/**
 	 * The name of the interceptor stack to be used with this action.
@@ -348,7 +358,20 @@ public class Target {
 		if(!this.rootHtmlDirectory.endsWith("/")) {
 			this.rootHtmlDirectory = Strings.concatenate(this.rootHtmlDirectory, "/");
 		}
+	}
+	
+	/**
+	 * Sets the value of the HTML views path pattern for automagic actions.
+	 * 
+	 * @param htmlPathPattern
+	 *   the pattern to be used to JSP path reconstruction at runtime.
+	 */
+	public void setHtmlPathPattern(String htmlPathPattern) {
+		if(Strings.isValid(htmlPathPattern)) {
+			this.htmlPathPattern = Strings.trim(htmlPathPattern);
+		}
 	}	
+	
 	
 	/**
 	 * Retrieves the name of the class to be instantiated, either by returning 
@@ -498,7 +521,16 @@ public class Target {
 		assert(Strings.isValid(rid));
 		Result result = results.get(rid);
 		if(result == null && automagic) {			
-			String url = Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
+			//String url = Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
+			
+			// ${rootdir}/${action}/${method}/${result}.jsp
+			String url = htmlPathPattern
+							.replaceAll("\\$\\{rootdir\\}", rootHtmlDirectory)
+							.replaceAll("\\$\\{action\\}", action)
+							.replaceAll("\\$\\{method\\}", method)
+							.replaceAll("\\$\\{result\\}", rid);			
+			
+			Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
 			logger.trace("synthetic URL for result '{}' on action '{}', method '{}' is '{}'", rid, action, method, url);
 			PortletMode mode = PortletMode.SAME;
 			WindowState state = WindowState.SAME;

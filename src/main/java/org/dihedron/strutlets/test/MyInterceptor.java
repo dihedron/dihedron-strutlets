@@ -20,6 +20,7 @@
 package org.dihedron.strutlets.test;
 
 import org.dihedron.strutlets.ActionInvocation;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 
 /**
@@ -31,7 +32,7 @@ public class MyInterceptor extends Interceptor {
 	 * @see org.dihedron.strutlets.interceptors.Interceptor#intercept(org.dihedron.strutlets.strutlets.ActionInvocation)
 	 */
 	@Override
-	public String intercept(ActionInvocation invocation) throws Exception {
+	public String intercept(ActionInvocation invocation) throws StrutletsException {
 		System.out.println("interceptor " + getParameter("id") + " - before");
 		String result = invocation.invoke();
 		System.out.println("interceptor " + getParameter("id") + " - after");

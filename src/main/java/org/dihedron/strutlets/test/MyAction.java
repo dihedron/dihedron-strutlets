@@ -20,10 +20,10 @@
 package org.dihedron.strutlets.test;
 
 import org.dihedron.strutlets.actions.Action;
-import org.dihedron.strutlets.actions.ActionException;
 import org.dihedron.strutlets.annotations.Interceptors;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Result;
+import org.dihedron.strutlets.exceptions.ActionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -283,9 +283,9 @@ public class ActionController extends GenericPortlet {
     	super.init();
        
         try {
-        	logger.info("   +----------------------------+");
-        	logger.info(String.format("   |   STRUTLETS VER.%1$-8s   |", Strutlets.VERSION));
-        	logger.info("   +----------------------------+");
+        	logger.info("   +--------------------------------+");
+        	logger.info(String.format("   |      STRUTLETS ver. %1$-8s   |", Strutlets.VERSION));
+        	logger.info("   +--------------------------------+");
         	
         	logger.info("action controller '{}' starting up...", getPortletName());
         	
@@ -671,7 +671,7 @@ public class ActionController extends GenericPortlet {
 	    	Target info = configuration.getTarget(target);
 	    	Result renderer = info.getResult(result);
 	    	url = renderer.getUrl();
-	    	logger.debug("renderer URL for target'{}' with result '{}' is '{}' (mode '{}', state '{}')", 
+	    	logger.debug("renderer URL for target '{}' with result '{}' is '{}' (mode '{}', state '{}')", 
 	    			target, result, url, renderer.getPortletMode(), renderer.getWindowState());
     	}
     	return url;

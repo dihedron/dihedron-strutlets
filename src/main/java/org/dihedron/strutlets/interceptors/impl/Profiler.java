@@ -20,6 +20,7 @@
 package org.dihedron.strutlets.interceptors.impl;
 
 import org.dihedron.strutlets.ActionInvocation;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class Profiler extends Interceptor {
 	 *   org.dihedron.strutlets.interceptors.Interceptor#intercept(org.dihedron.strutlets.ActionInvocation)
 	 */
 	@Override
-	public String intercept(ActionInvocation invocation) throws Exception {
+	public String intercept(ActionInvocation invocation) throws StrutletsException {
 		long start = System.currentTimeMillis();
 		String result = invocation.invoke();
 		logger.debug("action execution took {} ms", System.currentTimeMillis() - start);

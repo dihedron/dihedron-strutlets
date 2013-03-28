@@ -57,6 +57,29 @@ public @interface Invocable {
 	Semantics semantics() default Semantics.READ_WRITE;
 	
 	/**
+	 * A list containing the names of the fields whose value should be automatically
+	 * injected by the {@code Parameters} interceptor. If no value is provided,
+	 * all fields annotated with {@code @In} will be automatically injected.
+	 * 
+	 * @return
+	 *   the list of field names (<em>note: the {@code Action}'s field names, not
+	 *   the request parameter names!</em>). 
+	 */
+	String[] inputs() default {};
+
+	/**
+	 * A list containing the names of the fields whose value should be automatically
+	 * extracted by the {@code Parameters} interceptor, to be set into the 
+	 * response as a render parameter. If no value is provided, all fields annotated 
+	 * with {@code @Out} will be automatically extracted.
+	 * 
+	 * @return
+	 *   the list of field names (<em>note: the {@code Action}'s field names,
+	 *   not the response parameter names!</em>). 
+	 */
+	String[] outputs() default {};
+	
+	/**
 	 * The array of expected results; each of them will map to the appropriate 
 	 * renderer, and will be parameterised according to what is specified in the 
 	 * <code>@Result</code> annotation.

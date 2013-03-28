@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,7 +47,10 @@ import org.dihedron.utils.Resource;
 import org.dihedron.utils.Strings;
 import org.dihedron.xml.DomHelper;
 import org.reflections.Reflections;
-import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -286,16 +291,32 @@ public class ConfigurationLoader {
     public void loadFromJavaPackage(Configuration configuration, String javaPackage) throws StrutletsException {
     	
     	if(Strings.isValid(javaPackage)) {
+    		logger.trace("looking for action classes in package '{}'", javaPackage);
 
-	        Reflections classReflections = new Reflections(javaPackage);
-	        Set<Class<? extends Action>> actions = classReflections.getSubTypesOf(Action.class);
+    		// use this approach beacuse it seems to be consistently faster
+    		// than the much simpler new Reflections(javaPackage) 
+    		Reflections reflections = 
+    				new Reflections(new ConfigurationBuilder()
+    					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix(javaPackage)))
+    					.setUrls(ClasspathHelper.forPackage(javaPackage))
+    					.setScanners(new SubTypesScanner()));    		
+    		Set<Class<? extends Action>> actions = reflections.getSubTypesOf(Action.class);
 	        for(Class<?> clazz : actions) {
-	        	logger.debug("action class : '{}'", clazz.getName());
-	        	Reflections methodReflections = new Reflections(new Object[] {clazz}, new MethodAnnotationsScanner());        	
-	        	Set<Method> methods = methodReflections.getMethodsAnnotatedWith(Invocable.class);
-	        	for(Method method : methods) {
-	        		logger.debug("checking annotated method: '{}' in class '{}'", method.getName(), clazz.getSimpleName());
-	        		configuration.addTarget(clazz.getSimpleName(), method.getName());
+	        	logger.trace("action class: '{}'", clazz.getName());
+	        	Class<?> iteratorClass = clazz;
+	        	Set<Method> methods = new HashSet<Method>();
+	        	while(iteratorClass != null && iteratorClass!= Object.class) { 
+	        		Method[] set = iteratorClass.getDeclaredMethods();
+	        		methods.addAll(Arrays.asList(set));
+	        		iteratorClass = iteratorClass.getSuperclass();
+	        	}
+	        	for(Method method : methods) {	        		
+	        		if(method.isAnnotationPresent(Invocable.class)) {
+		        		logger.trace("checking annotated method '{}' in class '{}'", method.getName(), clazz.getSimpleName());
+		        		configuration.addTarget(clazz.getSimpleName(), method.getName());
+	        		} else {
+	        			logger.trace("discarding unannotated method '{}' in class '{}'", method.getName(), clazz.getSimpleName());
+	        		}
 	        	}
 	        }
     	}

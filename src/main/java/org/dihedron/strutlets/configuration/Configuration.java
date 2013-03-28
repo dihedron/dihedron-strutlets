@@ -262,6 +262,7 @@ public class Configuration {
 					
 					info.setPackageName(defaultActionPackage);
 					info.setRootHtmlDirectory(rootHtmlDirectory);
+					info.setHtmlPathPattern(htmlPathPattern);
 					info.setClassName(classname);
 					info.setInterceptorsStackId(stack);
 					
@@ -388,8 +389,7 @@ public class Configuration {
 	 * targets. For a thorough discussion on format and accepted variables
 	 * check out 
 	 * {@link org.dihedron.strutlets.ActionController.InitParameter.RENDER_PATH_PATTERN InitParameter.RENDER_PATH_PATTERN}.
-	 */
-	
+	 */	
 	private volatile String htmlPathPattern = DEFAULT_HTML_PATH_PATTERN;
 	
 	public final static void main(String[] args) {

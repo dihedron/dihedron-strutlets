@@ -2,19 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets</artifactId>
-	<version>0.0.3</version>
+	<version>0.4.0</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime library</name>
 	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>	
 	<url>http://maven.apache.org</url>
-	
-  <parent>
-    <groupId>org.dihedron.strutlets</groupId>   
-    <artifactId>parent</artifactId>
-    <version>0.0.1</version>
-    <relativePath>../dihedron-strutlets-parent</relativePath>
-  </parent>
   	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -77,13 +71,13 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.2</version>
+			<version>1.7.3</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.2</version>
+			<version>1.7.3</version>
 			<scope>test</scope>
 		</dependency>		
 		<dependency>

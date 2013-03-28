@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.dihedron.strutlets.ActionInvocation;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 
 /**
  * @author Andrea Funto'
@@ -105,7 +106,7 @@ public abstract class Interceptor {
 	 *   the action invocation object.
 	 * @return
 	 *   a result string.
-	 * @throws Exception
+	 * @throws StrutletsException
 	 */
-	public abstract String intercept(ActionInvocation invocation) throws Exception;
+	public abstract String intercept(ActionInvocation invocation) throws StrutletsException;
 }

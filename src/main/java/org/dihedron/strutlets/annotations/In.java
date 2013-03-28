@@ -25,25 +25,30 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation indicating that the field will contain 
- * data coming from the given parameter name.
+ * Annotation indicating that the field will contain data coming from the given 
+ * parameter name.
  * 
  * @author Andrea Funto'
  */
 @Retention(RetentionPolicy.RUNTIME) 
 @Target(ElementType.FIELD)
 public @interface In {
+	
 	/**
-	 * The name of the input parameter; if not specified,
-	 * the name of the parameter must match that of the field.
+	 * The name of the input parameter; if not specified, the name of the parameter 
+	 * must match that of the field.
+	 * 
 	 * @return
-	 *   the name of the parameter, or <code>&lt;same&gt;</code>
-	 *   if the name matches that of the field.
+	 *   the name of the parameter, or the empty string if the name matches that 
+	 *   of the field.
 	 */
 	String value() default "";
 	
 	/**
-	 * If the attribute is required.
+	 * The default value of the parameter, if no value is available in the request.
+	 * 
+	 * @return
+	 *   the default value of the parameter, if no value is available in the request.
 	 */
-	boolean required() default false;
+	String withDefault() default "";
 }

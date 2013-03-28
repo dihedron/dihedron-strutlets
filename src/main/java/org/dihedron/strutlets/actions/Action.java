@@ -27,6 +27,7 @@ import org.dihedron.reflection.Reflector;
 import org.dihedron.reflection.ReflectorException;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.exceptions.ActionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

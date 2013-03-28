@@ -29,6 +29,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 
@@ -183,9 +184,9 @@ public class ActionInvocation {
 	 *   control flow, it should pass through whatever results from the nested 
 	 *   interceptor call; changing this result with a different value results 
 	 *   in a    
-	 * @throws Exception
+	 * @throws StrutletsException
 	 */
-	public String invoke() throws Exception {
+	public String invoke() throws StrutletsException {
 		if(iterator.get() == null) {
 			iterator.set(interceptors.iterator());
 		}
