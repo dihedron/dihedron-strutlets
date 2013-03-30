@@ -29,17 +29,18 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.9</version>
-				<configuration>
-					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-					<bottom>
-						<![CDATA[
-							Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
-						]]>
-					</bottom>
-				</configuration>
+        <configuration>
+          <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+          <bottom>
+            <![CDATA[
+              Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
+            ]]>
+          </bottom>
+        </configuration>
 			</plugin>			
 		</plugins>
 	</build>
+	<!--
 	<reporting>
 		<plugins>
 			<plugin>
@@ -48,7 +49,8 @@
 				<version>2.9</version>
 			</plugin>
 		</plugins>
-	</reporting>	
+	</reporting>
+	-->	
 	<dependencies>
 		<dependency>
 			<groupId>javax.portlet</groupId>
@@ -65,7 +67,7 @@
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
-			<version>0.9.8</version>
+      <version>0.9.9-RC1</version>			
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

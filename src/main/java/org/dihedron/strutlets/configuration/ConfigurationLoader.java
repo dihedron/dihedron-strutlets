@@ -293,7 +293,7 @@ public class ConfigurationLoader {
     	if(Strings.isValid(javaPackage)) {
     		logger.trace("looking for action classes in package '{}'", javaPackage);
 
-    		// use this approach beacuse it seems to be consistently faster
+    		// use this approach because it seems to be consistently faster
     		// than the much simpler new Reflections(javaPackage) 
     		Reflections reflections = 
     				new Reflections(new ConfigurationBuilder()

@@ -280,7 +280,7 @@ public class Configuration {
 							QName qname = new QName(namespace, name);
 							events.put(qname.toString(), info.getId());
 						}
-						logger.trace("auto-configuring results of {}:{}", action, method.getName());
+						logger.trace("auto-configuring results of {}!{}", action, method.getName());
 						for(Result result : invocable.results()) {
 							String id = result.value();
 							PortletMode mode = PortletMode.getPortletMode(result.mode());
@@ -297,7 +297,7 @@ public class Configuration {
 							info.addResult(id, mode, state, url);
 						}
 					} else {
-						logger.trace("no annotations found for {}:{}", action, method.getName());
+						logger.trace("no annotations found for {}!{}", action, method.getName());
 					}
 				}
 			} else {

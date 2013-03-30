@@ -28,7 +28,7 @@ public class Strutlets {
 	/**
 	 * The library version.
 	 */
-	public final static String VERSION = "0.4.0";
+	public final static String VERSION = "0.4.1";
 	
 	/**
 	 * Prints out some generic information about the Strutlets framework.
