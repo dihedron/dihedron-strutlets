@@ -36,11 +36,11 @@ import java.lang.annotation.Target;
 public @interface Out {
 	
 	/**
-	 * The name of the output field which will be used to re-map
-	 * the name of the annotated field.
+	 * The name of the output parameter which will receive the annotated field's
+	 * value.
 	 * 
 	 * @return
-	 *   the name of the output.
+	 *   the name of the output parameter.
 	 */
 	String value() default "";
 }

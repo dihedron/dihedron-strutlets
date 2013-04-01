@@ -21,15 +21,17 @@ package org.dihedron.strutlets.interceptors.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
+import org.dihedron.reflection.Reflector;
+import org.dihedron.reflection.ReflectorException;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.annotations.Out;
+import org.dihedron.strutlets.exceptions.InterceptorException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.slf4j.Logger;
@@ -53,75 +55,101 @@ public class Parameters extends Interceptor {
 	 *   the current action invocation.
 	 * @return
 	 *   the result of the nested components' execution.
+	 * @throws StrutletsException 
 	 * @see 
 	 *   org.dihedron.strutlets.interceptors.Interceptor#intercept(org.dihedron.strutlets.ActionInvocation)
 	 */
 	@Override
 	public String intercept(ActionInvocation invocation) throws StrutletsException {
 		logger.debug("injecting parameters into action");
-		injectInputs(invocation);
-		String result = invocation.invoke();
-		extractOutputs(invocation);
-		return result;
-	}
-	
-	private void injectInputs(ActionInvocation invocation) {
-		
-		String methodName = invocation.getMethod();
-				 
-		Action action = invocation.getAction();
-				
-		Set<String> inputs = new HashSet<String>();
-		
-		// navigate the object class hierarchy to lookup the given method; if 
-		// found, look for its @Invocable annotation and extract the list of input 
-		// fields (if available) 
-		Class<?> clazz = action.getClass();
-		while(clazz != null && clazz != Object.class) {
-			try {
-				Method method = clazz.getDeclaredMethod(methodName);
-				if(method.isAnnotationPresent(Invocable.class)) {
-					Invocable annotation = method.getAnnotation(Invocable.class);
-					inputs.addAll(Arrays.asList(annotation.inputs()));				
-				}
-				break;
-			} catch (SecurityException e) {
-				logger.error("security exception accessing method '{}' on class '{}'", methodName, clazz.getSimpleName());
-			} catch (NoSuchMethodException e) {
-				logger.error("method '{}' not found on class '{}'", methodName, clazz.getSimpleName());
-			} finally {
-				clazz = clazz.getSuperclass();
-			}
-		}
-		
-		// when we get here, either we have a list of inputs or we have non, in 
-		// which case all fields marked with @In are assumed to be inputs; now 
-		// we navigate the field hierarchy looking for the input values 
-		
-		clazz = action.getClass();
-		Set<Field> fields = new HashSet<Field>();		
-		while(clazz != null && clazz != Object.class) {
-			fields.addAll(Arrays.asList(clazz.getDeclaredFields()));			
-			clazz = clazz.getSuperclass();
-		}
-		
-		for(Field field : fields) {
-			if(field.isAnnotationPresent(In.class)) {				
-				if(inputs.contains(field.getName()) || inputs.isEmpty()) {
-					// the field is indicated as an input, and is available on
-					// the action's class: go grab it!
-					In annotation = field.getAnnotation(In.class);
-					String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
-					String value = ActionContext.acquireContext().getFirstParameterValue(parameter);
-					if(value == null || value.trim().length() == 0) {
-						value = annotation.withDefault();
-					}
-				}
-			}			
+		try {
+			injectInputs(invocation);
+			String result = invocation.invoke();
+			extractOutputs(invocation);
+			return result;
+		} catch(ReflectorException e) {
+			throw new InterceptorException("error setting input fields", e);
 		}		
 	}
 	
-	private void extractOutputs(ActionInvocation invocation) {
+	private void injectInputs(ActionInvocation invocation) throws ReflectorException {
+		
+		String methodName = invocation.getMethod();				 
+		Action action = invocation.getAction();
+		logger.trace("injecting inputs for method '{}' on action '{}'", methodName, action.getClass().getSimpleName());
+		Set<Method> methods = Reflector.getMethods(action.getClass(), methodName);
+//		if(methods.isEmpty()) {
+//			logger.error("no method found with the given name ('{}') on action of class '{}'", methodName, action.getClass().getSimpleName());
+//			return;
+//		} else {
+//			for(Method method: methods) {
+//				logger.trace("method found: '{}'", method.getName());
+//			}
+//		}
+		String [] filter = {};
+		Method method = (Method) methods.toArray()[0];
+		if(method.isAnnotationPresent(Invocable.class)) {
+			Invocable annotation = method.getAnnotation(Invocable.class);
+			filter = annotation.inputs();				
+		}
+		
+		Set<Field> fields = Reflector.getFields(action.getClass(), filter);
+		for(Field field : fields) {
+			logger.trace("looking up value of field '{}' in request", field.getName());
+			if(field.isAnnotationPresent(In.class)) {				
+				In annotation = field.getAnnotation(In.class);
+				String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
+				// TODO: this method only supports single values, implement switch on String[]
+				String value = ActionContext.acquireContext().getFirstParameterValue(parameter);
+				if(value == null || value.trim().length() == 0) {
+					logger.trace("parameter '{}' not available in request, using default '{}'", parameter, annotation.withDefault());
+					value = annotation.withDefault();
+				} else {
+					logger.trace("parameter '{}' available in request, using value '{}'", parameter, value);					
+				}
+				new Reflector(action).setFieldValue(field.getName(), value);
+			}
+		}		
+	}
+	
+	private void extractOutputs(ActionInvocation invocation) throws ReflectorException {
+		String methodName = invocation.getMethod();				 
+		Action action = invocation.getAction();
+		logger.trace("extracting outputs for method '{}' on action '{}'", methodName, action.getClass().getSimpleName());
+		Set<Method> methods = Reflector.getMethods(action.getClass(), methodName);
+//		if(methods.isEmpty()) {
+//			logger.error("no method found with the given name ('{}') on action of class '{}'", methodName, action.getClass().getSimpleName());
+//			return;
+//		} else {
+//			for(Method method: methods) {
+//				logger.trace("method found: '{}'", method.getName());
+//			}
+//		}
+		String [] filter = {};
+		Method method = (Method) methods.toArray()[0];
+		if(method.isAnnotationPresent(Invocable.class)) {
+			Invocable annotation = method.getAnnotation(Invocable.class);
+			filter = annotation.outputs();				
+		}
+		
+		Set<Field> fields = Reflector.getFields(action.getClass(), filter);
+		for(Field field : fields) {
+			logger.trace("setting value of field '{}' in response", field.getName());
+			if(field.isAnnotationPresent(Out.class)) {				
+				Out annotation = field.getAnnotation(Out.class);
+				String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
+				String value = (String)new Reflector(action).getFieldValue(field.getName());
+				// TODO: this method only supports single values, implement switch on String[]
+				ActionContext.acquireContext().setRenderParameter(parameter, value);
+//				if(value == null || value.trim().length() == 0) {
+//					logger.trace("parameter '{}' not available in request, using default '{}'", parameter, annotation.withDefault());
+//					value = annotation.withDefault();
+//				} else {
+//					logger.trace("parameter '{}' available in request, using value '{}'", parameter, value);					
+//				}
+//				new Reflector(action).setFieldValue(field.getName(), value);
+			}
+		}		
 		
 	}
 }

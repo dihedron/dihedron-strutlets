@@ -54,7 +54,7 @@ public class Configuration {
 	/**
 	 * The default pattern for JSP paths generation, for auto-configured targets.
 	 */
-	public final static String DEFAULT_HTML_PATH_PATTERN = "${rootdir}/${action}/${method}/${result}.jsp";
+	public static final String DEFAULT_HTML_PATH_PATTERN = "${rootdir}/${action}/${method}/${result}.jsp";
 		
 	/**
 	 * Constructor.
@@ -127,16 +127,16 @@ public class Configuration {
 	 *   among the other cached informations before being returned, for future 
 	 *   reference.
 	 */
-	public Target getTarget(String target){
+	public Target getTarget(String target) {
 			
 		String action = Target.getActionName(target);
 		String method = Target.getMethodName(target);
-		target = Target.makeTargetName(action, method);
-		if(!store.containsKey(target)) {
+		String targetName = Target.makeTargetName(action, method);
+		if(!store.containsKey(targetName)) {
 			logger.debug("repository does not contain info for action '{}', method '{}'", action, method);
 			addTarget(action, method);
 		}
-		return store.get(target);
+		return store.get(targetName);
 	}
 
 	/**
@@ -155,7 +155,7 @@ public class Configuration {
 	 *   scanning process is stored among the other cached informations before 
 	 *   being returned, for future reference.
 	 */
-	public Target getTarget(String action, String method) throws Exception {			
+	public Target getTarget(String action, String method) {			
 		return getTarget(Target.makeTargetName(action, method));
 	}
 		
@@ -361,7 +361,7 @@ public class Configuration {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Configuration.class);
+	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
 
 	/**
 	 * The actual set of actions' targets. 
@@ -391,13 +391,4 @@ public class Configuration {
 	 * {@link org.dihedron.strutlets.ActionController.InitParameter.RENDER_PATH_PATTERN InitParameter.RENDER_PATH_PATTERN}.
 	 */	
 	private volatile String htmlPathPattern = DEFAULT_HTML_PATH_PATTERN;
-	
-	public final static void main(String[] args) {
-		QName qname = new QName("http://www.dihedron.org/events","myEvent");
-		System.out.println(qname.toString());
-		qname = new QName("myEvent");
-		System.out.println(qname.toString());
-		
-	}
-	
 }

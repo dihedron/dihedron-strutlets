@@ -23,8 +23,12 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +79,139 @@ public class Reflector {
 	private boolean exposePrivateFields = DEFAULT_EXPOSE_PRIVATE_FIELDS;
 	
 	/**
+	 * Returns the set of instance fields of the given class, including those 
+	 * inherited from the super-classes.
+	 * 
+	 * @param clazz
+	 *   the class whose fields are being retrieved.
+	 * @param filter
+	 *   an optional set of names for the fields to be looked up; only fields 
+	 *   with those names will be returned.
+	 * @return
+	 *   the set of fields from the given class and its super-classes.
+	 */
+	public static Set<Field> getFields(Class<?> clazz, String... filter) {
+		Set<Field> fields = new HashSet<Field>();
+		Set<String> acceptable = new HashSet<String>();
+		acceptable.addAll(Arrays.asList(filter));
+		
+		Class<?> cursor = clazz;
+		while(cursor != null && cursor != Object.class) {
+			Field[] array = cursor.getDeclaredFields();
+			for(Field field : array) {
+				if(!Modifier.isStatic(field.getModifiers())) {
+					if(acceptable.isEmpty() || acceptable.contains(field.getName())) {					
+						logger.trace("adding field '{}' in class '{}' to instance fields", field.getName(), cursor.getSimpleName());
+						fields.add(field);
+					}
+				}
+			}
+			cursor = cursor.getSuperclass();
+		}		
+		return fields;
+	}
+	
+	/**
+	 * Returns the set of class (static) fields of the given class, including those 
+	 * inherited from the super-classes.
+	 * 
+	 * @param clazz
+	 *   the class whose fields are being retrieved.
+	 * @param filter
+	 *   an optional set of names for the fields to be looked up; only fields 
+	 *   with those names will be returned.
+	 * @return
+	 *   the set of static fields from the given class and its super-classes.
+	 */
+	public static Set<Field> getClassFields(Class<?> clazz, String... filter) {
+		Set<Field> fields = new HashSet<Field>();
+		Set<String> acceptable = new HashSet<String>();
+		acceptable.addAll(Arrays.asList(filter));
+
+		Class<?> cursor = clazz;
+		while(cursor != null && cursor != Object.class) {
+			Field[] array = cursor.getDeclaredFields();
+			for(Field field : array) {
+				if(Modifier.isStatic(field.getModifiers())) {
+					if(acceptable.isEmpty() || acceptable.contains(field.getName())) {
+						logger.trace("adding field '{}' in class '{}' to static fields", field.getName(), cursor.getSimpleName());
+						fields.add(field);
+					}
+				}
+			}
+			cursor = cursor.getSuperclass();
+		}		
+		return fields;
+	}	
+	
+	/**
+	 * Returns the set of instance methods of the given class, including those 
+	 * inherited from the super-classes.
+	 * 
+	 * @param clazz
+	 *   the class whose methods are being retrieved.
+	 * @param filter
+	 *   an optional set of names for the methods to be looked up; only methods 
+	 *   with those names will be returned.
+	 * @return
+	 *   the set of methods from the given class and its super-classes.
+	 */
+	public static Set<Method> getMethods(Class<?> clazz, String... filter) {
+		Set<Method> methods = new HashSet<Method>();
+		Set<String> acceptable = new HashSet<String>();
+		acceptable.addAll(Arrays.asList(filter));
+		
+		Class<?> cursor = clazz;
+		while(cursor != null && cursor != Object.class) {
+			Method[] array = cursor.getDeclaredMethods();
+			for(Method method : array) {
+				if(!Modifier.isStatic(method.getModifiers())) {
+					logger.debug("checking method '{}'", method.getName());
+					if(acceptable.isEmpty() || acceptable.contains(method.getName())) {
+						logger.debug("adding method '{}' in class '{}' to instance methods", method.getName(), cursor.getSimpleName());
+						methods.add(method);
+					}
+				}
+			}
+			cursor = cursor.getSuperclass();
+		}		
+		return methods;
+	}	
+	
+	/**
+	 * Returns the set of class methods of the given class, including those 
+	 * inherited from the super-classes.
+	 * 
+	 * @param clazz
+	 *   the class whose methods are being retrieved.
+	 * @param filter
+	 *   an optional set of names for the methods to be looked up; only methods 
+	 *   with those names will be returned.
+	 * @return
+	 *   the set of class methods from the given class and its super-classes.
+	 */
+	public static Set<Method> getClassMethods(Class<?> clazz, String... filter) {
+		Set<Method> methods = new HashSet<Method>();
+		Set<String> acceptable = new HashSet<String>();
+		acceptable.addAll(Arrays.asList(filter));
+		
+		Class<?> cursor = clazz;
+		while(cursor != null && cursor != Object.class) {
+			Method[] array = cursor.getDeclaredMethods();
+			for(Method method : array) {
+				if(Modifier.isStatic(method.getModifiers())) {
+					if(acceptable.isEmpty() || acceptable.contains(method.getName())) {
+						logger.trace("adding method '{}' in class '{}' to static methods", method.getName(), cursor.getSimpleName());
+						methods.add(method);
+					}
+				}
+			}
+			cursor = cursor.getSuperclass();
+		}		
+		return methods;
+	}	
+	
+	/**
 	 * Constructor.
 	 * 
 	 * @param object
@@ -93,7 +230,7 @@ public class Reflector {
 	 *   whether fields should be accessed only through their getter.
 	 */
 	public Reflector(Object object, boolean useGetter) {
-		this(object, DEFAULT_USE_GETTER, DEFAULT_EXPOSE_PRIVATE_FIELDS);
+		this(object, useGetter, DEFAULT_EXPOSE_PRIVATE_FIELDS);
 	}	
 
 	/**
@@ -281,12 +418,13 @@ public class Reflector {
 	 * @throws ReflectorException 
 	 *   if the object is not a list or an array.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setElementAtIndex(int index, Object value) throws ReflectorException   {
 		
 		if(object.getClass().isArray()) {
 			 Array.set(object, translateArrayIndex(index, getArrayLength()), value);
-//		} else if (object instanceof List<?>){
-//			((List<?>)object).set(index, value);
+		} else if (object instanceof List<?>){
+			((List)object).set(index, value);
 		} else {
 			throw new ReflectorException("object is not an array or a list");
 		}		
@@ -339,14 +477,19 @@ public class Reflector {
 	 * element corresponding to the given key.
 	 * 
 	 * @param key
-	 *   the key corresponding to the element to be retrieved.
+	 *   the key corresponding to the element to be set.
 	 * @param value
 	 *   the value to be set.
-	 * @throws Exception
+	 * @throws ReflectorException
 	 *   if the object is not <code>Map</code>.
 	 */
-	public void setValueForKey(Object key, Object value)   {
-		// TODO: to be implemented using type recognition on generics' types
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void setValueForKey(Object key, Object value) throws ReflectorException   {
+		if(object instanceof Map) {
+			((Map)object).put(key, value);
+		} else {
+			throw new ReflectorException("object is not a map");
+		}
 	}
 	
 	
@@ -438,14 +581,15 @@ public class Reflector {
 	 */
 	private int translateArrayIndex(int index, int length) {
 		assert (index > 0 ? index < length : Math.abs(index) <= Math.abs(length)) : "index must be less than number of elements";
+		int translated = index;
 		
-		if(!(index > 0 ? index < length : Math.abs(index) <= Math.abs(length))){
-			logger.error("index is out of bounmds");
+		if(!(translated > 0 ? translated < length : Math.abs(translated) <= Math.abs(length))){
+			logger.error("index {} is out of bounds", translated);
 			throw new ArrayIndexOutOfBoundsException();
 		}
-		if(index < 0) {
-			index = length + index;
+		if(translated < 0) {
+			translated = length + translated;
 		}
-		return index;
+		return translated;
 	}
 }

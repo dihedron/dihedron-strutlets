@@ -38,8 +38,6 @@ public class MyAction extends Action {
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(MyAction.class);
 
-	public MyAction() {
-	}
 
 	/* (non-Javadoc)
 	 * @see org.dihedron.portlets.actions.Action#execute()

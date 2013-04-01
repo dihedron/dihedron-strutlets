@@ -22,6 +22,8 @@ package org.dihedron.strutlets.test;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrea Funto'
@@ -29,13 +31,18 @@ import org.dihedron.strutlets.interceptors.Interceptor;
 public class MyInterceptor extends Interceptor {
 	
 	/**
+	 * The logger.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(MyInterceptor.class);
+	
+	/**
 	 * @see org.dihedron.strutlets.interceptors.Interceptor#intercept(org.dihedron.strutlets.strutlets.ActionInvocation)
 	 */
 	@Override
 	public String intercept(ActionInvocation invocation) throws StrutletsException {
-		System.out.println("interceptor " + getParameter("id") + " - before");
+		logger.trace("interceptor {} - before", getParameter("id"));
 		String result = invocation.invoke();
-		System.out.println("interceptor " + getParameter("id") + " - after");
+		logger.trace("interceptor {} - after", getParameter("id"));
 		return result;
 	}
 }
