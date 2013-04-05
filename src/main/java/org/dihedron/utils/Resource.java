@@ -30,12 +30,12 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-public class Resource {
+public final class Resource {
 	
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Resource.class);
+	private static final Logger logger = LoggerFactory.getLogger(Resource.class);
 	
 	/**
 	 * Returns the given resource as a a stream: if the resource is a file

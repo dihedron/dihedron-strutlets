@@ -26,7 +26,7 @@ package org.dihedron.utils;
  * 
  * @author Andrea Funto'
  */
-public class Strings {
+public final class Strings {
 
 	/**
 	 * Checks whether the given string is neither null nor blank.

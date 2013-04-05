@@ -332,8 +332,9 @@ public class Reflector {
 				}
 				result = field.get(object);
 			} catch (Exception e) {
-				logger.error("error accessing field '" + fieldName + "'", e);
-				throw new ReflectorException("error accessing field '" + fieldName + "'", e);
+				String message = "error accessing field '" + fieldName + "'"; 
+				logger.error(message, e);
+				throw new ReflectorException(message, e);
 			} finally {
 				if(needReprotect) {				
 					protect(field);
@@ -371,8 +372,9 @@ public class Reflector {
 				}
 				field.set(object, value);
 			} catch (Exception e) {
-				logger.error("error accessing field '" + fieldName + "'", e);
-				throw new ReflectorException("error accessing field '" + fieldName + "'", e);
+				String message = "error accessing field '" + fieldName + "'"; 
+				logger.error(message, e);
+				throw new ReflectorException(message, e);
 			} finally {				
 				if(needReprotect) {				
 					protect(field);

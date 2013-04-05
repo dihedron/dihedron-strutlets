@@ -25,12 +25,12 @@ import java.io.PrintStream;
  * 
  * @author Andrea Funto'
  */
-public class Strutlets {
+public final class Strutlets {
 	
 	/**
 	 * The library version.
 	 */
-	public final static String VERSION = "0.5.0";
+	public final static String VERSION = "0.5.1";
 
 	/** 
 	 * The output channel.

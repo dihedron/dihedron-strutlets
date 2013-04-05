@@ -30,7 +30,7 @@ import org.w3c.dom.NodeList;
 /**
  * @author Andrea Funto'
  */
-public class DomHelper {
+public final class DomHelper {
 	
 	public static List<Element> getChildrenByTagName(Document document, String name) {
 		List<Element> nodes = new ArrayList<Element>();
