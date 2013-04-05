@@ -18,6 +18,8 @@
  */
 package org.dihedron.strutlets;
 
+import java.io.PrintStream;
+
 /**
  * A class to store general information about the library.
  * 
@@ -29,6 +31,13 @@ public class Strutlets {
 	 * The library version.
 	 */
 	public final static String VERSION = "0.5.0";
+
+	/** 
+	 * The output channel.
+	 */
+	private static final PrintStream out = System.out;
+	
+	private static final String HELP_COMMAND = "--help";
 	
 	/**
 	 * Prints out some generic information about the Strutlets framework.
@@ -37,8 +46,19 @@ public class Strutlets {
 	 *   input arguments, ignored.
 	 */
 	public static void main(String args[]) {
-		System.out.println("Strutlets ver." + VERSION + "\n");
-		// TODO: complete with documentation here...
+    	out.println("   +--------------------------------+");
+    	out.println(String.format("   |      STRUTLETS ver. %1$-8s   |", Strutlets.VERSION));
+    	out.println("   +--------------------------------+");
+    	
+    	if(args.length == 0 || args[0].equalsIgnoreCase(HELP_COMMAND)) {
+    		out.println("\ncommand synopsis:");
+    		out.println("\tstrutlets <arguments>");
+    		out.println("where:");
+    		out.println("\t--help         prints this help message");
+    		out.println("\t--version      prints version information");
+    		out.println("\t--license      prints license information");
+    		out.println("\t--generate     starts the portlet.xml wizard");
+    	}
 	}
 	
 	/**
