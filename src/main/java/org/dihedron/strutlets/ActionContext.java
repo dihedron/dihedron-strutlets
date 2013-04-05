@@ -79,7 +79,7 @@ public class ActionContext {
 		
 		/**
 		 * Attributes at request level will be accessible to the portlet that set 
-		 * them and to included JSPs and servlets untile the next action request 
+		 * them and to included JSPs and servlets until the next action request 
 		 * comes. The data lifecycle encompasses event and resource serving
 		 * methods, up to the <em>next</em> action processing request, when they
 		 * will be reset.
@@ -125,7 +125,7 @@ public class ActionContext {
 	 *   the per-thread instance.
 	 */
 	public static ActionContext acquireContext() {
-		logger.debug("retrieving action context for thread {}", Thread.currentThread().getId());
+		logger.trace("retrieving action context for thread {}", Thread.currentThread().getId());
 		return context.get();
 	} 
 	

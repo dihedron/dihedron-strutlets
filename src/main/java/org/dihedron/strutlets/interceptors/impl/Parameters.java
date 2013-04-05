@@ -31,6 +31,7 @@ import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Out;
+import org.dihedron.strutlets.annotations.In.Scope;
 import org.dihedron.strutlets.exceptions.InterceptorException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
@@ -74,42 +75,89 @@ public class Parameters extends Interceptor {
 	
 	private void injectInputs(ActionInvocation invocation) throws ReflectorException {
 		
-		String methodName = invocation.getMethod();				 
-		Action action = invocation.getAction();
-		logger.trace("injecting inputs for method '{}' on action '{}'", methodName, action.getClass().getSimpleName());
-		Set<Method> methods = Reflector.getMethods(action.getClass(), methodName);
-//		if(methods.isEmpty()) {
-//			logger.error("no method found with the given name ('{}') on action of class '{}'", methodName, action.getClass().getSimpleName());
-//			return;
-//		} else {
-//			for(Method method: methods) {
-//				logger.trace("method found: '{}'", method.getName());
-//			}
-//		}
-		String [] filter = {};
-		Method method = (Method) methods.toArray()[0];
-		if(method.isAnnotationPresent(Invocable.class)) {
-			Invocable annotation = method.getAnnotation(Invocable.class);
-			filter = annotation.inputs();				
-		}
-		
-		Set<Field> fields = Reflector.getFields(action.getClass(), filter);
-		for(Field field : fields) {
-			logger.trace("looking up value of field '{}' in request", field.getName());
-			if(field.isAnnotationPresent(In.class)) {				
-				In annotation = field.getAnnotation(In.class);
-				String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
-				// TODO: this method only supports single values, implement switch on String[]
-				String value = ActionContext.acquireContext().getFirstParameterValue(parameter);
-				if(value == null || value.trim().length() == 0) {
-					logger.trace("parameter '{}' not available in request, using default '{}'", parameter, annotation.withDefault());
-					value = annotation.withDefault();
-				} else {
-					logger.trace("parameter '{}' available in request, using value '{}'", parameter, value);					
-				}
-				new Reflector(action).setFieldValue(field.getName(), value);
+		logger.trace("injecting inputs for method '{}' on action '{}'", invocation.getMethod(), invocation.getAction().getClass().getSimpleName());
+		// get the method through reflection
+		Set<Method> methods = Reflector.getMethods(invocation.getAction().getClass(), invocation.getMethod());
+		if(methods.size() == 1) {
+			// now get the input fields for the given method, as declared in the annotation
+			String [] filter = {};
+			Method method = (Method)methods.toArray()[0];
+			if(method.isAnnotationPresent(Invocable.class)) {
+				Invocable annotation = method.getAnnotation(Invocable.class);
+				filter = annotation.inputs();
+				// get the corresponding fields
+				Set<Field> fields = Reflector.getFields(invocation.getAction().getClass(), filter);
+				for(Field field : fields) {
+					injectField(field, invocation);
+				}		
 			}
-		}		
+		}
+	}
+	
+	private void injectField(Field field, ActionInvocation invocation) throws ReflectorException {
+		logger.trace("looking up value of field '{}' in request", field.getName());
+		if(field.isAnnotationPresent(In.class)) {
+			
+			In annotation = field.getAnnotation(In.class);
+			
+			// get the name of the parameter to look up; if none provided in the annotation,
+			// take the name of the field itself			
+			String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
+			
+			// now, depending on the scope, try to locate the parameter in the appropriate context
+			Scope scope = annotation.scope();
+			Object value = null;
+			do {
+				// FORM scope is scanned first if specified (or if ANY is provided)
+				if(scope == Scope.FORM || scope == Scope.ANY) {
+					value = ActionContext.acquireContext().getParameterValues(parameter);
+					if(value != null) {
+						logger.trace("value for parameter '{}' found in FORM parameters: '{}'", parameter, value);
+						break;
+					}
+				}
+				// next comes the REQUEST scope (or if ANY is specified)
+				if(scope == Scope.REQUEST || scope == Scope.ANY) {
+					value = ActionContext.acquireContext().getRequestAttribute(parameter);
+					if(value != null) {
+						logger.trace("value for parameter '{}' found in REQUEST attributes: '{}'", parameter, value);
+						break;
+					}
+				}
+				// next comes the SESSION scope (or if ANY is specified)
+				if(scope == Scope.SESSION || scope == Scope.ANY) {
+					value = ActionContext.acquireContext().getSessionAttribute(parameter);
+					if(value != null) {
+						logger.trace("value for parameter '{}' found in SESSION attributes: '{}'", parameter, value);
+						break;
+					}
+				}
+				// last comes the APPLICATION scope (or if ANY is specified)
+				if(scope == Scope.APPLICATION || scope == Scope.ANY) {
+					value = ActionContext.acquireContext().getApplicationAttribute(parameter);
+					if(value != null) {
+						logger.trace("value for parameter '{}' found in APPLICATION attributes: '{}'", parameter, value);
+						break;
+					}
+				}				
+			} while(false);
+			
+			if(value != null) {
+				Action action = invocation.getAction();
+				if(field.getType() == value.getClass()) { 
+					// if both are strings, or whatever, but equal, assign directly
+					new Reflector(action).setFieldValue(field.getName(), value);
+				} else if(field.getType().isArray() && value.getClass().isArray()){
+					// both arrays, try to assign 
+					new Reflector(action).setFieldValue(field.getName(), value);
+				} else if(field.getType() == String.class && value.getClass().isArray()) {
+					// pick just the first value
+					new Reflector(action).setFieldValue(field.getName(), new Reflector(value).getElementAtIndex(0));
+				}
+			} else {
+				logger.warn("no value found for field '{}' in scope '{}'", scope.name());
+			}			
+		}
 	}
 	
 	private void extractOutputs(ActionInvocation invocation) throws ReflectorException {
