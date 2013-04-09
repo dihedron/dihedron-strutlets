@@ -34,42 +34,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface In {
 	
-	public enum Scope {
-		
-		/**
-		 * The parameter is to be looked for in the submitted form.
-		 */
-		FORM,
-		
-		/**
-		 * The parameter is to be looked up in the current request scope.
-		 * 
-		 * @see org.dihedron.strutlets.ActionContext.Scope.REQUEST.
-		 */
-		REQUEST,
-
-		/**
-		 * The parameter is to be looked up in the current session scope.
-		 * 
-		 * @see org.dihedron.strutlets.ActionContext.Scope.SESSION.
-		 */
-		SESSION,
-		
-		/**
-		 * The parameter is to be looked up in the current application scope.
-		 * 
-		 * @see org.dihedron.strutlets.ActionContext.Scope.APPLICATION.
-		 */
-		APPLICATION,
-		
-		/**
-		 * The parameter is to be looked up in any of the previous scopes, in 
-		 * the following order: FORM, REQUEST, SESSION, APPLICATION; the first
-		 * value encountered in the lookup is taken assumed valid.
-		 */		
-		ANY
-	}
-	
 	/**
 	 * The name of the input parameter; if not specified, the name of the parameter 
 	 * must match that of the field.
@@ -87,5 +51,5 @@ public @interface In {
 	 * @return
 	 *   the scope of the parameter.
 	 */
-	Scope scope() default Scope.ANY;
+	Scope[] scopes() default { Scope.FORM, Scope.REQUEST, Scope.SESSION, Scope.APPLICATION, Scope.CONFIGURATION };
 }

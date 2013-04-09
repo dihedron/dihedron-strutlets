@@ -43,4 +43,13 @@ public @interface Out {
 	 *   the name of the output parameter.
 	 */
 	String value() default "";
+	
+	/**
+	 * The scope in which the parameter should be looked up; by default, it is
+	 * looked up in all available scopes.
+	 * 
+	 * @return
+	 *   the scope of the parameter.
+	 */
+	Scope scope() default Scope.RENDER;	
 }

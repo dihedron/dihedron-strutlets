@@ -87,12 +87,12 @@ public class ConfigurationLoader {
 	/**
 	 * Whether the input XML file should be validated.
 	 */
-	private final static boolean VALIDATE_XML = false;
+	private static final boolean VALIDATE_XML = false;
 		
 	/**
 	 * The name of the actions configuration schema file.
 	 */
-	private final static String ACTIONS_CONFIG_XSD = "org/dihedron/strutslet/actions/actions-config.xsd";
+	private static final String ACTIONS_CONFIG_XSD = "org/dihedron/strutslet/actions/actions-config.xsd";
 	
 	/**
 	 * Tries to initialise the actions' configuration by parsing the input 

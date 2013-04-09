@@ -31,7 +31,7 @@ import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Out;
-import org.dihedron.strutlets.annotations.In.Scope;
+import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.InterceptorException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
@@ -95,7 +95,7 @@ public class Parameters extends Interceptor {
 	}
 	
 	private void injectField(Field field, ActionInvocation invocation) throws ReflectorException {
-		logger.trace("looking up value of field '{}' in request", field.getName());
+		logger.trace("looking up value of field '{}'", field.getName());
 		if(field.isAnnotationPresent(In.class)) {
 			
 			In annotation = field.getAnnotation(In.class);
@@ -104,43 +104,42 @@ public class Parameters extends Interceptor {
 			// take the name of the field itself			
 			String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
 			
-			// now, depending on the scope, try to locate the parameter in the appropriate context
-			Scope scope = annotation.scope();
+			// now, depending on the scope, try to locate the parameter in the appropriate context 
 			Object value = null;
-			do {
-				// FORM scope is scanned first if specified (or if ANY is provided)
-				if(scope == Scope.FORM || scope == Scope.ANY) {
+			for(Scope scope : annotation.scopes()) {
+				logger.trace("scanning scope '{}' for parameter '{}'...", scope.name(), parameter);
+				if(scope == Scope.FORM) {
 					value = ActionContext.acquireContext().getParameterValues(parameter);
 					if(value != null) {
-						logger.trace("value for parameter '{}' found in FORM parameters: '{}'", parameter, value);
+						logger.trace("... value for '{}' found in FORM parameters: '{}'", parameter, value);
 						break;
 					}
-				}
-				// next comes the REQUEST scope (or if ANY is specified)
-				if(scope == Scope.REQUEST || scope == Scope.ANY) {
+				} else if(scope == Scope.REQUEST) {
 					value = ActionContext.acquireContext().getRequestAttribute(parameter);
 					if(value != null) {
-						logger.trace("value for parameter '{}' found in REQUEST attributes: '{}'", parameter, value);
+						logger.trace("... value for '{}' found in REQUEST attributes: '{}'", parameter, value);
 						break;
 					}
-				}
-				// next comes the SESSION scope (or if ANY is specified)
-				if(scope == Scope.SESSION || scope == Scope.ANY) {
+				} else if(scope == Scope.SESSION) {
 					value = ActionContext.acquireContext().getSessionAttribute(parameter);
 					if(value != null) {
-						logger.trace("value for parameter '{}' found in SESSION attributes: '{}'", parameter, value);
+						logger.trace("... value for '{}' found in SESSION attributes: '{}'", parameter, value);
+						break;
+					}
+				} else if(scope == Scope.APPLICATION) {
+					value = ActionContext.acquireContext().getApplicationAttribute(parameter);
+					if(value != null) {
+						logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", parameter, value);
+						break;
+					}
+				} else if(scope == Scope.CONFIGURATION) {
+					value = invocation.getAction().getParameter(parameter);
+					if(value != null) {
+						logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", parameter, value);
 						break;
 					}
 				}
-				// last comes the APPLICATION scope (or if ANY is specified)
-				if(scope == Scope.APPLICATION || scope == Scope.ANY) {
-					value = ActionContext.acquireContext().getApplicationAttribute(parameter);
-					if(value != null) {
-						logger.trace("value for parameter '{}' found in APPLICATION attributes: '{}'", parameter, value);
-						break;
-					}
-				}				
-			} while(false);
+			}
 			
 			if(value != null) {
 				Action action = invocation.getAction();
@@ -155,7 +154,7 @@ public class Parameters extends Interceptor {
 					new Reflector(action).setFieldValue(field.getName(), new Reflector(value).getElementAtIndex(0));
 				}
 			} else {
-				logger.warn("no value found for field '{}' in scope '{}'", scope.name());
+				logger.warn("no value found for '{}' in declared scopes", parameter);
 			}			
 		}
 	}

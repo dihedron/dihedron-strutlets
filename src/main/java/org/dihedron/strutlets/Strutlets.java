@@ -30,7 +30,7 @@ public final class Strutlets {
 	/**
 	 * The library version.
 	 */
-	public final static String VERSION = "0.5.1";
+	public final static String VERSION = "0.6.0";
 
 	/** 
 	 * The output channel.
