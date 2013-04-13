@@ -48,9 +48,9 @@ public final class Resource {
 	 *   the path to the resource.
 	 * @return
 	 *   an open stream if the resource could be found; null otherwise.
-	 * @throws Exception 
+	 * @throws IOException 
 	 */
-	public static InputStream getAsStream(String path) throws Exception {
+	public static InputStream getAsStream(String path) throws IOException {
 		
 		InputStream stream = getAsStreamFromFileSystem(path);
 		if(stream == null) {

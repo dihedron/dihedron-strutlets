@@ -50,7 +50,7 @@ public class Inputs extends Interceptor {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Inputs.class);
+	private static final Logger logger = LoggerFactory.getLogger(Inputs.class);
 
 	/**
 	 * Looks for fields annotated with {@code @In} and injects them with values 
@@ -69,8 +69,7 @@ public class Inputs extends Interceptor {
 		logger.debug("injecting parameters into action");
 		try {
 			injectInputs(invocation);
-			String result = invocation.invoke();
-			return result;
+			return invocation.invoke();
 		} catch(ReflectorException e) {
 			throw new InterceptorException("error setting input fields", e);
 		}		

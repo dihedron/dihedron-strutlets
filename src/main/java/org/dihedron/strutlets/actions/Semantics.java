@@ -56,7 +56,7 @@ public enum Semantics {
 	 * @return
 	 *   the corresponding enumeration item, or null if none corresponding.
 	 */
-	public final static Semantics getFor(String value) {
+	public static final Semantics getFor(String value) {
 		if(Strings.isValid(value)) {
 			for(Semantics semantics : Semantics.values()) {
 				if(semantics.value.equalsIgnoreCase(value)) {

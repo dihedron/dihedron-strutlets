@@ -39,7 +39,7 @@ public class Dumper extends Interceptor {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Dumper.class);
+	private static final Logger logger = LoggerFactory.getLogger(Dumper.class);
 	
 	private static final int SECTION_HEADER_LENGTH = 64;
 	

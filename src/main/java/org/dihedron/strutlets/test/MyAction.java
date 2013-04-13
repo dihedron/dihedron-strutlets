@@ -24,6 +24,7 @@ import org.dihedron.strutlets.annotations.Interceptors;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Result;
 import org.dihedron.strutlets.exceptions.ActionException;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class MyAction extends Action {
 			@Result(value="whatever")
 		}
 	)	
-	public String myMethod() throws Exception {
+	public String myMethod() throws StrutletsException {
 		logger.info("action!myMethod");
 		return Action.SUCCESS;
 	}

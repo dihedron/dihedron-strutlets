@@ -33,7 +33,7 @@ public class Profiler extends Interceptor {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Profiler.class);
+	private static final Logger logger = LoggerFactory.getLogger(Profiler.class);
 
 	/**
 	 * Measures and prints out the time it takes to execute the nested interceptors 

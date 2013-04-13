@@ -49,7 +49,7 @@ public class Outputs extends Interceptor {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Outputs.class);
+	private static final Logger logger = LoggerFactory.getLogger(Outputs.class);
 
 	/**
 	 * Scans the {@code Action}'s invocable method's fields for @Out annotations,
