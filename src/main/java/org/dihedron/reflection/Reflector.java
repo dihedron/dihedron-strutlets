@@ -166,9 +166,9 @@ public class Reflector {
 			Method[] array = cursor.getDeclaredMethods();
 			for(Method method : array) {
 				if(!Modifier.isStatic(method.getModifiers())) {
-					logger.debug("checking method '{}'", method.getName());
+					logger.trace("checking method '{}'", method.getName());
 					if(acceptable.isEmpty() || acceptable.contains(method.getName())) {
-						logger.debug("adding method '{}' in class '{}' to instance methods", method.getName(), cursor.getSimpleName());
+						logger.trace("adding method '{}' in class '{}' to instance methods", method.getName(), cursor.getSimpleName());
 						methods.add(method);
 					}
 				}
@@ -318,11 +318,11 @@ public class Reflector {
 		Object result = null;
 		String name = fieldName.trim();
 		if(useGetter) {
-			logger.info("accessing value using getter");
+			logger.trace("accessing value using getter");
 			String methodName = "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1);			
 			result = invoke(methodName);
 		} else {
-			logger.info("accessing value through exposePrivateFields field reading");
+			logger.trace("accessing value through exposePrivateFields field reading");
 			Field field = null;			
 			boolean needReprotect = false;
 			try {
@@ -358,11 +358,11 @@ public class Reflector {
 
 		String name = fieldName.trim();
 		if(useGetter) {
-			logger.info("accessing value using setter");
+			logger.trace("accessing value using setter");
 			String methodName = "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
 			invoke(methodName);
 		} else {
-			logger.info("accessing value through exposePrivateFields field reading");
+			logger.trace("accessing value through exposePrivateFields field reading");
 			Field field = null;
 			boolean needReprotect = false;
 			try {

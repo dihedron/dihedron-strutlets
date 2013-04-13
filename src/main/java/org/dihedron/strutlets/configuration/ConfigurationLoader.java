@@ -175,7 +175,7 @@ public class ConfigurationLoader {
 
 			xsd = getClass().getClassLoader().getResourceAsStream(ACTIONS_CONFIG_XSD);
 			if(xsd == null) {
-				logger.warn("error loading XSD for actions configuration");
+				logger.warn("XSD for actions configuration not found");
 			} else {
 				logger.debug("XSD for actions configuration loaded");
 				SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");

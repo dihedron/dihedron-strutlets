@@ -445,7 +445,7 @@ public class ActionController extends GenericPortlet {
     	// or a plain JSP page URL; if it's a target, execute it and then
     	// proceed to rendering
     	String target = getTarget(request);
-    	logger.info("target is '{}'", target);
+    	logger.debug("target is '{}'", target);
     	
     	if(Target.isValidTarget(target)) { // (*)
 	    	// this is a valid target specification, dispatch to the appropriate 
