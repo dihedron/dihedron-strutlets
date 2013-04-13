@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.portlet.Event;
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-public class ActionContext {
+public final class ActionContext {
 	
 	/**
 	 * The logger.
@@ -124,26 +123,10 @@ public class ActionContext {
 	 * @return
 	 *   the per-thread instance.
 	 */
-	public static ActionContext acquireContext() {
-		logger.trace("retrieving action context for thread {}", Thread.currentThread().getId());
+	static private ActionContext getContext() {
 		return context.get();
 	} 
-	
-	/**
-	 * Cleans up the internal status of the <code>ActionContext</code> in order to
-	 * avoid memory leaks due to persisting portal objects stored in the per-thread
-	 * local storage; afterwards it removes the thread local entry altogether, so
-	 * the application server does not complain about left-over data in TLS when
-	 * re-deploying the portlet.
-	 */	
-	public static void removeContext() {
-		logger.debug("removing action context for thread {}", Thread.currentThread().getId());
-		context.get().invocation = null;
-		context.get().request = null;
-		context.get().response = null;
-		context.remove();
-	}
-			
+				
 	/**
 	 * Initialise the attributes map used to emulate the per-request attributes;
 	 * this map will simulate action-scoped request parameters, and will be populated 
@@ -159,18 +142,18 @@ public class ActionContext {
 	 * @param invocation
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
-	 * @return
-	 *   the object itself, for method chaining.
 	 */
-	public ActionContext initialise(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
+	static void bindContext(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
+		
+		ActionContext context = getContext();
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
-		this.request = request;
-		this.response = response;
+		context.request = request;
+		context.response = response;
 		
 		if(invocation != null && invocation.length > 0) {
-			this.invocation = invocation[0];
+			context.invocation = invocation[0];
 		}
 		
 		PortletSession session = request.getPortletSession();
@@ -187,8 +170,23 @@ public class ActionContext {
 					new HashMap<String, Object>(), 
 					PortletSession.PORTLET_SCOPE);
 		}
-		return this;
 	}
+	
+	/**
+	 * Cleans up the internal status of the <code>ActionContext</code> in order to
+	 * avoid memory leaks due to persisting portal objects stored in the per-thread
+	 * local storage; afterwards it removes the thread local entry altogether, so
+	 * the application server does not complain about left-over data in TLS when
+	 * re-deploying the portlet.
+	 */	
+	static void unbindContext() {
+		logger.debug("removing action context for thread {}", Thread.currentThread().getId());
+		context.get().invocation = null;
+		context.get().request = null;
+		context.get().response = null;
+		context.remove();
+	}
+	
 	
 	/**
 	 * Retrieves the <code>ActionInvocation</code> object.
@@ -196,8 +194,8 @@ public class ActionContext {
 	 * @return
 	 *   the <code>ActionInvocation</code> object.
 	 */
-	public ActionInvocation getActionInvocation() {
-		return invocation;
+	public static ActionInvocation getActionInvocation() {
+		return getContext().invocation;
 	}
 	
 	/**
@@ -206,7 +204,7 @@ public class ActionContext {
 	 * @return
 	 *   the name of the event.
 	 */
-	public String getEventName() {
+	public static String getEventName() {
 		Event event = getEvent();
 		if(event != null) {
 			return event.getName();
@@ -221,7 +219,7 @@ public class ActionContext {
 	 * @return
 	 *   the <code>QName</code> of the event.
 	 */
-	public QName getEventQName() {
+	public static QName getEventQName() {
 		Event event = getEvent();
 		if(event != null) {
 			return event.getQName();
@@ -236,7 +234,7 @@ public class ActionContext {
 	 * @return
 	 *   the serializable payload of the event.
 	 */
-	public Serializable getEventPayload() {
+	public static Serializable getEventPayload() {
 		Event event = getEvent();
 		if(event != null) {
 			return event.getValue();
@@ -252,9 +250,9 @@ public class ActionContext {
 	 * @param payload
 	 *   the event payload, as a serialisable object.
 	 */
-	public void fireEvent(String name, Serializable payload) {
-		if(response instanceof StateAwareResponse) {
-			((StateAwareResponse)response).setEvent(name, payload);
+	public static void fireEvent(String name, Serializable payload) {
+		if(getContext().response instanceof StateAwareResponse) {
+			((StateAwareResponse)getContext().response).setEvent(name, payload);
 		}
 	}
 	
@@ -268,9 +266,9 @@ public class ActionContext {
 	 * @param payload
 	 *   the event payload, as a serialisable object.
 	 */
-	public void fireEvent(String name, String namespace, Serializable payload) {
+	public static void fireEvent(String name, String namespace, Serializable payload) {
 		QName qname = new QName(namespace, name);
-		this.fireEvent(qname,  payload);
+		fireEvent(qname,  payload);
 	}
 	
 	/**
@@ -281,9 +279,9 @@ public class ActionContext {
 	 * @param payload
 	 *   the event payload, as a serialisable object.
 	 */
-	public void fireEvent(QName qname, Serializable payload) {
-		if(response instanceof StateAwareResponse) {
-			((StateAwareResponse)response).setEvent(qname, payload);
+	public static void fireEvent(QName qname, Serializable payload) {
+		if(getContext().response instanceof StateAwareResponse) {
+			((StateAwareResponse)getContext().response).setEvent(qname, payload);
 		}
 	}
 	
@@ -293,8 +291,8 @@ public class ActionContext {
 	 * @return
 	 *   a string representing the authentication type.
 	 */
-	public String getAuthType() {
-		return request.getAuthType();
+	public static String getAuthType() {
+		return getContext().request.getAuthType();
 	}
 	
 	/**
@@ -303,8 +301,8 @@ public class ActionContext {
 	 * @return
 	 *   whether the client request came through a secured connection.
 	 */
-	public boolean isSecure() {
-		return request.isSecure();
+	public static boolean isSecure() {
+		return getContext().request.isSecure();
 	}
 	
 	/**
@@ -313,8 +311,8 @@ public class ActionContext {
 	 * @return
 	 *   the name of the remote authenticated user.
 	 */
-	public String getRemoteUser() {
-		return request.getRemoteUser();
+	public static String getRemoteUser() {
+		return getContext().request.getRemoteUser();
 	}
 
 	/**
@@ -323,8 +321,8 @@ public class ActionContext {
 	 * @return
 	 *   the user principal.
 	 */
-	public Principal getUserPrincipal() {
-		return request.getUserPrincipal();
+	public static Principal getUserPrincipal() {
+		return getContext().request.getUserPrincipal();
 	}
 
 	/**
@@ -335,8 +333,8 @@ public class ActionContext {
 	 * @return
 	 *   whether the user has the given role.
 	 */
-	public boolean isUserInRole(String role) {
-		return request.isUserInRole(role);
+	public static boolean isUserInRole(String role) {
+		return getContext().request.isUserInRole(role);
 	}
 	
 	/**
@@ -345,8 +343,8 @@ public class ActionContext {
 	 * @return
 	 *   the request locale.
 	 */
-	public Locale getLocale() {
-		return request.getLocale();
+	public static Locale getLocale() {
+		return getContext().request.getLocale();
 	}
 	
 	/**
@@ -358,8 +356,8 @@ public class ActionContext {
 	 *   an Enumeration of Locales, in decreasing order, in which the portal will 
 	 *   accept content for this request
 	 */	
-	public Enumeration<Locale> getLocales(){
-		return request.getLocales();
+	public static Enumeration<Locale> getLocales(){
+		return getContext().request.getLocales();
 	}
 	
 	/**
@@ -369,10 +367,10 @@ public class ActionContext {
 	 * the portlet-scope session attributes.
 	 * 
 	 * @return
-	 *  	the portlet window ID.
+	 *   the portlet window ID.
 	 */
-	public String getPortletWindowId() {
-		return request.getWindowID();
+	public static String getPortletWindowId() {
+		return getContext().request.getWindowID();
 	}
 	
 	/**
@@ -386,8 +384,8 @@ public class ActionContext {
 	 *   specify a session ID.
 	 * @see isRequestedSessionIdValid()
 	 */
-	public String getRequestedSessionId() {
-		return request.getRequestedSessionId();
+	public static String getRequestedSessionId() {
+		return getContext().request.getRequestedSessionId();
 	}
 	
 
@@ -400,8 +398,8 @@ public class ActionContext {
      * @see getRequestedSessionId()
      * @see getPortletSession()
      */
-	public boolean isRequestedSessionIdValid() {
-		return request.isRequestedSessionIdValid(); 
+	public static boolean isRequestedSessionIdValid() {
+		return getContext().request.isRequestedSessionIdValid(); 
 	}
 	
 	/**
@@ -410,8 +408,8 @@ public class ActionContext {
 	 * @return
 	 *   whether the <code>PortletSession</code> is still valid.
 	 */
-	public boolean isSessionValid() {
-		PortletSession session = request.getPortletSession();
+	public static boolean isSessionValid() {
+		PortletSession session = getContext().request.getPortletSession();
 		long elapsed = System.currentTimeMillis() - session.getLastAccessedTime();
 		return (elapsed < session.getMaxInactiveInterval() * 1000);
 	}
@@ -424,22 +422,41 @@ public class ActionContext {
 	 *   the number of seconds left before the session gets invalidated by the 
 	 *   container.
 	 */
-	public long getSecondsToSessionInvalid() {
-		PortletSession session = request.getPortletSession();
+	public static long getSecondsToSessionInvalid() {
+		PortletSession session = getContext().request.getPortletSession();
 		long elapsed = System.currentTimeMillis() - session.getLastAccessedTime();
 		return (long)((elapsed - session.getMaxInactiveInterval() * 1000) / 1000);		
 	}
 	
-	public long getTimeOfLastAccessToSession() {
-		return request.getPortletSession().getLastAccessedTime();
+	/**
+	 * Returns the number of seconds since the last access to the session object.
+	 * 
+	 * @return
+	 *   the number of seconds since the last access to the session object.
+	 */
+	public static long getTimeOfLastAccessToSession() {
+		return getContext().request.getPortletSession().getLastAccessedTime();
 	}
 	
-	public int getMaxInactiveSessionInterval() {
-		return request.getPortletSession().getMaxInactiveInterval();
+	/**
+	 * Returns the maximum amount of inactivity seconds before the session is 
+	 * considered stale.
+	 * 
+	 * @return
+	 *   the maximum number of seconds before the session is considered stale.
+	 */
+	public static int getMaxInactiveSessionInterval() {
+		return getContext().request.getPortletSession().getMaxInactiveInterval();
 	}
 	
-	public void setMaxInactiveSessionInterval(int time) {
-		request.getPortletSession().setMaxInactiveInterval(time);
+	/**
+	 * Sets the session timeout duration in seconds.
+	 * 
+	 * @param time
+	 *   the session timeout duration, in seconds.
+	 */
+	public static void setMaxInactiveSessionInterval(int time) {
+		getContext().request.getPortletSession().setMaxInactiveInterval(time);
 	}
 	
 	/**
@@ -450,7 +467,7 @@ public class ActionContext {
 	 * @return
 	 *   the attribute value.
 	 */	
-	public Object getApplicationAttribute(String key) {
+	public static Object getApplicationAttribute(String key) {
 		return getAttribute(key, Scope.APPLICATION);
 	}
 	
@@ -464,7 +481,7 @@ public class ActionContext {
 	 * @param value
 	 *   the attribute value.
 	 */
-	public void setApplicationAttribute(String key, Object value) {
+	public static void setApplicationAttribute(String key, Object value) {
 		setAttribute(key, value, Scope.APPLICATION);
 	}
 	
@@ -476,7 +493,7 @@ public class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not set.
 	 */	
-	public Object removeApplicationAttribute(String key) {
+	public static Object removeApplicationAttribute(String key) {
 		return removeAttribute(key, Scope.APPLICATION);
 	}
 
@@ -488,7 +505,7 @@ public class ActionContext {
 	 * @return
 	 *   the attribute value.
 	 */	
-	public Object getSessionAttribute(String key) {
+	public static Object getSessionAttribute(String key) {
 		return getAttribute(key, Scope.SESSION);
 	}
 	
@@ -503,7 +520,7 @@ public class ActionContext {
 	 * @param value
 	 *   the attribute value.
 	 */
-	public void setSessionAttribute(String key, Object value) {
+	public static void setSessionAttribute(String key, Object value) {
 		setAttribute(key, value, Scope.SESSION);
 	}	
 	
@@ -515,7 +532,7 @@ public class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not set.
 	 */	
-	public Object removeSessionAttribute(String key) {
+	public static Object removeSessionAttribute(String key) {
 		return removeAttribute(key, Scope.SESSION);
 	}	
 	
@@ -524,7 +541,7 @@ public class ActionContext {
 	 * @param key
 	 * @return
 	 */
-	public Object getRequestAttribute(String key) {
+	public static Object getRequestAttribute(String key) {
 		return getAttribute(key, Scope.REQUEST);
 	}
 
@@ -538,7 +555,7 @@ public class ActionContext {
 	 * @param value
 	 *   the attribute value.
 	 */
-	public void setRequestAttribute(String key, Object value) {
+	public static void setRequestAttribute(String key, Object value) {
 		setAttribute(key, value, Scope.REQUEST);
 	}
 	
@@ -550,7 +567,7 @@ public class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not set.
 	 */	
-	public Object removeRequestAttribute(String key) {
+	public static Object removeRequestAttribute(String key) {
 		return removeAttribute(key, Scope.REQUEST);
 	}		
 
@@ -565,7 +582,7 @@ public class ActionContext {
 	 * @return
 	 *   the requested attribute value, or null if not found.
 	 */
-	public Object getAttribute(String key, Scope scope) {
+	public static Object getAttribute(String key, Scope scope) {
 		return getAttributes(scope).get(key);
 	}
 		
@@ -579,10 +596,10 @@ public class ActionContext {
 	 *   the map of attributes at the requested scope scope.
 	 */
 	@SuppressWarnings("unchecked")
-	public Map<String, Object> getAttributes(Scope scope) {
+	public static Map<String, Object> getAttributes(Scope scope) {
 		Map<String, Object> map = null;
-		if(request != null) {
-			PortletSession session = request.getPortletSession();
+		if(getContext().request != null) {
+			PortletSession session = getContext().request.getPortletSession();
 			session.isNew(); // TODO: check on this
 			switch(scope) {
 			case APPLICATION:
@@ -608,7 +625,7 @@ public class ActionContext {
 	 * @param scope
 	 *   the requested scope.
 	 */
-	public void setAttribute(String key, Object value, Scope scope) {
+	public static void setAttribute(String key, Object value, Scope scope) {
 		getAttributes(scope).put(key,  value);
 	}
 	  
@@ -648,8 +665,8 @@ public class ActionContext {
 	 * @param scope
 	 *   the scope at which the attributes should be set.
 	 */
-	public void setAttributes(Map<String, Object> attributes, Scope scope) {
-		PortletSession session = request.getPortletSession();
+	public static void setAttributes(Map<String, Object> attributes, Scope scope) {
+		PortletSession session = getContext().request.getPortletSession();
 		Map<String, Object> map;
 		switch(scope) {
 		case APPLICATION:
@@ -680,7 +697,7 @@ public class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not found.
 	 */
-	public Object removeAttribute(String key, Scope scope) {
+	public static Object removeAttribute(String key, Scope scope) {
 		return getAttributes(scope).remove(key);		
 	}
 	
@@ -690,7 +707,7 @@ public class ActionContext {
 	 * @param scope
 	 *   the requested scope.
 	 */
-	public void clearAttributes(Scope scope) {
+	public static void clearAttributes(Scope scope) {
 		getAttributes(scope).clear();
 	}
 	
@@ -700,9 +717,9 @@ public class ActionContext {
 	 * @return
 	 *   the map of input parameters.
 	 */
-	public Map<String, String[]> getParameters() {
-		if(request != null) {
-			return request.getParameterMap();
+	public static Map<String, String[]> getParameters() {
+		if(getContext().request != null) {
+			return getContext().request.getParameterMap();
 		}
 		return null;
 	}
@@ -713,9 +730,9 @@ public class ActionContext {
 	 * @return
 	 *   the names of all request parameters.
 	 */
-	public Set<String> getParameterNames() {
+	public static Set<String> getParameterNames() {
 		Set<String> set = new HashSet<String>();
-		Enumeration<String> e = request.getParameterNames();
+		Enumeration<String> e = getContext().request.getParameterNames();
 		while(e.hasMoreElements()) {
 			set.add(e.nextElement());
 		}
@@ -730,9 +747,9 @@ public class ActionContext {
 	 * @return
 	 *   the array of parameter values.
 	 */
-	public String[] getParameterValues(String key) {
-		if(request != null) {
-			return request.getParameterValues(key);
+	public static String[] getParameterValues(String key) {
+		if(getContext().request != null) {
+			return getContext().request.getParameterValues(key);
 		}
 		return null;
 	}
@@ -746,9 +763,9 @@ public class ActionContext {
 	 * @return
 	 *   the first value of the array, or null if not found.
 	 */
-	public String getFirstParameterValue(String key) {
-		if(request != null) {
-			return request.getParameter(key);
+	public static String getFirstParameterValue(String key) {
+		if(getContext().request != null) {
+			return getContext().request.getParameter(key);
 		}
 		return null;
 	}
@@ -759,9 +776,9 @@ public class ActionContext {
 	 * @return
 	 *   the map of input public parameters.
 	 */
-	public Map<String, String[]> getPublicParameters() {
-		if(request != null) {
-			return request.getPublicParameterMap();
+	public static Map<String, String[]> getPublicParameters() {
+		if(getContext().request != null) {
+			return getContext().request.getPublicParameterMap();
 		}
 		return null;
 	}
@@ -772,9 +789,9 @@ public class ActionContext {
 	 * @return
 	 *   the names of all request public parameters.
 	 */
-	public Set<String> getPublicParameterNames() {
-		if(request != null) {
-			return request.getPublicParameterMap().keySet();
+	public static Set<String> getPublicParameterNames() {
+		if(getContext().request != null) {
+			return getContext().request.getPublicParameterMap().keySet();
 		}
 		return null;
 	}
@@ -787,9 +804,9 @@ public class ActionContext {
 	 * @return
 	 *   the array of parameter values.
 	 */
-	public String[] getPublicParameterValues(String key) {
-		if(request != null) {
-			return request.getPublicParameterMap().get(key);
+	public static String[] getPublicParameterValues(String key) {
+		if(getContext().request != null) {
+			return getContext().request.getPublicParameterMap().get(key);
 		}
 		return null;
 	}
@@ -803,9 +820,9 @@ public class ActionContext {
 	 * @return
 	 *   the first value of the array, or null if not found.
 	 */
-	public String getFirstPublicParameterValue(String key) {
-		if(request != null) {
-			String [] values = request.getPublicParameterMap().get(key);
+	public static String getFirstPublicParameterValue(String key) {
+		if(getContext().request != null) {
+			String [] values = getContext().request.getPublicParameterMap().get(key);
 			if(values != null && values.length > 0) {
 				return values[0];
 			}
@@ -819,9 +836,9 @@ public class ActionContext {
 	 * @return
 	 *   the map of input private parameters.
 	 */
-	public Map<String, String[]> getPrivateParameters() {
-		if(request != null) {
-			return request.getPrivateParameterMap();
+	public static Map<String, String[]> getPrivateParameters() {
+		if(getContext().request != null) {
+			return getContext().request.getPrivateParameterMap();
 		}
 		return null;
 	}
@@ -832,9 +849,9 @@ public class ActionContext {
 	 * @return
 	 *   the names of all request private parameters.
 	 */
-	public Set<String> getPrivateParameterNames() {
-		if(request != null) {
-			return request.getPrivateParameterMap().keySet();
+	public static Set<String> getPrivateParameterNames() {
+		if(getContext().request != null) {
+			return getContext().request.getPrivateParameterMap().keySet();
 		}
 		return null;
 	}
@@ -847,9 +864,9 @@ public class ActionContext {
 	 * @return
 	 *   the array of parameter values.
 	 */
-	public String[] getPrivateParameterValues(String key) {
-		if(request != null) {
-			return request.getPrivateParameterMap().get(key);
+	public static String[] getPrivateParameterValues(String key) {
+		if(getContext().request != null) {
+			return getContext().request.getPrivateParameterMap().get(key);
 		}
 		return null;
 	}
@@ -863,12 +880,26 @@ public class ActionContext {
 	 * @return
 	 *   the first value of the array, or null if not found.
 	 */
-	public String getFirstPrivateParameterValue(String key) {
-		if(request != null) {
-			String [] values = request.getPrivateParameterMap().get(key);
+	public static String getFirstPrivateParameterValue(String key) {
+		if(getContext().request != null) {
+			String [] values = getContext().request.getPrivateParameterMap().get(key);
 			if(values != null && values.length > 0) {
 				return values[0];
 			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the map of currently set render parameters.
+	 * 
+	 * @return
+	 *   a map of render parameters names an values, or null if unsupported by 
+	 *   the current type of request/response.
+	 */
+	public static Map<String, String[]> getRenderParameterMap() {
+		if(getContext().response instanceof StateAwareResponse) {
+			return ((StateAwareResponse)getContext().response).getRenderParameterMap();
 		}
 		return null;
 	}
@@ -881,30 +912,15 @@ public class ActionContext {
 	 * @param values
 	 *   the parameter value(s).
 	 */
-	public void setRenderParameter(String key, String... values) {
-		if(Strings.isValid(key) && values != null && response instanceof StateAwareResponse) {
+	public static void setRenderParameter(String key, String... values) {
+		if(Strings.isValid(key) && values != null && getContext().response instanceof StateAwareResponse) {
 			if(values.length == 1) {
-				((StateAwareResponse)response).setRenderParameter(key, values[0]);
+				((StateAwareResponse)getContext().response).setRenderParameter(key, values[0]);
 			} else {
-				((StateAwareResponse)response).setRenderParameter(key, values);
+				((StateAwareResponse)getContext().response).setRenderParameter(key, values);
 			}
 		}
 	}
-
-	/**
-	 * Sets a render parameter. The parameter must be a string.
-	 * 
-	 * @param key
-	 *   the name of the parameter.
-	 * @param value
-	 *   the parameter value.
-	 *
-	public void setRenderParameter(String key, String[] value) {
-		if(Strings.isValid(key)) {
-			response.setRenderParameter(key, value);
-		}
-	}
-	*/
 	
 	/**
 	 * Returns an array containing all of the Cookie properties. This method 
@@ -913,9 +929,9 @@ public class ActionContext {
 	 * @return
 	 *   the array of cookie properties, or null if no cookies exist.
 	 */
-	public Cookie[] getCookies() {
-		if(request != null) {
-			return request.getCookies();
+	public static Cookie[] getCookies() {
+		if(getContext().request != null) {
+			return getContext().request.getCookies();
 		}
 		return null;
 	}
@@ -926,9 +942,9 @@ public class ActionContext {
 	 * @param cookie
 	 *   the cookie to be added to the client.
 	 */
-	public void setCookie(Cookie cookie) {
-		if(response != null) {
-			response.addProperty(cookie);
+	public static void setCookie(Cookie cookie) {
+		if(getContext().response != null) {
+			getContext().response.addProperty(cookie);
 		}
 	}
 	
@@ -939,8 +955,8 @@ public class ActionContext {
 	 *   the underlying portlet request object.
 	 */
 	@Deprecated
-	public PortletRequest getPortletRequest() {
-		return request;
+	public static PortletRequest getPortletRequest() {
+		return getContext().request;
 	}
 	
 	/**
@@ -950,8 +966,8 @@ public class ActionContext {
 	 *   the underlying portlet response object.
 	 */
 	@Deprecated
-	public PortletResponse getPortletResponse() {
-		return response;
+	public static PortletResponse getPortletResponse() {
+		return getContext().response;
 	}
 		
 	/**
@@ -961,98 +977,110 @@ public class ActionContext {
 	 *   the underlying portlet session object.
 	 */
 	@Deprecated
-	public PortletSession getPortletSession() {
-		return request.getPortletSession();
+	public static PortletSession getPortletSession() {
+		return getContext().request.getPortletSession();
 	}
 	
+	/**
+	 * Returns the event, if this invocation was doe to an inter-portlet communication
+	 * even being fired.
+	 *  
+	 * @return
+	 *   the event object.
+	 */
 	@Deprecated
-	public Event getEvent() {
-		if(request != null && request instanceof EventRequest) {
-			return ((EventRequest)request).getEvent();
+	public static Event getEvent() {
+		if(getContext().request != null && getContext().request instanceof EventRequest) {
+			return ((EventRequest)getContext().request).getEvent();
 		}
 		return null;
 	}
 	
-
 	/**
-	 * Provides a pretty printed representation of the <code>ActionContext</code>,
-	 * with all attributes, properties and parameters.
-	 * 
-	 * @return 
-	 *   a pretty printed representation of the <code>ActionContext</code>
-	 * @see 
-	 *   java.lang.Object#toString()
+	 * Private constructor, so this object cannot be instantiated by anyone else.
 	 */
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-		Map<String, Object> attributes = null;
-		buffer.append("--------- APPLICATION ---------\n");
-		attributes = getAttributes(Scope.APPLICATION);
-		if(attributes != null) {
-			for(Entry<String, Object> entry : attributes.entrySet()) {
-				buffer.append("attribute\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
-			}
-		}
-		buffer.append("----------- SESSION -----------\n");
-		attributes = getAttributes(Scope.SESSION);
-		if(attributes != null) {
-			for(Entry<String, Object> entry : attributes.entrySet()) {
-				buffer.append("attribute\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
-			}
-		}
-		buffer.append("----------- REQUEST -----------\n");
-		attributes = getAttributes(Scope.REQUEST);
-		if(attributes != null) {
-			for(Entry<String, Object> entry : attributes.entrySet()) {
-				buffer.append("attribute\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
-			}
-		}
-		buffer.append("---------- PARAMETERS ---------\n");
-		Map<String, String[]> parameters = getParameters();
-		if(parameters != null) {
-			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				buffer.append("parameter\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(" + values : ");
-				for(String value : entry.getValue()) {
-					buffer.append("'").append(value).append("', ");
-				}
-				buffer.append("\n");
-			}
-		}
-		buffer.append("----------- PUBLIC ------------\n");
-		parameters = getPublicParameters();
-		if(parameters != null) {
-			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				buffer.append("parameter\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(" + values : ");
-				for(String value : entry.getValue()) {
-					buffer.append("'").append(value).append("', ");
-				}
-				buffer.append("\n");
-			}
-		}
-		buffer.append("----------- PRIVATE -----------\n");
-		parameters = getPublicParameters();
-		if(parameters!= null) {
-			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				buffer.append("parameter\n");
-				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
-				buffer.append(" + values : ");
-				for(String value : entry.getValue()) {
-					buffer.append("'").append(value).append("', ");
-				}
-				buffer.append("\n");
-			}
-		}
-		buffer.append("-------------------------------\n");
-		return buffer.toString();
+	private ActionContext() {		
 	}
+
+//	/**
+//	 * Provides a pretty printed representation of the <code>ActionContext</code>,
+//	 * with all attributes, properties and parameters.
+//	 * 
+//	 * @return 
+//	 *   a pretty printed representation of the <code>ActionContext</code>
+//	 * @see 
+//	 *   java.lang.Object#toString()
+//	 */
+//	public String toString() {
+//		StringBuilder buffer = new StringBuilder();
+//		Map<String, Object> attributes = null;
+//		buffer.append("--------- APPLICATION ---------\n");
+//		attributes = getAttributes(Scope.APPLICATION);
+//		if(attributes != null) {
+//			for(Entry<String, Object> entry : attributes.entrySet()) {
+//				buffer.append("attribute\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
+//			}
+//		}
+//		buffer.append("----------- SESSION -----------\n");
+//		attributes = getAttributes(Scope.SESSION);
+//		if(attributes != null) {
+//			for(Entry<String, Object> entry : attributes.entrySet()) {
+//				buffer.append("attribute\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
+//			}
+//		}
+//		buffer.append("----------- REQUEST -----------\n");
+//		attributes = getAttributes(Scope.REQUEST);
+//		if(attributes != null) {
+//			for(Entry<String, Object> entry : attributes.entrySet()) {
+//				buffer.append("attribute\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(String.format(" + value  : '%1$s'\n", entry.getValue()));
+//			}
+//		}
+//		buffer.append("---------- PARAMETERS ---------\n");
+//		Map<String, String[]> parameters = getParameters();
+//		if(parameters != null) {
+//			for(Entry<String, String[]> entry : parameters.entrySet()) {
+//				buffer.append("parameter\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(" + values : ");
+//				for(String value : entry.getValue()) {
+//					buffer.append("'").append(value).append("', ");
+//				}
+//				buffer.append("\n");
+//			}
+//		}
+//		buffer.append("----------- PUBLIC ------------\n");
+//		parameters = getPublicParameters();
+//		if(parameters != null) {
+//			for(Entry<String, String[]> entry : parameters.entrySet()) {
+//				buffer.append("parameter\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(" + values : ");
+//				for(String value : entry.getValue()) {
+//					buffer.append("'").append(value).append("', ");
+//				}
+//				buffer.append("\n");
+//			}
+//		}
+//		buffer.append("----------- PRIVATE -----------\n");
+//		parameters = getPublicParameters();
+//		if(parameters!= null) {
+//			for(Entry<String, String[]> entry : parameters.entrySet()) {
+//				buffer.append("parameter\n");
+//				buffer.append(String.format(" + key    : '%1$s'\n", entry.getKey()));
+//				buffer.append(" + values : ");
+//				for(String value : entry.getValue()) {
+//					buffer.append("'").append(value).append("', ");
+//				}
+//				buffer.append("\n");
+//			}
+//		}
+//		buffer.append("-------------------------------\n");
+//		return buffer.toString();
+//	}
 }

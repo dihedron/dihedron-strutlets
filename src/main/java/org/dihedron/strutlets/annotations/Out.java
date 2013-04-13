@@ -37,7 +37,8 @@ public @interface Out {
 	
 	/**
 	 * The name of the output parameter which will receive the annotated field's
-	 * value.
+	 * value; if not specified, a parameter with the same name as the fields will
+	 * be set.
 	 * 
 	 * @return
 	 *   the name of the output parameter.
@@ -45,11 +46,11 @@ public @interface Out {
 	String value() default "";
 	
 	/**
-	 * The scope in which the parameter should be looked up; by default, it is
-	 * looked up in all available scopes.
+	 * The scope into which the parameter should be stored; by default, it is
+	 * stored among the render parameters.
 	 * 
 	 * @return
-	 *   the scope of the parameter.
+	 *   the scope into which to set the parameter.
 	 */
 	Scope scope() default Scope.RENDER;	
 }

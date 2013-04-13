@@ -527,7 +527,7 @@ public class ActionController extends GenericPortlet {
     		}
     	} catch(Exception e) {
 			logger.error("error servicing action request");
-			throw new PortletException("error servicing action request", e);
+			throw new PortletException("Error servicing action request", e);
 		}
     }
     
@@ -553,12 +553,12 @@ public class ActionController extends GenericPortlet {
     		throw e;
     	} catch(Exception e) {
 			logger.error("error servicing action request");
-			throw new PortletException("error servicing action request", e);
+			throw new StrutletsException("Error servicing action request", e);
 		}
     }    
     
     
-    protected String invokeTarget(String target, PortletRequest request, PortletResponse response) throws Exception {
+    protected String invokeTarget(String target, PortletRequest request, PortletResponse response) throws StrutletsException {
     	Action action = null;
     	String result = null;
     	try {
@@ -574,7 +574,7 @@ public class ActionController extends GenericPortlet {
 				logger.info("action '{}' ready", info.getClassName());
 			} else {    			 	
 				logger.error("no action found for target '{}'", target);
-				throw new PortletException("no action could be found for target '" + target + "'");
+				throw new StrutletsException("no action could be found for target '" + target + "'");
 			}
 			
 			// get the stack for the given action
@@ -585,10 +585,17 @@ public class ActionController extends GenericPortlet {
 
 	    	ActionInvocation invocation = new ActionInvocation(action, method, stack, request, response);
 	    	
-	    	ActionContext.acquireContext().initialise(request, response, invocation);
+	    	// bind the per-thread invocation context to the current request,
+	    	// response and invocation objects
+	    	ActionContext.bindContext(request, response, invocation);
+	    	
+	    	// fire the action stack invocation
 	    	result = invocation.invoke();
+	    	
     	} finally {
-    		ActionContext.removeContext();
+    		// unbind the invocation context from the thread-loca storage to
+    		// prevent memory leanks and complaints by the app-server
+    		ActionContext.unbindContext();
     	}
     	return result;
     }

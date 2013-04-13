@@ -51,7 +51,6 @@ public class Profiler extends Interceptor {
 		long start = System.currentTimeMillis();
 		String result = invocation.invoke();
 		logger.debug("action execution took {} ms", System.currentTimeMillis() - start);
-		return result;
-		
+		return result;		
 	}
 }

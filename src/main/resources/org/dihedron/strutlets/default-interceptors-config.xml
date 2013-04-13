@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:///d:/dati/IBM/lrenv/liferay/projects/corso/workspace/plugins/portlets/actions-framework-portlet/docroot/WEB-INF/src/interceptors-config.xsd">
 	<stack id="default">
-		<interceptor id="timer" class="org.dihedron.strutlets.interceptors.impl.Profiler"/>
-		<interceptor id="timer" class="org.dihedron.strutlets.interceptors.impl.Parameters"/>
+		<interceptor id="profiler" class="org.dihedron.strutlets.interceptors.impl.Profiler"/>
+		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper"/>
+		<interceptor id="inputs" class="org.dihedron.strutlets.interceptors.impl.Inputs"/>
+		<interceptor id="outputs" class="org.dihedron.strutlets.interceptors.impl.Outputs"/>
 		<interceptor id="interceptor_02" class="org.dihedron.strutlets.test.MyInterceptor">
 			<parameter>
 				<key>id</key>

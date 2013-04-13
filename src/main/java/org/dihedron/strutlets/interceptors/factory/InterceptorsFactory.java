@@ -68,22 +68,22 @@ public class InterceptorsFactory {
 	/**
 	 * The logger.
 	 */
-	private static Logger logger = LoggerFactory.getLogger(InterceptorsFactory.class);
+	private static final Logger logger = LoggerFactory.getLogger(InterceptorsFactory.class);
 	
 	/**
 	 * Whether the input XML file should be validated.
 	 */
-	private final static boolean VALIDATE_XML = false;
+	private static final boolean VALIDATE_XML = false;
 	
 	/**
 	 * The name of the interceptors configuration schema file.
 	 */
-	private final static String INTERCEPTORS_CONFIG_XSD = "org/dihedron/strutslet/interceptors/interceptors-config.xsd";
+	private static final String INTERCEPTORS_CONFIG_XSD = "org/dihedron/strutlets/interceptors/interceptors-config.xsd";
 
 	/**
 	 * The name of the default interceptor stack ("default").
 	 */
-	private final static String DEFAULT_INTERCEPTOR_STACK = "default";
+	private static final String DEFAULT_INTERCEPTOR_STACK = "default";
 	
 	/**
 	 * The map of registered interceptor stacks.

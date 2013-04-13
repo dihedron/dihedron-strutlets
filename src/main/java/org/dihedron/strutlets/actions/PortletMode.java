@@ -25,13 +25,13 @@ package org.dihedron.strutlets.actions;
  */
 public final class PortletMode extends javax.portlet.PortletMode {
 	
-	public final static PortletMode VIEW = new PortletMode("view");
+	public static final PortletMode VIEW = new PortletMode("view");
 	 
-	public final static PortletMode EDIT = new PortletMode("edit");
+	public static final PortletMode EDIT = new PortletMode("edit");
 	
-	public final static PortletMode HELP = new PortletMode("help");
+	public static final PortletMode HELP = new PortletMode("help");
 	
-	public final static PortletMode SAME = new PortletMode("same");
+	public static final PortletMode SAME = new PortletMode("same");
 
 	
 	public static PortletMode getPortletMode(String id) {

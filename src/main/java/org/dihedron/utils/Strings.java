@@ -80,6 +80,51 @@ public final class Strings {
 	}
 	
 	/**
+	 * Formats an output string by centring the given input string and padding 
+	 * it with blanks.
+	 * 
+	 * @param string
+	 *   the string to be centred.
+	 * @param size
+	 *   the final size of the output string.
+	 * @return
+	 *   a formatted string, where the input string is centred and the remaining
+	 *   space is filled with blanks. 
+	 */
+	public static String centre(String string, int size) {
+		return centre(string, size, ' ');
+	}
+    
+	/**
+	 * Formats an output string by centring the given input string and padding 
+	 * it with the given character.
+	 * 
+	 * @param string
+	 *   the string to be centred.
+	 * @param size
+	 *   the final size of the output string.
+	 * @param padding 
+	 *   the character to be used as padding.  
+	 * @return
+	 *   a formatted string, where the input string is centred and the remaining
+	 *   space is filled with blanks. 
+	 */
+	public static String centre(String string, int size, char padding) {
+		if(string == null || size <= string.length()) {
+			return string;
+		}		
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < (size - string.length()) / 2; i++) {
+			sb.append(padding);
+		}
+		sb.append(string);
+		while (sb.length() < size) {
+			sb.append(padding);
+		}
+		return sb.toString();
+    }	
+	
+	/**
 	 * Private constructor to prevent utility class instantiation. 
 	 */
 	private Strings() {

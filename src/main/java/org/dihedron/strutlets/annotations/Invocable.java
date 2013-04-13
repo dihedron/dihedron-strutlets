@@ -58,24 +58,26 @@ public @interface Invocable {
 	
 	/**
 	 * A list containing the names of the fields whose value should be automatically
-	 * injected by the {@code Parameters} interceptor. If no value is provided,
+	 * injected by the {@code Inputs} interceptor. If no value is provided,
 	 * all fields annotated with {@code @In} will be automatically injected.
 	 * 
 	 * @return
-	 *   the list of field names (<em>note: the {@code Action}'s field names, not
-	 *   the request parameter names!</em>). 
+	 *   the list of field names (<em>note: the {@code Action}'s field names, not 
+	 *   the final parameter names declared in the {@code @In} annotation's
+	 *   @{code value} fields!</em>).
 	 */
 	String[] inputs() default {};
 
 	/**
 	 * A list containing the names of the fields whose value should be automatically
-	 * extracted by the {@code Parameters} interceptor, to be set into the 
-	 * response as a render parameter. If no value is provided, all fields annotated 
-	 * with {@code @Out} will be automatically extracted.
+	 * extracted by the {@code Outputs} interceptor, to be set into the appropriate 
+	 * scope, e.g. into the response as a render parameter. If no value is provided, 
+	 * all fields annotated with {@code @Out} will be automatically extracted.
 	 * 
 	 * @return
 	 *   the list of field names (<em>note: the {@code Action}'s field names,
-	 *   not the response parameter names!</em>). 
+	 *   not the final parameter names declared in the {@code @Out} annotation's
+	 *   @{code value} fields!</em>). 
 	 */
 	String[] outputs() default {};
 	
