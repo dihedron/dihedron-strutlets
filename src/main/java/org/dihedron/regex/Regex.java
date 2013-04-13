@@ -183,16 +183,4 @@ public class Regex {
 	public int hashCode() {
 		return ("regex: " + regex).hashCode();
 	}
-
-	/*
-	public static void main(String [] args) {
-		logger = Logger.initialiseWithDefaults(Logger.Level.DEBUG, Regex.class);
-		Regex regex = new Regex("^pipp\\d*\\.pdf");
-		regex.matches("pippo1.pdf");
-		regex.matches("pipp1.pdf");
-		regex.matches("pipp1.pdff");
-		regex.matches("pippo.pdf");
-		regex.matches("pluto.pdf");
-	}
-	*/
 }

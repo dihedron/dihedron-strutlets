@@ -96,9 +96,11 @@ public class InterceptorsFactory {
 	 * 
 	 * @param filepath
 	 *   the path to the input configuration file on the file-system.
+	 * @throws IOException 
+	 * @throws StrutletsException 
 	 * @throws Exception
 	 */
-	public void loadFromFileSystem(String filepath) throws Exception {
+	public void loadFromFileSystem(String filepath) throws IOException, StrutletsException {
 		InputStream stream = Resource.getAsStreamFromFileSystem(filepath);
 		loadFromStream(stream);
 	}
@@ -110,9 +112,10 @@ public class InterceptorsFactory {
 	 * @param file
 	 *   the <code>File</code> object representing the configuration file on
 	 *   the file-system.
+	 * @throws IOException 
 	 * @throws Exception
 	 */
-	public void loadFromFileSystem(File file) throws Exception {
+	public void loadFromFileSystem(File file) throws StrutletsException, IOException {
 		InputStream stream = Resource.getAsStreamFromFileSystem(file);
 		loadFromStream(stream);
 	}
@@ -134,19 +137,20 @@ public class InterceptorsFactory {
 	 * Initialises the configuration by parsing the input configuration file,
 	 * passed in as an input stream.
 	 * 
-	 * @param stream
+	 * @param input
 	 *   the configuration file as a stream; the stream will always be closed 
 	 *   by the time the method returns. If the stream is null, the method
 	 *   exits immediately without any complaint, in order to make interceptors'
 	 *   loading optional.
 	 * @throws StrutletsException
 	 */
-	public void loadFromStream(InputStream stream) throws StrutletsException {
+	public void loadFromStream(InputStream input) throws StrutletsException {
 		
-		if(stream == null) {
+		if(input == null) {
 			logger.warn("invalid input stream");
 			return;
 		}
+		InputStream stream = input; 
 		
 		InputStream xsd = null;
 		try {

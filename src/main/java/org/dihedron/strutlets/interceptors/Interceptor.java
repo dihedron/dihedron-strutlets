@@ -38,7 +38,7 @@ public abstract class Interceptor {
 	/**
 	 * A map of configuration parameters.
 	 */
-	protected Map<String, String> parameters = new HashMap<String, String>();
+	private Map<String, String> parameters = new HashMap<String, String>();
 		
 	/**
 	 * Sets the interceptor's unique identifier.

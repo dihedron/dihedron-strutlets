@@ -159,13 +159,14 @@ public class ConfigurationLoader {
 	 *   by the time the method returns. If null, the method returns immediately.
 	 * @throws StrutletsException
 	 */
-	public void loadFromStream(Configuration repo, InputStream stream) throws StrutletsException {
+	public void loadFromStream(Configuration repo, InputStream input) throws StrutletsException {
 				
-		if(stream == null) {
+		if(input == null) {
 			logger.warn("no valid actions' configuration found, controller will rely on annotated actions");
 			return;
 		}
 		
+		InputStream stream = input;		
 		InputStream xsd = null;
 		try {
 		

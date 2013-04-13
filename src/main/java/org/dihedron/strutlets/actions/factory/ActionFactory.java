@@ -33,7 +33,7 @@ public final class ActionFactory {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(ActionFactory.class);
+	private static final Logger logger = LoggerFactory.getLogger(ActionFactory.class);
 	
 	/**
 	 * 

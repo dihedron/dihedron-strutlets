@@ -298,8 +298,8 @@ public class ActionController extends GenericPortlet {
         	configuration = new Configuration();
                       
             // try to load the actions configuration, in the following order:
-            // 1. see if there's a user-specified configuration file
-            // 2. if not, try the default actions-config-xml under the root;
+            // a. see if there's a user-specified configuration file
+            // b. if not, try the default actions-config-xml under the root
             // self-configuring actions will be configured as requests come
 			ConfigurationLoader loader = new ConfigurationLoader();
 			
@@ -351,15 +351,6 @@ public class ActionController extends GenericPortlet {
 			logger.error("error initialising controller portlet");
 			throw e;
 		}
-    }
-
-    /**
-     * Cleans up any resources.
-     * 
-     * @see javax.portlet.GenericPortlet#destroy()
-     */
-    public void destroy() {
-        super.destroy();
     }
 
     /**
@@ -470,10 +461,10 @@ public class ActionController extends GenericPortlet {
 	    		if(Strings.isValid(url)) {
 	    			logger.debug("redirecting to jspPage '{}' as requested by client", url);
 	    		} else {
-	    			// we have to resort to the default URL for the given 
-	    			// mode, the ones specified in the portlet parameters;
-	    			// at this point we are sure it's not a target (otherwise
-	    			// it would have been detected as such above, at (*)
+	    			// we have to resort to the default URL for the given mode,
+	    			// the ones specified in the portlet parameters; at this point
+	    			// we are sure it's not a target (otherwise it would have been 
+	    			// detected as such above, at (*)
 		    		PortletMode mode = request.getPortletMode();
 		    		url = getDefaultUrl(mode);
 	    		}

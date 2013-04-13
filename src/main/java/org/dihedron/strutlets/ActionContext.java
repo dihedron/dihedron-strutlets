@@ -49,7 +49,12 @@ public final class ActionContext {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(ActionContext.class);
+	private static final Logger logger = LoggerFactory.getLogger(ActionContext.class);
+	
+	/**
+	 * The number of milliseconds in a second.
+	 */
+	private static final int MILLISECONDS_PER_SEC = 1000;
 	
 	/**
 	 * The scope for the attributes.
@@ -123,7 +128,7 @@ public final class ActionContext {
 	 * @return
 	 *   the per-thread instance.
 	 */
-	static private ActionContext getContext() {
+	private static ActionContext getContext() {
 		return context.get();
 	} 
 				
@@ -145,15 +150,13 @@ public final class ActionContext {
 	 */
 	static void bindContext(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
 		
-		ActionContext context = getContext();
-		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
-		context.request = request;
-		context.response = response;
+		context.get().request = request;
+		context.get().response = response;
 		
 		if(invocation != null && invocation.length > 0) {
-			context.invocation = invocation[0];
+			context.get().invocation = invocation[0];
 		}
 		
 		PortletSession session = request.getPortletSession();
@@ -411,7 +414,7 @@ public final class ActionContext {
 	public static boolean isSessionValid() {
 		PortletSession session = getContext().request.getPortletSession();
 		long elapsed = System.currentTimeMillis() - session.getLastAccessedTime();
-		return (elapsed < session.getMaxInactiveInterval() * 1000);
+		return (elapsed < session.getMaxInactiveInterval() * MILLISECONDS_PER_SEC);
 	}
 	
 	/**
@@ -425,7 +428,7 @@ public final class ActionContext {
 	public static long getSecondsToSessionInvalid() {
 		PortletSession session = getContext().request.getPortletSession();
 		long elapsed = System.currentTimeMillis() - session.getLastAccessedTime();
-		return (long)((elapsed - session.getMaxInactiveInterval() * 1000) / 1000);		
+		return (long)((elapsed - session.getMaxInactiveInterval() * MILLISECONDS_PER_SEC) / MILLISECONDS_PER_SEC);		
 	}
 	
 	/**
@@ -600,7 +603,8 @@ public final class ActionContext {
 		Map<String, Object> map = null;
 		if(getContext().request != null) {
 			PortletSession session = getContext().request.getPortletSession();
-			session.isNew(); // TODO: check on this
+			// TODO: check on this
+			session.isNew(); 
 			switch(scope) {
 			case APPLICATION:
 				map = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);
@@ -990,7 +994,7 @@ public final class ActionContext {
 	 */
 	@Deprecated
 	public static Event getEvent() {
-		if(getContext().request != null && getContext().request instanceof EventRequest) {
+		if(getContext().request instanceof EventRequest) {
 			return ((EventRequest)getContext().request).getEvent();
 		}
 		return null;

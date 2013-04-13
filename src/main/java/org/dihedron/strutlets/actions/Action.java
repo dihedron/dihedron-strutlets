@@ -40,7 +40,7 @@ public abstract class Action {
 	/**
 	 * The logger.
 	 */
-	private final static Logger logger = LoggerFactory.getLogger(Action.class);
+	private static final Logger logger = LoggerFactory.getLogger(Action.class);
 	
 	/**
 	 * The default return code for a successful execution.
@@ -96,13 +96,14 @@ public abstract class Action {
 	 * @throws Exception
 	 */
 	public String invoke(String method) throws ActionException {
+		String meth = method;		
 		try {
-			if(method == null) {
-				method = Target.DEFAULT_METHOD_NAME;
+			if(meth == null) {
+				meth = Target.DEFAULT_METHOD_NAME;
 			}
-			logger.info("invoking method '{}'", method);
+			logger.info("invoking method '{}'", meth);
 			Reflector helper = new Reflector(this);
-			return (String)helper.invoke(method);
+			return (String)helper.invoke(meth);
 		} catch(ReflectorException e) {
 			throw new ActionException("error invoking action", e);
 		}

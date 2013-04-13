@@ -75,7 +75,7 @@ public class Target {
 	 * The regular expression used to extract action and method name from targets
 	 * and to check if a give string represents a target.
 	 */
-	private static final Regex regex = new Regex(TARGET_REGEXP);	
+	private static final Regex REGEX = new Regex(TARGET_REGEXP);	
 	
 	/**
 	 * Checks whether the given string represents a valid target specification.
@@ -87,7 +87,7 @@ public class Target {
 	 *   whether the given string complies with a target specification. 
 	 */
 	public static final boolean isValidTarget(String string) {
-		return Strings.isValid(string) && regex.matches(string);
+		return Strings.isValid(string) && REGEX.matches(string);
 	}
 	
 	/**
@@ -126,10 +126,8 @@ public class Target {
 	 */
 	public static final String getMethodName(String target) {
 		String method = null;
-		if(Strings.isValid(target)) {
-			if(target.contains(METHOD_SEPARATOR)) {
-				method = target.substring(target.indexOf(METHOD_SEPARATOR) + 1).trim();
-			}
+		if(Strings.isValid(target) && target.contains(METHOD_SEPARATOR)) {
+			method = target.substring(target.indexOf(METHOD_SEPARATOR) + 1).trim();
 		}
 		if(!Strings.isValid(method)) {
 			method = DEFAULT_METHOD_NAME;
@@ -151,15 +149,16 @@ public class Target {
 	 *   the name of the target, in the form "MyAction!myMethod".
 	 */
 	public static final String makeTargetName(String action, String method) {
+		String meth = method;
 		if(!Strings.isValid(action)) {
 			logger.error("invalid action name");
 			return null;
 		}
-		if(!Strings.isValid(method)) {
+		if(!Strings.isValid(meth)) {
 			logger.trace("using default name for method");
-			method = DEFAULT_METHOD_NAME;
+			meth = DEFAULT_METHOD_NAME;
 		}
-		String result = action.trim() + METHOD_SEPARATOR + method;
+		String result = action.trim() + METHOD_SEPARATOR + meth;
 		logger.trace("target name is '{}'", result);
 		return result;
 	}
@@ -521,8 +520,6 @@ public class Target {
 		assert(Strings.isValid(rid));
 		Result result = results.get(rid);
 		if(result == null && automagic) {			
-			//String url = Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
-			
 			// ${rootdir}/${action}/${method}/${result}.jsp
 			String url = htmlPathPattern
 							.replaceAll("\\$\\{rootdir\\}", rootHtmlDirectory)

@@ -1,4 +1,4 @@
-analyseLocally=false
+analyseLocally=true
 eclipse.preferences.version=1
 projectKey=org.dihedron.strutlets\:strutlets
 serverUrl=http\://localhost\:9000

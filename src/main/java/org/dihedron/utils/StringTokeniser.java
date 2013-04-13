@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strings;
+package org.dihedron.utils;
 
 
 import java.util.ArrayList;
@@ -36,14 +36,14 @@ public class StringTokeniser {
 	 * The default behaviour with respect to empty tokens:
 	 * by default they are reported among the output tokens.
 	 */
-	public final static boolean DEFAULT_SKIM_EMPTY = false;
+	public static final boolean DEFAULT_SKIM_EMPTY = false;
 	
 	/**
 	 * The default behaviour with respect to trimming of
 	 * leading and traling spaces in the tokens as they are
 	 * processed: by default they are removed.
 	 */
-	public final static boolean DEFAULT_TRIM_TOKENS = true;
+	public static final boolean DEFAULT_TRIM_TOKENS = true;
 	
 	/**
 	 * The delimiter used in the tokenising.
@@ -133,30 +133,31 @@ public class StringTokeniser {
 	 *   the list of tokens.
 	 */
 	public String[] tokenise(String string) {
-		if(string == null || string.length() == 0) {
+		String str = string;
+		if(str == null || str.length() == 0) {
 			return null;
 		}
 		index = 0;
 		tokens = null;
 		List<String> list = new ArrayList<String>();
 		int length = delimiter.length();
-		int idx = string.indexOf(delimiter);
+		int idx = str.indexOf(delimiter);
 		while(idx != -1) {
-			String token = string.substring(0, idx);
-			string = string.substring(idx + length);
+			String token = str.substring(0, idx);
+			str = str.substring(idx + length);
 			if(trimTokens) {
-				string = string.trim();
+				str = str.trim();
 			}			
 			if(!skimEmpty || token.length() > 0) {
 				list.add(token);
 			}			
-			idx = string.indexOf(delimiter);
+			idx = str.indexOf(delimiter);
 		}
 		
 		// handle the case where there is only one token
 		// or there is a token after the last separator
-		if(string.trim().length() > 0) {
-			list.add(string);
+		if(str.trim().length() > 0) {
+			list.add(str);
 		}
 		
 		tokens = new String[list.size()];

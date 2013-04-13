@@ -25,15 +25,35 @@ package org.dihedron.strutlets.actions;
  */
 public final class PortletMode extends javax.portlet.PortletMode {
 	
+	/**
+	 * The VIEW portlet mode: this is the normal portlet mode.
+	 */
 	public static final PortletMode VIEW = new PortletMode("view");
 	 
+	/**
+	 * The EDIT mode, in which the portlet would normally allow user input.
+	 */
 	public static final PortletMode EDIT = new PortletMode("edit");
 	
+	/**
+	 * The HELP portlet mode, where inline help would normally be served.
+	 */
 	public static final PortletMode HELP = new PortletMode("help");
 	
+	/**
+	 * A constant indicating that the portlet mode should not change from what it is.
+	 */
 	public static final PortletMode SAME = new PortletMode("same");
 
-	
+	/**
+	 * Factory method: returns the portlet mode corresponding to the given id.
+	 * 
+	 * @param id
+	 *   the string representation of the portlet mode.
+	 * @return
+	 *   the corresponding portlet mode from the static instances if supported, 
+	 *   or a brand new mode otherwise.
+	 */
 	public static PortletMode getPortletMode(String id) {
 		assert(id != null);
 		if(SAME.equals(id)) {

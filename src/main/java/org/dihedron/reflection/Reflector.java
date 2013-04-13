@@ -99,11 +99,9 @@ public class Reflector {
 		while(cursor != null && cursor != Object.class) {
 			Field[] array = cursor.getDeclaredFields();
 			for(Field field : array) {
-				if(!Modifier.isStatic(field.getModifiers())) {
-					if(acceptable.isEmpty() || acceptable.contains(field.getName())) {					
-						logger.trace("adding field '{}' in class '{}' to instance fields", field.getName(), cursor.getSimpleName());
-						fields.add(field);
-					}
+				if(!Modifier.isStatic(field.getModifiers()) && ( acceptable.isEmpty() || acceptable.contains(field.getName()))) {					
+					logger.trace("adding field '{}' in class '{}' to instance fields", field.getName(), cursor.getSimpleName());
+					fields.add(field);
 				}
 			}
 			cursor = cursor.getSuperclass();
@@ -132,11 +130,9 @@ public class Reflector {
 		while(cursor != null && cursor != Object.class) {
 			Field[] array = cursor.getDeclaredFields();
 			for(Field field : array) {
-				if(Modifier.isStatic(field.getModifiers())) {
-					if(acceptable.isEmpty() || acceptable.contains(field.getName())) {
-						logger.trace("adding field '{}' in class '{}' to static fields", field.getName(), cursor.getSimpleName());
-						fields.add(field);
-					}
+				if(Modifier.isStatic(field.getModifiers()) && (acceptable.isEmpty() || acceptable.contains(field.getName()))) {
+					logger.trace("adding field '{}' in class '{}' to static fields", field.getName(), cursor.getSimpleName());
+					fields.add(field);
 				}
 			}
 			cursor = cursor.getSuperclass();
@@ -199,11 +195,9 @@ public class Reflector {
 		while(cursor != null && cursor != Object.class) {
 			Method[] array = cursor.getDeclaredMethods();
 			for(Method method : array) {
-				if(Modifier.isStatic(method.getModifiers())) {
-					if(acceptable.isEmpty() || acceptable.contains(method.getName())) {
-						logger.trace("adding method '{}' in class '{}' to static methods", method.getName(), cursor.getSimpleName());
-						methods.add(method);
-					}
+				if(Modifier.isStatic(method.getModifiers()) && (acceptable.isEmpty() || acceptable.contains(method.getName()))) {
+					logger.trace("adding method '{}' in class '{}' to static methods", method.getName(), cursor.getSimpleName());
+					methods.add(method);
 				}
 			}
 			cursor = cursor.getSuperclass();
