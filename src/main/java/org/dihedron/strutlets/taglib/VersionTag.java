@@ -20,36 +20,23 @@ package org.dihedron.strutlets.taglib;
 
 import java.io.IOException;
 
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
-import javax.servlet.jsp.tagext.TagSupport;
+import javax.servlet.jsp.tagext.SimpleTagSupport;
+
+import org.dihedron.strutlets.Strutlets;
 
 /**
+ * Prints out the current Strutlets version.
+ * 
  * @author Andrea Funto'
  */
-public class DefineObjectsHandler extends TagSupport {
+public class VersionTag extends SimpleTagSupport {
 
 	/**
-	 * Serial version id.
+	 * Prints the current Strutlets version to the page.
+	 * 
+	 * @see javax.servlet.jsp.tagext.SimpleTagSupport#doTag()
 	 */
-	private static final long serialVersionUID = 6007222483445909571L;
-
-	@Override
-	public int doStartTag() throws JspException {
-
-//		try {
-			// get the writer object for output
-			JspWriter out = pageContext.getOut();
-			
-			pageContext.setAttribute("pippo", new String("ciao"));
-
-			// Perform substr operation on string.
-			//out.println(input.substring(start, end));
-
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-		return SKIP_BODY;
+	public void doTag() throws IOException { 
+		getJspContext().getOut().println("<a href=\"http://www.dihedron.org/strutlets/\">Strutlets</a> ver. " + Strutlets.VERSION);
 	}
-
 }
