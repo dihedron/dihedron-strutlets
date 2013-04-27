@@ -19,6 +19,7 @@
 
 package org.dihedron.strutlets;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.Enumeration;
@@ -26,22 +27,34 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 
+import javax.portlet.ActionResponse;
 import javax.portlet.Event;
 import javax.portlet.EventRequest;
+import javax.portlet.PortalContext;
+import javax.portlet.PortletModeException;
+import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletSession;
+import javax.portlet.RenderResponse;
 import javax.portlet.StateAwareResponse;
+import javax.portlet.WindowStateException;
 import javax.servlet.http.Cookie;
 import javax.xml.namespace.QName;
 
+import org.dihedron.strutlets.actions.PortletMode;
+import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This object provides mediated access to the underlying JSR-286 features, such
+ * as session, parameters, remote user information and the like.
+ * 
  * @author Andrea Funto'
  */
 public final class ActionContext {
@@ -55,6 +68,58 @@ public final class ActionContext {
 	 * The number of milliseconds in a second.
 	 */
 	private static final int MILLISECONDS_PER_SEC = 1000;
+	
+	/**
+	 * The 4 possible phases in the portlet lifecycle.
+	 * 
+	 * @author Andrea Funto'
+	 */
+	public enum Phase {
+		/**
+		 * The phase in which action processing occurs.
+		 */
+		ACTION(PortletRequest.ACTION_PHASE),
+		
+		/**
+		 * The phase in which the portlet handles events.
+		 */
+		EVENT(PortletRequest.EVENT_PHASE),
+		
+		/**
+		 * The phase in which the portlet is requested to repaint itself.
+		 */
+		RENDER(PortletRequest.RENDER_PHASE),
+		
+		/**
+		 * The phase in which the portlet is serving resources as is.
+		 */
+		RESOURCE(PortletRequest.RESOURCE_PHASE);	
+		
+		/**
+		 * Returns the standard (JSR-286) textual representation of the given phase.
+		 * 
+		 * @see java.lang.Enum#toString()
+		 */
+		@Override
+		public String toString() {
+			return value;
+		}
+		
+		/**
+		 * Constructor.
+		 *
+		 * @param value
+		 *   the standard (JSR-286) name for the given phase.
+		 */
+		private Phase(String value) {
+			this.value = value;
+		}
+		
+		/**
+		 * The standard (JSR-286) name of the phase.
+		 */
+		private String value;
+	};
 	
 	/**
 	 * The scope for the attributes.
@@ -123,6 +188,11 @@ public final class ActionContext {
 	private ActionInvocation invocation;
 	
 	/**
+	 * The controller portlet reference.
+	 */
+	private ActionController portlet;
+	
+	/**
 	 * Retrieves the per-thread instance.
 	 * 
 	 * @return
@@ -148,10 +218,11 @@ public final class ActionContext {
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
+	static void bindContext(ActionController portlet, PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
+		context.get().portlet = portlet;
 		context.get().request = request;
 		context.get().response = response;
 		
@@ -187,9 +258,65 @@ public final class ActionContext {
 		context.get().invocation = null;
 		context.get().request = null;
 		context.get().response = null;
+		context.get().portlet = null;
 		context.remove();
 	}
 	
+	/**
+	 * Returns the current phase of the action request lifecycle.
+	 * 
+	 * @return
+	 *   the current phase of the action request lifecycle.
+	 */
+	public Phase getActionPhase() {
+		String currentPhase = (String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
+		for(Phase phase: Phase.values()) {
+			if(currentPhase.equals(phase.toString())) {
+				return phase;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns whether the portlet is currently in the action phase.
+	 * 
+	 * @return
+	 *   whether the portlet is currently in the action phase.
+	 */
+	public boolean isActionPhase() {
+		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.ACTION_PHASE);
+	}
+
+	/**
+	 * Returns whether the portlet is currently in the event phase.
+	 * 
+	 * @return
+	 *   whether the portlet is currently in the event phase.
+	 */
+	public boolean isEventPhase() {
+		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.EVENT_PHASE);
+	}
+	
+	/**
+	 * Returns whether the portlet is currently in the resource phase.
+	 * 
+	 * @return
+	 *   whether the portlet is currently in the resource phase.
+	 */
+	public boolean isResourcePhase() {
+		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RESOURCE_PHASE);
+	}
+
+	/**
+	 * Returns whether the portlet is currently in the render phase.
+	 * 
+	 * @return
+	 *   whether the portlet is currently in the render phase.
+	 */
+	public boolean isRenderPhase() {
+		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RENDER_PHASE);
+	}
 	
 	/**
 	 * Retrieves the <code>ActionInvocation</code> object.
@@ -364,6 +491,189 @@ public final class ActionContext {
 	}
 	
 	/**
+	 * Returns the set of available information for the current user as per the
+	 * portlet's configuration in portlet.xml.
+	 * 
+	 * In order to have user information available in the portlet, the portlet.xml
+	 * must include the following lines after all the portlets have been defined:
+	 * <pre>
+	 *   &lt;portlet-app ...&gt;
+	 *     &lt;portlet&gt;
+	 *     &lt;portlet-name&gt;MyPortlet&lt;/portlet-name&gt;
+	 *       ...
+	 *     &lt;/portlet&gt;
+	 *     ...
+	 *     &lt;user-attribute&gt;
+	 *       &lt;description&gt;User First Name&lt;/description&gt;
+	 *       &lt;name&gt;user.name.given&lt;/name&gt;
+	 *     &lt;/user-attribute&gt;
+	 *     &lt;user-attribute&gt;
+	 *       &lt;description&gt;User Last Name&lt;/description&gt;
+	 *       &lt;name&gt;user.name.family&lt;/name&gt;
+	 *     &lt;/user-attribute&gt;
+	 *   &lt;/portlet-app&gt;
+	 * </pre>
+	 * where {@code user.name.given} and {@code user.name.family} are two of the
+	 * possible values; the following is a pretty complete list of acceptable 
+	 * values:<ul>
+	 *   <li>user.bdate</li>
+	 *   <li>user.gender</li>
+	 *   <li>user.employer</li>
+	 *   <li>user.department</li>
+	 *   <li>user.jobtitle</li>
+	 *   <li>user.name.prefix</li>
+	 *   <li>user.name.given</li>
+	 *   <li>user.name.family</li>
+	 *   <li>user.name.middle</li>
+	 *   <li>user.name.suffix</li>
+	 *   <li>user.name.nickName</li>
+	 *   <li>user.home-info.postal.name</li>
+	 *   <li>user.home-info.postal.street</li>
+	 *   <li>user.home-info.postal.city</li>
+	 *   <li>user.home-info.postal.stateprov</li>
+	 *   <li>user.home-info.postal.postalcode</li>
+	 *   <li>user.home-info.postal.country</li>
+	 *   <li>user.home-info.postal.organization</li>
+	 *   <li>user.home-info.telecom.telephone.intcode</li>
+	 *   <li>user.home-info.telecom.telephone.loccode</li>
+	 *   <li>user.home-info.telecom.telephone.number</li>
+	 *   <li>user.home-info.telecom.telephone.ext</li>
+	 *   <li>user.home-info.telecom.telephone.comment</li>
+	 *   <li>user.home-info.telecom.fax.intcode</li>
+	 *   <li>user.home-info.telecom.fax.loccode</li>
+	 *   <li>user.home-info.telecom.fax.number</li>
+	 *   <li>user.home-info.telecom.fax.ext</li>
+	 *   <li>user.home-info.telecom.fax.comment</li>
+	 *   <li>user.home-info.telecom.mobile.intcode</li>
+	 *   <li>user.home-info.telecom.mobile.loccode</li>
+	 *   <li>user.home-info.telecom.mobile.number</li>
+	 *   <li>user.home-info.telecom.mobile.ext</li>
+	 *   <li>user.home-info.telecom.mobile.comment</li>
+	 *   <li>user.home-info.telecom.pager.intcode</li>
+	 *   <li>user.home-info.telecom.pager.loccode</li>
+	 *   <li>user.home-info.telecom.pager.number</li>
+	 *   <li>user.home-info.telecom.pager.ext</li>
+	 *   <li>user.home-info.telecom.pager.comment</li>
+	 *   <li>user.home-info.online.email</li>
+	 *   <li>user.home-info.online.uri</li>
+	 *   <li>user.business-info.postal.name</li>
+	 *   <li>user.business-info.postal.street</li>
+	 *   <li>user.business-info.postal.city</li>
+	 *   <li>user.business-info.postal.stateprov</li>
+	 *   <li>user.business-info.postal.postalcode</li>
+	 *   <li>user.business-info.postal.country</li>
+	 *   <li>user.business-info.postal.organization</li>
+	 *   <li>user.business-info.telecom.telephone.intcode</li>
+	 *   <li>user.business-info.telecom.telephone.loccode</li>
+	 *   <li>user.business-info.telecom.telephone.number</li>
+	 *   <li>user.business-info.telecom.telephone.ext</li>
+	 *   <li>user.business-info.telecom.telephone.comment</li>
+	 *   <li>user.business-info.telecom.fax.intcode</li>
+	 *   <li>user.business-info.telecom.fax.loccode</li>
+	 *   <li>user.business-info.telecom.fax.number</li>
+	 *   <li>user.business-info.telecom.fax.ext</li>
+	 *   <li>user.business-info.telecom.fax.comment</li>
+	 *   <li>user.business-info.telecom.mobile.intcode</li>
+	 *   <li>user.business-info.telecom.mobile.loccode</li>
+	 *   <li>user.business-info.telecom.mobile.number</li>
+	 *   <li>user.business-info.telecom.mobile.ext</li>
+	 *   <li>user.business-info.telecom.mobile.comment</li>
+	 *   <li>user.business-info.telecom.pager.intcode</li>
+	 *   <li>user.business-info.telecom.pager.loccode</li>
+	 *   <li>user.business-info.telecom.pager.number</li>
+	 *   <li>user.business-info.telecom.pager.ext</li>
+	 *   <li>user.business-info.telecom.pager.comment</li>
+	 *   <li>user.business-info.online.email</li>
+	 *   <li>user.business-info.online.uri</li>
+	 * </ul>
+	 *     
+	 * @return
+	 *   a map representing the user information available to the portlets in 
+	 *   the curent application. 
+	 */
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getUserInformation() {
+		return (Map<String, Object>)request.getAttribute(PortletRequest.USER_INFO);		
+	}
+	
+	/**
+	 * Returns the current portal context, containing information about the 
+	 * current portal server.
+	 * 
+	 * @return
+	 *   the portal context.
+	 */
+	public PortalContext getPortalContext() {
+		return request.getPortalContext();
+	}
+	
+	/**
+	 * Returns the current portlet mode.
+	 * 
+	 * @return
+	 *   the current portlet mode.
+	 */
+	public PortletMode getPortletMode() {
+		return PortletMode.getPortletMode(request.getPortletMode().toString());
+	}
+
+	/**
+	 * Sets the current portlet mode; it is preferable not to use this method
+	 * directly and let the framework set the portlet mode instead, by
+	 * specifying it in the action's results settings.
+	 *  
+	 * @param mode
+	 *   the new portlet mode.
+	 * @throws PortletModeException
+	 *   if the new portlet mode is not supported by the current portal server 
+	 *   runtime environment. 
+	 */
+	@Deprecated
+	public void setPortletMode(PortletMode mode) throws PortletModeException {
+		if(response instanceof StateAwareResponse) {
+			if(request.isPortletModeAllowed(mode)) {
+				logger.trace("changing portlet mode to '{}'", mode);
+				((StateAwareResponse)response).setPortletMode(mode);
+			} else {
+				logger.warn("unsupported portlet mode '{}'", mode);
+			}
+		}		
+	}
+	
+	/**
+	 * Returns the current portlet window state.
+	 * 
+	 * @return
+	 *   the current portlet window state.
+	 */
+	public WindowState getWindowState() {
+		return WindowState.getWindowState(request.getWindowState().toString());
+	}
+	
+	/**
+	 * Sets the current window state; it is preferable not to use this method
+	 * directly and let the framework set the portlet window state instead, by
+	 * specifying it in the action's results settings.
+	 *  
+	 * @param state
+	 *   the new window state.
+	 * @throws WindowStateException
+	 *   if the new window state is not supported by the current portal server 
+	 *   runtime environment. 
+	 */
+	@Deprecated
+	public void setWindowState(WindowState state) throws WindowStateException {
+		if(response instanceof StateAwareResponse) {
+			if(request.isWindowStateAllowed(state)) {
+				logger.trace("changing window state to '{}'", state);
+				((StateAwareResponse)response).setWindowState(state);
+			} else {
+				logger.warn("unsupported window state '{}'", state);
+			}
+		}
+	}
+	
+	/**
 	 * Returns the portlet window ID. The portlet window ID is unique for this 
 	 * portlet window and is constant for the lifetime of the portlet window.
 	 * 	This ID is the same that is used by the portlet container for scoping 
@@ -460,6 +770,104 @@ public final class ActionContext {
 	 */
 	public static void setMaxInactiveSessionInterval(int time) {
 		getContext().request.getPortletSession().setMaxInactiveInterval(time);
+	}
+	
+	/**
+	 * Sets the title of the portlet; this method can only be invoked in the render 
+	 * phase.
+	 * 
+	 * @param title
+	 */
+	public void setPortletTitle(String title) {
+		if(isRenderPhase() && response instanceof RenderResponse) {
+			logger.trace("setting the portlet title to '{}'", title);
+			((RenderResponse)response).setTitle(title);
+		} else {
+			logger.warn("cannot set the title out of the render phase");
+		}
+	}
+	
+	/**
+	 * Encodes the given URL; ths URL is not prefixed with the current context 
+	 * path, and is therefore considered as absolute. An example of such URLs is
+	 * <code>/MyApplication/myServlet</code>.
+	 * 
+	 * @param url
+	 *   the absolute URL to be encoded.
+	 * @return
+	 *   the URL, in encoded form.
+	 */
+	public String encodeAbsoluteURL(String url) {
+		String encoded = response.encodeURL(url);
+		logger.trace("url '{}' encoded as '{}'", url, encoded);
+		return encoded;
+	}
+	
+	/**
+	 * Encodes the given URL; the URL is prefixed with the current context path, 
+	 * and is therefore considered as relative to it. An example of such URLs is
+	 * <code>/css/myStyleSheet.css</code>.
+	 * 
+	 * @param url
+	 *   the relative URL to be encoded.
+	 * @return
+	 *   the URL, in encoded form.
+	 */	
+	public String encodeRelativeURL(String url) {
+		String unencoded = request.getContextPath() + url;
+		String encoded = response.encodeURL(unencoded);
+		logger.trace("url '{}' encoded as '{}'", unencoded, encoded);
+		return encoded;
+	}
+	
+	/**
+	 * Redirects to a different URL, with no referrer URL unless it is specified 
+	 * in the URL itself. 
+	 * 
+	 * @param url
+	 * @throws IOException
+	 */
+	public void sendRedirect(String url) throws IOException {
+		if(isActionPhase() && response instanceof ActionResponse) {
+			((ActionResponse)response).sendRedirect(url);
+		}
+	}
+
+	/**
+	 * Redirects to a different URL, adding a referrer to provide a "back" address 
+	 * to the destination page.
+	 * 
+	 * @param url
+	 * @param referrer
+	 * @throws IOException
+	 */
+	public void sendRedirect(String url, String referrer) throws IOException {
+		if(isActionPhase() && response instanceof ActionResponse) {
+			((ActionResponse)response).sendRedirect(url, referrer);
+		}
+	}
+	
+	/**
+	 * Returns the resource bundle associated with the underlying portlet, for 
+	 * the given locale.
+	 * 
+	 * @param locale
+	 *   the selected locale.
+	 * @return
+	 *   the portlet's configured resource bundle.
+	 */
+	public ResourceBundle getResouceBundle(Locale locale) {
+		return portlet.getResourceBundle(locale);
+	}
+	
+	/**
+	 * Returns the per-user portlet preferences.
+	 * 
+	 * @return
+	 *   the per-user portlet preferences.
+	 */
+	public PortletPreferences getPortletPreferences() {
+		return request.getPreferences();
 	}
 	
 	/**
@@ -925,6 +1333,7 @@ public final class ActionContext {
 			}
 		}
 	}
+	
 	
 	/**
 	 * Returns an array containing all of the Cookie properties. This method 

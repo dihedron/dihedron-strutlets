@@ -49,7 +49,8 @@ public class ActionInvocation {
 	private String method;
 	
 	/**
-	 * The <code>ActionRequest</code> or <code>EventRequest</code> object.
+	 * The <code>ActionRequest</code>, <code>EventRequest</code> or
+	 * <code>RenderRequest</code> object.
 	 */
 	private PortletRequest request;
 	

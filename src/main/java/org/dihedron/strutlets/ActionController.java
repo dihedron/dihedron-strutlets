@@ -257,7 +257,7 @@ public class ActionController extends GenericPortlet {
      * interceptors stack to apply, and which page (in which mode and which window 
      * state) to apply for each result. The loading process in is two phases, first
      * the initialisation parameter is checked for the name of the file to load,:
-     * if provided, the confguration is loaded from there; if not provided, then 
+     * if provided, the configuration is loaded from there; if not provided, then 
      * the default location (WEB-INF/)is scanned for the existence of a file 
      * named <code>actions-config.xml</code> and if found it is loaded.</li>
      * <li><b>loading the interceptors stacks</b>: the framework already provides 
@@ -483,11 +483,26 @@ public class ActionController extends GenericPortlet {
     	logger.trace("... output rendering done");
     }
     
+    /**
+     * Serves a resource.
+     * 
+     * @see javax.portlet.GenericPortlet#serveResource(javax.portlet.ResourceRequest, javax.portlet.ResourceResponse)
+     */
     public void serveResource(ResourceRequest request, ResourceResponse response) throws PortletException, IOException {
         super.serveResource(request, response);
     }
     
-    
+    /**
+     * Processes an action request, both in the action, in the event and in the render phase.
+     * 
+     * @param target
+     *   the requested target (in the form "MyAction!myMethod").
+     * @param request
+     *   the current request object.
+     * @param response
+     *   the current response object.
+     * @throws PortletException
+     */
     protected void doProcess(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
     	try {
 			if(Strings.isValid(target)) {
@@ -580,7 +595,7 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
-	    	ActionContext.bindContext(request, response, invocation);
+	    	ActionContext.bindContext(this, request, response, invocation);
 	    	
 	    	// fire the action stack invocation
 	    	result = invocation.invoke();
