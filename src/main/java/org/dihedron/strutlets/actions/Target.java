@@ -86,7 +86,7 @@ public class Target {
 	 * @return
 	 *   whether the given string complies with a target specification. 
 	 */
-	public static final boolean isValidTarget(String string) {
+	public static final boolean isValidActionTarget(String string) {
 		return Strings.isValid(string) && REGEX.matches(string);
 	}
 	

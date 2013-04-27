@@ -143,9 +143,16 @@ public class Outputs extends Interceptor {
 					}
 					break;
 				case REQUEST:
-					value = reflector.getFieldValue(field.getName());				
+					value = reflector.getFieldValue(field.getName());		
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-					ActionContext.setRequestAttribute(parameter, (String [])value);
+					String [] array = null;
+					// TODO: handle String array too, and Object[] through loop and toString()
+					if(value instanceof String) {
+						array = new String [] { (String)value };
+					} else if(value.getClass().isArray()) {
+						array = (String [])value;
+					}
+					ActionContext.setRequestAttribute(parameter, array);
 					break;
 				case SESSION:
 					value = reflector.getFieldValue(field.getName());				

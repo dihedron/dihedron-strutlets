@@ -101,9 +101,11 @@ public abstract class Action {
 			if(meth == null) {
 				meth = Target.DEFAULT_METHOD_NAME;
 			}
-			logger.info("invoking method '{}'", meth);
+			logger.info("invoking method '{}'...", meth);
 			Reflector helper = new Reflector(this);
-			return (String)helper.invoke(meth);
+			String result = (String)helper.invoke(meth);
+			logger.info("... method '{}' invocation returned '{}'", meth, result);
+			return result;
 		} catch(ReflectorException e) {
 			throw new ActionException("error invoking action", e);
 		}
