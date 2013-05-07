@@ -634,7 +634,14 @@ public class ActionController extends GenericPortlet {
     /**
      * Retrieves the name of the current target from one of the places where it 
      * might have been set by the requester:<ol>
-     * <li>in the <code>javax.portlet.action</code> parameter, which is the 
+     * <li>in the {@code EXECUTION_TARGET} render parameter, where it might
+     * have been set by a prior action execution (see {@code #doProcess(String, 
+     * PortletRequest, StateAwareResponse)}; if this parameter is set, then the 
+     * current method is being invoked in the following render phase and it 
+     * should render the appropriate JSP page according to the given action's 
+     * result, as per the {@code EXECUTION_RESULT} render parameter, otherwise 
+     * the process goes on</li>
+     * <li>in the {@code javax.portlet.action} parameter, which is the 
      * parameter to use to have a render URL invoke some business logic prior
      * to its render phase, e.g. to query a database and then render the query 
      * results</li>
@@ -643,7 +650,7 @@ public class ActionController extends GenericPortlet {
      * parameter: by default it should be used to provide the name of web page 
      * (JSP), but this frameworks extends its use to address a target prior to 
      * the rendering of a web page</li>
-     * <if nothing valid was found, then the default render URL is extracted for
+     * <li>if nothing valid was found, then the default render URL is extracted for
      * the current portlet mode from the portlet's initialisation parameters; for 
      * details about how this is achieved, look at {@link #getDefaultUrl(PortletMode)}
      * </li></ol>.
@@ -654,17 +661,24 @@ public class ActionController extends GenericPortlet {
      *   the target of the request.
      */
     private String getTarget(PortletRequest request) {
-    	String target = request.getParameter(ACTION_TARGET);
-		logger.trace("target in ACTION_TARGET is '{}'", target);
-		if(!Target.isValidActionTarget(target)) {
-			target = request.getParameter(RENDER_REDIRECT_PARAMETER);
-			logger.trace("target in RENDER_REDIRECT_PARAMETER is '{}'", target);
-			if(!Strings.isValid(target)) {				
-	    		PortletMode mode = request.getPortletMode();
-	    		logger.trace("getting default target for mode '{}'", mode);
-	    		target = getDefaultUrl(mode);
+    	String target = null;
+    	if(!Strings.isValid(request.getParameter(EXECUTION_TARGET))) {
+    		logger.trace("trying to get target as action...");
+	    	target = request.getParameter(ACTION_TARGET);
+			logger.trace("target in ACTION_TARGET is '{}'", target);
+			if(!Target.isValidActionTarget(target)) {
+				logger.trace("trying to get target as redirect parameter...");
+				target = request.getParameter(RENDER_REDIRECT_PARAMETER);
+				logger.trace("target in RENDER_REDIRECT_PARAMETER is '{}'", target);
+				if(!Strings.isValid(target)) {	
+		    		PortletMode mode = request.getPortletMode();
+		    		logger.trace("getting default target for mode '{}'", mode);
+		    		target = getDefaultUrl(mode);
+				}
 			}
-		}
+    	} else {
+    		logger.trace("target must be derived from prior action execution result");
+    	}
 		logger.debug("target: '{}'", target);
 		return target;
 	}
