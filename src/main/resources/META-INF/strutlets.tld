@@ -28,9 +28,9 @@
 	<tag>
 		<name>useBean</name>
 		<description>
-			Picks bean from the given context (render parameters, rquest, session or
-			application scope) and makes it available to the current page context and 
-			to the JSP EL.
+			Picks a bean from the given scope (render parameters, request, session or
+			application attributes) and makes it available to the current page context 
+			and	to the JSP EL.
 		</description>		
 		<tag-class>org.dihedron.strutlets.taglib.UseBeanTag</tag-class> 
 		<tei-class>org.dihedron.strutlets.taglib.UseBeanTagExtraInfo</tei-class>
@@ -41,7 +41,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>		
 		<attribute>
-			<name>context</name>
+			<name>scope</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>	
@@ -56,7 +56,7 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>	
 		<attribute>
-			<name>scope</name>
+			<name>visibility</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>	

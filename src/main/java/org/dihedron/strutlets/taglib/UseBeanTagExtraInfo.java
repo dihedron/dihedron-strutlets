@@ -42,10 +42,10 @@ public class UseBeanTagExtraInfo extends TagExtraInfo {
 	 * @see javax.servlet.jsp.tagext.TagExtraInfo#getVariableInfo(javax.servlet.jsp.tagext.TagData)
 	 */
 	public VariableInfo[] getVariableInfo(TagData data) {
-		String attribute = data.getAttributeString("scope");
-		int scope = VariableInfo.AT_BEGIN; 
+		String attribute = data.getAttributeString("visibility");
+		int visibility = VariableInfo.AT_BEGIN; 
 		if(attribute != null && attribute.trim().equalsIgnoreCase("nested")) {
-			scope = VariableInfo.NESTED;
+			visibility = VariableInfo.NESTED;
 		}
 		 
 		return new VariableInfo[] { 
@@ -57,7 +57,7 @@ public class UseBeanTagExtraInfo extends TagExtraInfo {
 				// variable will be declared
 				true,
 				// and it's available until the end tag
-				scope
+				visibility
 			) 
 		};
 	}

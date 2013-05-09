@@ -18,12 +18,8 @@
  */
 package org.dihedron.strutlets.taglib;
 
-import java.io.IOException;
-
-import javax.portlet.PortletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.dihedron.strutlets.ActionContext;
@@ -41,7 +37,8 @@ public class UseBeanTag extends TagSupport {
 	 *  
 	 * @author Andrea Funto'
 	 */
-	private enum Context {
+	private enum Scope {
+		
 		/**
 		 * The parameter is available as a render parameter (either public or private).
 		 */
@@ -67,66 +64,8 @@ public class UseBeanTag extends TagSupport {
 		/**
 		 * Constructor.
 		 *
-		 * @param context
-		 *   the context, as a string.
-		 */
-		private Context(String context) {
-			this.context = context;
-		}
-		
-		/**
-		 * Tries to convert a textual representation into the proper enumeration 
-		 * constant.
-		 * 
-		 * @param text
-		 *   the textual representation of the enumeration constant.
-		 * @return
-		 */
-		public static Context fromString(String text) {
-			if (text != null) {
-				for (Context c : Context.values()) {
-					if (text.equalsIgnoreCase(c.context)) {
-						return c;
-					}
-				}
-			}
-			throw new IllegalArgumentException("No enumeration value matching '" + text + "'");
-		}		
-		
-		@Override
-		public String toString() {
-			return context;
-		}
-		
-		/**
-		 * The context, as a string.
-		 */
-		private String context;		
-	}
-	
-	/**
-	 * The scope into which the new variable will be placed.
-	 * 
-	 * @author Andrea Funto'
-	 */
-	private enum Scope {
-		/**
-		 * The variable will be visible from the definition point until the end
-		 * of the current JSP page.
-		 */
-		PAGE("page"),
-		
-		/**
-		 * The variable will only be visible from the start tag until the matching
-		 * closing tag.
-		 */
-		NESTED("nested");
-		
-		/**
-		 * Constructor.
-		 *
 		 * @param scope
-		 *   the visibility scope of the new variable.
+		 *   the context in which the variable is to be located, as a string.
 		 */
 		private Scope(String scope) {
 			this.scope = scope;
@@ -151,16 +90,75 @@ public class UseBeanTag extends TagSupport {
 			throw new IllegalArgumentException("No enumeration value matching '" + text + "'");
 		}		
 		
-		
 		@Override
 		public String toString() {
 			return scope;
 		}
 		
 		/**
+		 * The context, as a string.
+		 */
+		private String scope;		
+	}
+	
+	/**
+	 * The visibility of the new variable: the whole page or only the nested tags.
+	 * 
+	 * @author Andrea Funto'
+	 */
+	private enum Visibility {
+		
+		/**
+		 * The variable will be visible from the definition point until the end
+		 * of the current JSP page.
+		 */
+		PAGE("page"),
+		
+		/**
+		 * The variable will only be visible from the start tag until the matching
+		 * closing tag.
+		 */
+		NESTED("nested");
+		
+		/**
+		 * Constructor.
+		 *
+		 * @param visibility
+		 *   the visibility scope of the new variable.
+		 */
+		private Visibility(String visibility) {
+			this.visibility = visibility;
+		}
+		
+		/**
+		 * Tries to convert a textual representation into the proper enumeration 
+		 * constant.
+		 * 
+		 * @param text
+		 *   the textual representation of the enumeration constant.
+		 * @return
+		 */
+		public static Visibility fromString(String text) {
+			if (text != null) {
+				for (Visibility v : Visibility.values()) {
+					if (text.equalsIgnoreCase(v.visibility)) {
+						return v;
+					}
+				}
+			}
+			throw new IllegalArgumentException("No enumeration value matching '" + text + "'");
+		}		
+		
+		
+		@Override
+		public String toString() {
+			return visibility;
+		}
+		
+		/**
 		 * The visibility scope of the new variable, as a string.
 		 */
-		private String scope;
+		private String visibility;
 	}
 	
 	/**
@@ -176,13 +174,13 @@ public class UseBeanTag extends TagSupport {
 	/**
 	 * The default visibility scope of the new variable.
 	 */
-	private static final Scope DEFAULT_SCOPE = Scope.PAGE;
+	private static final Visibility DEFAULT_VISIBILITY = Visibility.PAGE;
 	
 	/**
-	 * The default context where the parameter is supposed to be avilable and
+	 * The default context where the parameter is supposed to be available and
 	 * will be looked up.
 	 */
-	private static final Context DEFAULT_CONTEXT = Context.RENDER;
+	private static final Scope DEFAULT_SCOPE = Scope.RENDER;
 	
 	/**
 	 * The name of the attribute to be made available to the page and EL. 
@@ -201,7 +199,7 @@ public class UseBeanTag extends TagSupport {
 	 * (for details see {@link ActionContext.Scope#SESSION}.</li>
 	 * </ol>
 	 */
-	private Context context = DEFAULT_CONTEXT;
+	private Scope context = DEFAULT_SCOPE;
 		
 	/**
 	 * The name of the destination variable.
@@ -221,7 +219,7 @@ public class UseBeanTag extends TagSupport {
 	 * end of the page.</li>
 	 * </ul>
 	 */
-	private Scope scope = DEFAULT_SCOPE;	
+	private Visibility visibility = DEFAULT_VISIBILITY;	
 	
 	/**
 	 * Sets the name of the attribute to be made available to the page and EL.
@@ -245,8 +243,8 @@ public class UseBeanTag extends TagSupport {
 	 *   <li>application</li>: the bean is among the application attributes;
 	 * <ul>
 	 */
-	public void setContext(String context) {
-		this.context = Context.fromString(context);
+	public void setScope(String context) {
+		this.context = Scope.fromString(context);
 	}
 	
 	/**
@@ -272,15 +270,15 @@ public class UseBeanTag extends TagSupport {
 	/**
 	 * Sets the visibility scope of the new variable.
 	 * 
-	 * @param scope
+	 * @param visibility
 	 *   the visibility scope of the new variable; accepted values include:<ul>
 	 *   <li>{@code nested}: the variable will be visible only between the start 
 	 *   and end tags,</li>
 	 *   <li>{@code page}; the variable will be available from this point until the
 	 *   end of the page.</li></ul>
 	 */
-	public void setScope(String scope) {		
-		this.scope = Scope.fromString(scope);
+	public void setVisibility(String visibility) {		
+		this.visibility = Visibility.fromString(visibility);
 	}	
 
 	@Override
