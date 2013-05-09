@@ -128,13 +128,22 @@ public final class ActionContext {
 	 */
 	public enum Scope {
 		/**
+		 * Attributes at request level will be accessible to the portlet that set 
+		 * them and to included JSPs and servlets until the next action request 
+		 * comes. The data lifecycle encompasses event and resource serving
+		 * methods, up to the <em>next</em> action processing request, when they
+		 * will be reset.
+		 */
+		REQUEST(0x00),
+		
+		/**
 		 * Attributes set at <em>application</em> scope are accessible throughout the 
 		 * application: all portlets, JSPs and servlets packaged in the same WAR
 		 * file will have access to these attributes on a per-user basis. JSPs
 		 * and servlets will have direct access to tese attributes through
 		 * <code>HttsSession</code> attributes.
 		 */
-		APPLICATION,
+		APPLICATION(PortletSession.APPLICATION_SCOPE),
 		
 		/**
 		 * Attributes set at <em>session</em> will be available to all resources 
@@ -144,16 +153,32 @@ public final class ActionContext {
 		 * <code>HttpSession</code> object under a namespaced attribute key.
 		 * The fabricated attribute name will contain the window ID.
 		 */
-		SESSION,
+		PORTLET(PortletSession.PORTLET_SCOPE);
 		
 		/**
-		 * Attributes at request level will be accessible to the portlet that set 
-		 * them and to included JSPs and servlets until the next action request 
-		 * comes. The data lifecycle encompasses event and resource serving
-		 * methods, up to the <em>next</em> action processing request, when they
-		 * will be reset.
+		 * Returns the numeric value of the constant.
+		 * 
+		 * @return
+		 *   the numeric value of the constant.
 		 */
-		REQUEST
+		public int getValue() {
+			return value;
+		}
+		
+		/**
+		 * Constructor.
+		 *
+		 * @param value
+		 *   the numeric value of the constant.
+		 */
+		private Scope(int value) {
+			this.value = value;
+		}
+		
+		/**
+		 * The numeric value of the constant.
+		 */
+		private int value;
 	}
 	
 	public static final String ACTION_SCOPED_ATTRIBUTES_KEY = "org.dihedron.ActionScopedRequestAttributes";
@@ -222,16 +247,17 @@ public final class ActionContext {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
-		context.get().portlet = portlet;
-		context.get().request = request;
-		context.get().response = response;
-		
+		getContext().portlet = portlet;
+		getContext().request = request;
+		getContext().response = response;
+				
 		if(invocation != null && invocation.length > 0) {
-			context.get().invocation = invocation[0];
+			getContext().invocation = invocation[0];
 		}
 		
 		PortletSession session = request.getPortletSession();
 		
+		// remove all request-scoped attributes from previous invocations		
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = 
 			(Map<String, Object>)session.getAttribute(
@@ -268,8 +294,8 @@ public final class ActionContext {
 	 * @return
 	 *   the current phase of the action request lifecycle.
 	 */
-	public Phase getActionPhase() {
-		String currentPhase = (String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
+	public static Phase getActionPhase() {
+		String currentPhase = (String)getContext().request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
 		for(Phase phase: Phase.values()) {
 			if(currentPhase.equals(phase.toString())) {
 				return phase;
@@ -284,8 +310,8 @@ public final class ActionContext {
 	 * @return
 	 *   whether the portlet is currently in the action phase.
 	 */
-	public boolean isActionPhase() {
-		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.ACTION_PHASE);
+	public static boolean isActionPhase() {
+		return getContext().request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.ACTION_PHASE);
 	}
 
 	/**
@@ -294,8 +320,8 @@ public final class ActionContext {
 	 * @return
 	 *   whether the portlet is currently in the event phase.
 	 */
-	public boolean isEventPhase() {
-		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.EVENT_PHASE);
+	public static boolean isEventPhase() {
+		return getContext().request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.EVENT_PHASE);
 	}
 	
 	/**
@@ -304,8 +330,8 @@ public final class ActionContext {
 	 * @return
 	 *   whether the portlet is currently in the resource phase.
 	 */
-	public boolean isResourcePhase() {
-		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RESOURCE_PHASE);
+	public static boolean isResourcePhase() {
+		return getContext().request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RESOURCE_PHASE);
 	}
 
 	/**
@@ -314,9 +340,34 @@ public final class ActionContext {
 	 * @return
 	 *   whether the portlet is currently in the render phase.
 	 */
-	public boolean isRenderPhase() {
-		return request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RENDER_PHASE);
+	public static boolean isRenderPhase() {
+		return getContext().request.getAttribute(PortletRequest.LIFECYCLE_PHASE).equals(PortletRequest.RENDER_PHASE);
 	}
+	
+	/**
+	 * Returns the current portlet's name.
+	 * 
+	 * @return
+	 *   the current portlet's name.
+	 */
+	public static String getPortletName() {
+		return getContext().portlet.getPortletName();
+	}
+	
+	/**
+	 * Returns the value of the given portlet's initialisation parameter.
+	 * 
+	 * @param name
+	 *  the name of the parameter.
+	 * @return
+	 *   the value of the given portlet's initialisation parameter.
+	 */
+	public static String getPortletInitialisationParameter(String name) {
+		return getContext().portlet.getInitParameter(name);
+	}
+	
+	// TODO: get other stuff from portlet.xml and web.xml
+	// PortletContext and PorteltConfig (see Ashish Sarin pages 119-120)
 	
 	/**
 	 * Retrieves the <code>ActionInvocation</code> object.
@@ -909,19 +960,19 @@ public final class ActionContext {
 	}
 
 	/**
-	 * Returns the session-scoped attribute corresponding to the given key. 
+	 * Returns the portlet-scoped attribute corresponding to the given key. 
 	 * 
 	 * @param key
 	 *   the attribute key.
 	 * @return
 	 *   the attribute value.
 	 */	
-	public static Object getSessionAttribute(String key) {
-		return getAttribute(key, Scope.SESSION);
+	public static Object getPortletAttribute(String key) {
+		return getAttribute(key, Scope.PORTLET);
 	}
 	
 	/**
-	 * Adds or replaces an attribute in the map of attributes at session scope.
+	 * Adds or replaces an attribute in the map of attributes at portlet scope.
 	 * The attribute will be visible to the portlet itself (but not to other 
 	 * instances of the same portlet), and to JSPs and servlets included by the 
 	 * portlet, on a per-user basis.
@@ -931,26 +982,29 @@ public final class ActionContext {
 	 * @param value
 	 *   the attribute value.
 	 */
-	public static void setSessionAttribute(String key, Object value) {
-		setAttribute(key, value, Scope.SESSION);
+	public static void setPortletAttribute(String key, Object value) {
+		setAttribute(key, value, Scope.PORTLET);
 	}	
 	
 	/**
-	 * Removes the session-scoped attribute corresponding to the given key. 
+	 * Removes the portlet-scoped attribute corresponding to the given key. 
 	 * 
 	 * @param key
 	 *   the attribute key.
 	 * @return
 	 *   the previous value of the attribute, or null if not set.
 	 */	
-	public static Object removeSessionAttribute(String key) {
-		return removeAttribute(key, Scope.SESSION);
+	public static Object removePortletAttribute(String key) {
+		return removeAttribute(key, Scope.PORTLET);
 	}	
 	
 	/**
+	 * Returns the value of the reqest-scoped attribute.
 	 * 
 	 * @param key
+	 *   the attribute key.
 	 * @return
+	 *   the value of the request-scoped attribute, or null if not set.
 	 */
 	public static Object getRequestAttribute(String key) {
 		return getAttribute(key, Scope.REQUEST);
@@ -980,7 +1034,7 @@ public final class ActionContext {
 	 */	
 	public static Object removeRequestAttribute(String key) {
 		return removeAttribute(key, Scope.REQUEST);
-	}		
+	}
 
 	/**
 	 * Returns the value of the given attribute in the proper application-, 
@@ -1012,11 +1066,11 @@ public final class ActionContext {
 		if(getContext().request != null) {
 			PortletSession session = getContext().request.getPortletSession();
 			// TODO: check on this
-			session.isNew(); 
+			//session.isNew(); 
 			switch(scope) {
 			case APPLICATION:
 				map = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);
-			case SESSION:
+			case PORTLET:
 				map = session.getAttributeMap(PortletSession.PORTLET_SCOPE);
 			case REQUEST:
 				Map<String, Object> attributes = session.getAttributeMap(PortletSession.PORTLET_SCOPE);
@@ -1038,7 +1092,7 @@ public final class ActionContext {
 	 *   the requested scope.
 	 */
 	public static void setAttribute(String key, Object value, Scope scope) {
-		getAttributes(scope).put(key,  value);
+		getAttributes(scope).put(key, value);
 	}
 	  
 	/**
@@ -1085,7 +1139,7 @@ public final class ActionContext {
 			map = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);		
 			map.putAll(attributes);
 			break;
-		case SESSION:
+		case PORTLET:
 			map = session.getAttributeMap(PortletSession.PORTLET_SCOPE);		
 			map.putAll(attributes);
 			break;

@@ -154,10 +154,10 @@ public class Outputs extends Interceptor {
 					}
 					ActionContext.setRequestAttribute(parameter, array);
 					break;
-				case SESSION:
+				case PORTLET:
 					value = reflector.getFieldValue(field.getName());				
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-					ActionContext.setSessionAttribute(parameter, (String [])value);
+					ActionContext.setPortletAttribute(parameter, (String [])value);
 					break;
 				case APPLICATION:
 					value = reflector.getFieldValue(field.getName());				

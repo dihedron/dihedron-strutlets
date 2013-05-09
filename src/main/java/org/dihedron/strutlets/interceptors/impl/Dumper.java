@@ -62,14 +62,14 @@ public class Dumper extends Interceptor {
 		StringBuilder builder = new StringBuilder();
 		dumpFormParameters(builder);
 		dumpAttributes(Scope.REQUEST, builder);
-		dumpAttributes(Scope.SESSION, builder);
+		dumpAttributes(Scope.PORTLET, builder);
 		dumpAttributes(Scope.APPLICATION, builder);
 		logger.debug("action context BEFORE execution:\n{}", builder);
 		builder.setLength(0);
 		String result = invocation.invoke();
 		dumpRenderParameters(builder);
 		dumpAttributes(Scope.REQUEST, builder);
-		dumpAttributes(Scope.SESSION, builder);
+		dumpAttributes(Scope.PORTLET, builder);
 		dumpAttributes(Scope.APPLICATION, builder);
 		logger.debug("action context AFTER execution:\n{}", builder);
 		return result;		

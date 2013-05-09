@@ -145,10 +145,10 @@ public class Inputs extends Interceptor {
 						logger.trace("... value for '{}' found in REQUEST attributes: '{}'", parameter, value);
 						break;
 					}
-				} else if(scope == Scope.SESSION) {
-					value = ActionContext.getSessionAttribute(parameter);
+				} else if(scope == Scope.PORTLET) {
+					value = ActionContext.getPortletAttribute(parameter);
 					if(value != null) {
-						logger.trace("... value for '{}' found in SESSION attributes: '{}'", parameter, value);
+						logger.trace("... value for '{}' found in PORTLET attributes: '{}'", parameter, value);
 						break;
 					}
 				} else if(scope == Scope.APPLICATION) {

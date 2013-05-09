@@ -1,5 +1,7 @@
 analyseLocally=true
 eclipse.preferences.version=1
+extraProperties=
+lastAnalysisDate=1368134835319
 projectKey=org.dihedron.strutlets\:strutlets
 serverUrl=http\://localhost\:9000
 version=2

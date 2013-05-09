@@ -49,9 +49,9 @@ public enum Scope {
 	/**
 	 * The parameter is to be looked up or stored in the current session scope.
 	 * 
-	 * @see org.dihedron.strutlets.ActionContext.Scope.SESSION.
+	 * @see org.dihedron.strutlets.ActionContext.Scope.PORTLET.
 	 */
-	SESSION,
+	PORTLET,
 	
 	/**
 	 * The parameter is to be looked up or stored in the current application scope.
