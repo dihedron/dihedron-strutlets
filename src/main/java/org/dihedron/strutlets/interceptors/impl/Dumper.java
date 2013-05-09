@@ -87,7 +87,7 @@ public class Dumper extends Interceptor {
 		for(Entry<String, String[]> entry : parameters.entrySet()) {
 			builder.append("'").append(entry.getKey()).append("' = [ ");
 			for(String value : entry.getValue()) {
-				builder.append("'").append(value).append("', ");
+				builder.append("'").append(value.toString()).append("', ");
 			}
 			builder.append("]\n");
 		}
@@ -127,7 +127,7 @@ public class Dumper extends Interceptor {
 		Map<String, Object> attributes = ActionContext.getAttributes(scope);
 		builder.append(Strings.centre(" " + scope.name() + " SCOPE ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 		for(Entry<String, Object> entry : attributes.entrySet()) {
-			builder.append("'").append(entry.getKey()).append("'").append(entry.getValue()).append("'\n");
+			builder.append("'").append(entry.getKey()).append("' = '").append(entry.getValue().toString()).append("'\n");
 		}
 		builder.append(SECTION_FOOTER).append("\n");
 	}

@@ -5,6 +5,7 @@
 		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper"/>
 		<interceptor id="inputs" class="org.dihedron.strutlets.interceptors.impl.Inputs"/>
 		<interceptor id="outputs" class="org.dihedron.strutlets.interceptors.impl.Outputs"/>
+		<!-- 
 		<interceptor id="interceptor_02" class="org.dihedron.strutlets.test.MyInterceptor">
 			<parameter>
 				<key>id</key>
@@ -41,7 +42,9 @@
 				<value>value_03_3</value>
 			</parameter>
 		</interceptor>
+		-->
 	</stack>
+	<!-- 
 	<stack id="stack_01">
 		<interceptor id="interceptor_03" class="org.dihedron.strutlets.test.MyInterceptor">
 			<parameter>
@@ -72,4 +75,5 @@
 			</parameter>
 		</interceptor>
 	</stack>
+	-->
 </configuration>
