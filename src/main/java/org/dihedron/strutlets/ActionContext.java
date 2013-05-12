@@ -47,6 +47,7 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
+import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -430,10 +431,16 @@ public final class ActionContext {
 	 *   the fully-qualified name of the event.
 	 * @param payload
 	 *   the event payload, as a serialisable object.
+	 * @throws InvalidPhaseException
+	 *   if the operation is attempted while in the render phase. 
 	 */
-	public static void fireEvent(String name, Serializable payload) {
-		if(getContext().response instanceof StateAwareResponse) {
+	public static void fireEvent(String name, Serializable payload) throws InvalidPhaseException {
+//		if(getContext().response instanceof StateAwareResponse) {
+		if(isActionPhase() || isEventPhase()) {
 			((StateAwareResponse)getContext().response).setEvent(name, payload);
+		} else {
+			logger.error("trying to fire an event in the render phase");
+			throw new InvalidPhaseException("Events cannot be fired in the render phase.");
 		}
 	}
 	
@@ -446,8 +453,10 @@ public final class ActionContext {
 	 *   the event namespace.
 	 * @param payload
 	 *   the event payload, as a serialisable object.
+	 * @throws InvalidPhaseException
+	 *   if the operation is attempted while in the render phase. 
 	 */
-	public static void fireEvent(String name, String namespace, Serializable payload) {
+	public static void fireEvent(String name, String namespace, Serializable payload) throws InvalidPhaseException {
 		QName qname = new QName(namespace, name);
 		fireEvent(qname,  payload);
 	}
@@ -459,10 +468,16 @@ public final class ActionContext {
 	 *   an object representing the fully-qualified name of the event.
 	 * @param payload
 	 *   the event payload, as a serialisable object.
+	 * @throws InvalidPhaseException
+	 *   if the operation is attempted while in the render phase. 
 	 */
-	public static void fireEvent(QName qname, Serializable payload) {
-		if(getContext().response instanceof StateAwareResponse) {
+	public static void fireEvent(QName qname, Serializable payload) throws InvalidPhaseException {
+//		if(getContext().response instanceof StateAwareResponse) {
+		if(isActionPhase() || isEventPhase()) {
 			((StateAwareResponse)getContext().response).setEvent(qname, payload);
+		} else {
+			logger.error("trying to fire an event in the render phase");
+			throw new InvalidPhaseException("Events cannot be fired in the render phase.");
 		}
 	}
 	
@@ -678,17 +693,23 @@ public final class ActionContext {
 	 * @throws PortletModeException
 	 *   if the new portlet mode is not supported by the current portal server 
 	 *   runtime environment. 
+	 * @throws InvalidPhaseException
+	 *   if the operation is attempted while in the render phase. 
 	 */
 	@Deprecated
-	public void setPortletMode(PortletMode mode) throws PortletModeException {
-		if(response instanceof StateAwareResponse) {
+	public void setPortletMode(PortletMode mode) throws PortletModeException, InvalidPhaseException {
+//		if(response instanceof StateAwareResponse) {
+		if(isActionPhase() || isEventPhase()) {
 			if(request.isPortletModeAllowed(mode)) {
 				logger.trace("changing portlet mode to '{}'", mode);
 				((StateAwareResponse)response).setPortletMode(mode);
 			} else {
 				logger.warn("unsupported portlet mode '{}'", mode);
 			}
-		}		
+		} else {
+			logger.error("trying to change portlet mode in the render phase");
+			 throw new InvalidPhaseException("Portlet mode cannot be changed in the render phase.");
+		}			
 	}
 	
 	/**
@@ -711,17 +732,23 @@ public final class ActionContext {
 	 * @throws WindowStateException
 	 *   if the new window state is not supported by the current portal server 
 	 *   runtime environment. 
+	 * @throws InvalidPhaseException
+	 *   if the operation is attempted in the render phase. 
 	 */
 	@Deprecated
-	public void setWindowState(WindowState state) throws WindowStateException {
-		if(response instanceof StateAwareResponse) {
+	public void setWindowState(WindowState state) throws WindowStateException, InvalidPhaseException {
+//		if(response instanceof StateAwareResponse) {
+		if(isActionPhase() || isEventPhase()) {
 			if(request.isWindowStateAllowed(state)) {
 				logger.trace("changing window state to '{}'", state);
 				((StateAwareResponse)response).setWindowState(state);
 			} else {
 				logger.warn("unsupported window state '{}'", state);
 			}
-		}
+		} else {
+			logger.error("trying to change window state in the render phase");
+			throw new InvalidPhaseException("Windows state cannot be changed in the render phase.");
+		}			
 	}
 	
 	/**
@@ -895,6 +922,9 @@ public final class ActionContext {
 	public void sendRedirect(String url, String referrer) throws IOException {
 		if(isActionPhase() && response instanceof ActionResponse) {
 			((ActionResponse)response).sendRedirect(url, referrer);
+		} else {
+			logger.warn("trying to redirect while not in action phase");
+			// TODO: should we throw an InvalidPhaseException????
 		}
 	}
 	
@@ -930,7 +960,8 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */	
 	public static Object getApplicationAttribute(String key) {
-		return getAttribute(key, Scope.APPLICATION);
+		PortletSession session = getContext().request.getPortletSession();
+		return session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
 	}
 	
 	/**
@@ -944,7 +975,8 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */
 	public static void setApplicationAttribute(String key, Object value) {
-		setAttribute(key, value, Scope.APPLICATION);
+		PortletSession session = getContext().request.getPortletSession();
+		session.setAttribute(key, value, PortletSession.APPLICATION_SCOPE);
 	}
 	
 	/**
@@ -955,8 +987,11 @@ public final class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not set.
 	 */	
-	public static Object removeApplicationAttribute(String key) {
-		return removeAttribute(key, Scope.APPLICATION);
+	public static Object removeApplicationAttribute(String key) {		
+		PortletSession session = getContext().request.getPortletSession();
+		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
+		session.removeAttribute(key, PortletSession.APPLICATION_SCOPE);
+		return value;
 	}
 
 	/**
@@ -968,7 +1003,8 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */	
 	public static Object getPortletAttribute(String key) {
-		return getAttribute(key, Scope.PORTLET);
+		PortletSession session = getContext().request.getPortletSession();
+		return session.getAttribute(key, PortletSession.PORTLET_SCOPE);		
 	}
 	
 	/**
@@ -983,7 +1019,8 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */
 	public static void setPortletAttribute(String key, Object value) {
-		setAttribute(key, value, Scope.PORTLET);
+		PortletSession session = getContext().request.getPortletSession();
+		session.setAttribute(key, value, PortletSession.PORTLET_SCOPE);		
 	}	
 	
 	/**
@@ -995,7 +1032,10 @@ public final class ActionContext {
 	 *   the previous value of the attribute, or null if not set.
 	 */	
 	public static Object removePortletAttribute(String key) {
-		return removeAttribute(key, Scope.PORTLET);
+		PortletSession session = getContext().request.getPortletSession();
+		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
+		session.removeAttribute(key, PortletSession.PORTLET_SCOPE);
+		return value;		
 	}	
 	
 	/**
@@ -1007,7 +1047,8 @@ public final class ActionContext {
 	 *   the value of the request-scoped attribute, or null if not set.
 	 */
 	public static Object getRequestAttribute(String key) {
-		return getAttribute(key, Scope.REQUEST);
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY); 
+		return map.get(key);
 	}
 
 	/**
@@ -1021,7 +1062,8 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */
 	public static void setRequestAttribute(String key, Object value) {
-		setAttribute(key, value, Scope.REQUEST);
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY); 
+		map.put(key, value);		
 	}
 	
 	/**
@@ -1033,7 +1075,10 @@ public final class ActionContext {
 	 *   the previous value of the attribute, or null if not set.
 	 */	
 	public static Object removeRequestAttribute(String key) {
-		return removeAttribute(key, Scope.REQUEST);
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY);
+		Object value = map.get(key);
+		map.remove(key);		
+		return value;
 	}
 
 	/**
@@ -1048,7 +1093,15 @@ public final class ActionContext {
 	 *   the requested attribute value, or null if not found.
 	 */
 	public static Object getAttribute(String key, Scope scope) {
-		return getAttributes(scope).get(key);
+		switch(scope) {
+		case REQUEST:
+			return getRequestAttribute(key);
+		case PORTLET:
+			return getPortletAttribute(key);
+		case APPLICATION:
+			return getApplicationAttribute(key);
+		}
+		return null;
 	}
 		
 	/**
@@ -1062,6 +1115,7 @@ public final class ActionContext {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Map<String, Object> getAttributes(Scope scope) {
+		// FIXME !
 		Map<String, Object> map = null;
 		if(getContext().request != null) {
 			PortletSession session = getContext().request.getPortletSession();
@@ -1092,7 +1146,17 @@ public final class ActionContext {
 	 *   the requested scope.
 	 */
 	public static void setAttribute(String key, Object value, Scope scope) {
-		getAttributes(scope).put(key, value);
+		switch(scope) {
+		case REQUEST:
+			setRequestAttribute(key, value);
+			break;
+		case PORTLET:
+			setPortletAttribute(key, value);
+			break;
+		case APPLICATION:
+			setApplicationAttribute(key, value);
+			break;
+		}
 	}
 	  
 	/**
@@ -1132,6 +1196,7 @@ public final class ActionContext {
 	 *   the scope at which the attributes should be set.
 	 */
 	public static void setAttributes(Map<String, Object> attributes, Scope scope) {
+		// FIXME !
 		PortletSession session = getContext().request.getPortletSession();
 		Map<String, Object> map;
 		switch(scope) {
@@ -1163,8 +1228,16 @@ public final class ActionContext {
 	 * @return
 	 *   the previous value of the attribute, or null if not found.
 	 */
-	public static Object removeAttribute(String key, Scope scope) {
-		return getAttributes(scope).remove(key);		
+	public static Object removeAttribute(String key, Scope scope) {		
+		switch(scope) {
+		case REQUEST:
+			return removeRequestAttribute(key);
+		case PORTLET:
+			return removePortletAttribute(key);
+		case APPLICATION:
+			return removeApplicationAttribute(key);
+		}
+		return null;
 	}
 	
 	/**
@@ -1174,6 +1247,7 @@ public final class ActionContext {
 	 *   the requested scope.
 	 */
 	public static void clearAttributes(Scope scope) {
+		// FIXME
 		getAttributes(scope).clear();
 	}
 	
@@ -1378,13 +1452,21 @@ public final class ActionContext {
 	 * @param values
 	 *   the parameter value(s).
 	 */
-	public static void setRenderParameter(String key, String... values) {
+	public static void setRenderParameter(String key, String... values) throws InvalidPhaseException {
 		if(Strings.isValid(key) && values != null && getContext().response instanceof StateAwareResponse) {
+			logger.trace("setting render parameter '{}'...", key);
 			if(values.length == 1) {
+				logger.trace(" ... value is '{}'", values[0]);
 				((StateAwareResponse)getContext().response).setRenderParameter(key, values[0]);
 			} else {
 				((StateAwareResponse)getContext().response).setRenderParameter(key, values);
-			}
+				for(String value : values) {
+					logger.trace(" ... value is '{}'", value);
+				}
+			} 
+		} else {
+			logger.error("trying to set render parameter '{}' in render phase", key);
+			throw new InvalidPhaseException("Render parameters cannot be set in the render phase");
 		}
 	}
 	

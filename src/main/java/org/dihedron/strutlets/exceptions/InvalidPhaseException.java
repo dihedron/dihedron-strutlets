@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013, Andrea Funto'. All rights reserved.
+ * Copyright (c) 2012, 2013, Andrea Funto'. All rights reserved.
  * 
  * This file is part of the Strutlets framework ("Strutlets").
  *
@@ -19,65 +19,56 @@
 
 package org.dihedron.strutlets.exceptions;
 
-import javax.portlet.PortletException;
 
 /**
- * Base exception of all Strutlets exceptions.
+ * An exception thrown whenever an operation is attempted that should not be 
+ * performed in the current portlet life cycle phase. An instance of such errors
+ * is when a render parameter is set in the RENDER phase.
  * 
  * @author Andrea Funto'
  */
-public class StrutletsException extends PortletException {
+public class InvalidPhaseException extends ActionException {
 
 	/**
-	 * Serial verion id.
+	 * Serial version id.
 	 */
-	private static final long serialVersionUID = -8305119928892480615L;
+	private static final long serialVersionUID = 3549200585726515802L;
 
 	/**
 	 * Constructor.
 	 */
-	public StrutletsException() {
+	public InvalidPhaseException() {
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param message
 	 *   the exception message.
 	 */
-	public StrutletsException(String message) {
+	public InvalidPhaseException(String message) {
 		super(message);
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param cause
-	 *   the exception's root cause.
+	 *  the exception's root cause.
 	 */
-	public StrutletsException(Throwable cause) {
+	public InvalidPhaseException(Throwable cause) {
 		super(cause);
 	}
 
 	/**
 	 * Constructor.
-	 *   
+	 *
 	 * @param message
-	 *   the exception message.
+	 *   the exception's message.
 	 * @param cause
 	 *   the exception's root cause.
 	 */
-	public StrutletsException(String message, Throwable cause) {
+	public InvalidPhaseException(String message, Throwable cause) {
 		super(message, cause);
 	}
-	
-//	/**
-//	 * Prints the exception's stack trace to a String. 
-//	 */
-//	public String toString() {
-//		Writer writer = new StringWriter();
-//		PrintWriter printWriter = new PrintWriter(writer);
-//		this.printStackTrace(printWriter);
-//		return writer.toString();		
-//	}
 }

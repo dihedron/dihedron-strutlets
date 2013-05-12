@@ -18,7 +18,13 @@
  */
 package org.dihedron.strutlets.taglib;
 
+import java.util.Enumeration;
+import java.util.Map;
+
+import javax.portlet.PortletSession;
+import javax.portlet.PortletSessionUtil;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -53,7 +59,7 @@ public class UseBeanTag extends TagSupport {
 		 * The parameter is persistently stored in the current session, and only 
 		 * available to the current portlet.
 		 */
-		SESSION("session"),
+		PORTLET("portlet"),
 		
 		/**
 		 * The parameter is persistently stored in the current session, and 
@@ -239,7 +245,7 @@ public class UseBeanTag extends TagSupport {
 	 *   the name of the scope; supported values include:<ul>
 	 *   <li>render</li>: one of the render parameters;
 	 *   <li>request</li>: the bean is among the request attributes;
-	 *   <li>session</li>: the bean is among the session attributes;
+	 *   <li>portlet</li>: the bean is among the portlet attributes;
 	 *   <li>application</li>: the bean is among the application attributes;
 	 * <ul>
 	 */
@@ -284,26 +290,54 @@ public class UseBeanTag extends TagSupport {
 	@Override
 	public int doStartTag() throws JspException {
 		Object value = null;
+		
+		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
+		
 		switch(context) {
 		case RENDER:
-			HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
+			
 			if(type.equals("java.lang.String")) {
 				value = request.getParameter(name);
 			} else if(type.equals("Ljava.lang.String[")) {
+				// FIXME
 				value = request.getParameterValues(name);
 			}
 			break;
 		case REQUEST:
-			// TODO
-		case SESSION:
-			// TODO
+			value = getAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY, PortletSession.PORTLET_SCOPE);
+			if(value != null) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> map = (Map<String, Object>)value;
+				value = map.get(name);
+			}
+			break;
+		case PORTLET:
+			value = getAttribute(name, PortletSession.PORTLET_SCOPE);
+			break;
 		case APPLICATION:
-			// TODO
+			value = getAttribute(name, PortletSession.APPLICATION_SCOPE);
 			break;
 		}
 				
 		pageContext.setAttribute(var, value);
 		
 		return EVAL_BODY_INCLUDE;
+	}
+	
+	private Object getAttribute(String name, int scope) {
+		HttpSession session = pageContext.getSession();
+		@SuppressWarnings("unchecked")
+		Enumeration<String> names = (Enumeration<String>)session.getAttributeNames();
+		while(names.hasMoreElements()) {
+			String encodedName = names.nextElement();
+			String decodedName = PortletSessionUtil.decodeAttributeName(encodedName);			
+			int decodedScope = PortletSessionUtil.decodeScope(name);
+			logger.trace("analysing attribute '{}' in scope '{}'", decodedName, decodedScope);
+			if(decodedName.equals(name) && decodedScope == scope) {
+				logger.trace("attribute '{}' found in PORLTET scope", decodedName);
+				return session.getAttribute(encodedName);
+			}				
+		}
+		return null;
 	}
 }
