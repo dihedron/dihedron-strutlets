@@ -45,9 +45,9 @@ public class Target {
 	public static final String DEFAULT_METHOD_NAME = "execute";
 	
 	/**
-	 * The default method semantics: read-write.
+	 * The default method semantics: business.
 	 */
-	public static final Semantics DEFAULT_METHOD_SEMANTICS = Semantics.READ_WRITE;
+	public static final Semantics DEFAULT_METHOD_SEMANTICS = Semantics.BUSINESS;
 	
 	/**
 	 * The default pattern used to make up JSP URLs for automagic Actions.

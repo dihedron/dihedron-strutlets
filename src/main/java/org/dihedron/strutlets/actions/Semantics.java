@@ -34,18 +34,31 @@ import org.dihedron.utils.Strings;
 public enum Semantics {
 	/**
 	 * Used to indicate that the annotated method may change the internal 
-	 * system's state. Methods annotated with this value cannot respond to
-	 * render requests.
+	 * system's state as part of its business logic; moreover methods annotated
+	 * with this value may have access to events, render parameters and all the
+	 * goodies made available to portlets through {@code StateAwareResponse}s.
+	 * Methods annotated with this value can be used to respond to action and 
+	 * event requests; thy <em>must not</em> be used to respond to render requests.
 	 */
-	READ_WRITE("read/write"),
+	BUSINESS("business"),
 	
 	/**
-	 * Used to annotate a read-only method, which is supposed not to change
-	 * the system's internal state (e.g. it can read from a database, but
-	 * it's supposed not to write to it, as render requests must be 
-	 * idempotent and reiterable).
+	 * Used to annotate a method to be used exclusively in the render phase.
+	 * These methods should be able to be invoked as many times as the container
+	 * sees fit while still keeping the internal system coherence. This means
+	 * that the methods should be <em>idempotent</em> and <em>repeatabale</em>, 
+	 * that is it can be called multiple times in a row and it should always 
+	 * render consistent and valid results. This does not necessarily mean that 
+	 * it cannot refresh the page contents, perform new queries, etc.: it can
+	 * interact with the model and even update the system status, but it must
+	 * do so in a way that guarantees that the order and number of invocations
+	 * does not lead to unpredictable internal system status.
+	 * Moreover, methods annotated as "presentation" and used duing the render 
+	 * phase have no access to render parameters and events: trying to call
+	 * methods that set render parameters or fire events will result in an 
+	 * exception being thrown.  
 	 */
-	READ_ONLY("read-only");
+	PRESENTATION("presentation");
 	
 	/**
 	 * Returns the enumeration item corresponding to the given input string.

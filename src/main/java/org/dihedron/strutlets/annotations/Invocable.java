@@ -50,11 +50,11 @@ public @interface Invocable {
 	 * exception being thrown. 
 	 *  
 	 * @return
-	 *   whether the method may change the system's status (READ_WRITE, the 
-	 *   default) or will leave it untouched (READ_ONLY). 
+	 *   whether the method may change the system's status (BUSINESS, the 
+	 *   default) or will leave it untouched (PRESENTATION). 
 	 * 
 	 */
-	Semantics semantics() default Semantics.READ_WRITE;
+	Semantics semantics() default Semantics.BUSINESS;
 	
 	/**
 	 * A list containing the names of the fields whose value should be automatically

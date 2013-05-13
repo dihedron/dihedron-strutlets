@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -961,7 +962,9 @@ public final class ActionContext {
 	 */	
 	public static Object getApplicationAttribute(String key) {
 		PortletSession session = getContext().request.getPortletSession();
-		return session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
+		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
+		logger.trace("application attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		return value;
 	}
 	
 	/**
@@ -977,6 +980,7 @@ public final class ActionContext {
 	public static void setApplicationAttribute(String key, Object value) {
 		PortletSession session = getContext().request.getPortletSession();
 		session.setAttribute(key, value, PortletSession.APPLICATION_SCOPE);
+		logger.trace("application attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");		
 	}
 	
 	/**
@@ -991,7 +995,20 @@ public final class ActionContext {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
 		session.removeAttribute(key, PortletSession.APPLICATION_SCOPE);
+		logger.trace("application attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");		
 		return value;
+	}
+
+	/**
+	 * Removes all application-level attributes from the session.
+	 */
+	public static void clearApplicationAttributes() {
+		PortletSession session = getContext().request.getPortletSession();				
+		Map<String, Object> attributes = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);
+		for(Entry<String, Object> attribute : attributes.entrySet()) {
+			removeApplicationAttribute(attribute.getKey());
+		}
+		logger.trace("all attributes at application scope cleared");
 	}
 
 	/**
@@ -1004,7 +1021,9 @@ public final class ActionContext {
 	 */	
 	public static Object getPortletAttribute(String key) {
 		PortletSession session = getContext().request.getPortletSession();
-		return session.getAttribute(key, PortletSession.PORTLET_SCOPE);		
+		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
+		logger.trace("portlet attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		return value;
 	}
 	
 	/**
@@ -1020,7 +1039,8 @@ public final class ActionContext {
 	 */
 	public static void setPortletAttribute(String key, Object value) {
 		PortletSession session = getContext().request.getPortletSession();
-		session.setAttribute(key, value, PortletSession.PORTLET_SCOPE);		
+		session.setAttribute(key, value, PortletSession.PORTLET_SCOPE);	
+		logger.trace("portlet attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 	}	
 	
 	/**
@@ -1035,11 +1055,24 @@ public final class ActionContext {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
 		session.removeAttribute(key, PortletSession.PORTLET_SCOPE);
+		logger.trace("portlet attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 		return value;		
 	}	
 	
 	/**
-	 * Returns the value of the reqest-scoped attribute.
+	 * Removes all portlet-level attributes from the session.
+	 */
+	public static void clearPortletAttributes() {
+		PortletSession session = getContext().request.getPortletSession();				
+		Map<String, Object> attributes = session.getAttributeMap(PortletSession.PORTLET_SCOPE);
+		for(Entry<String, Object> attribute : attributes.entrySet()) {
+			removePortletAttribute(attribute.getKey());
+		}
+		logger.trace("all attributes at portlet scope cleared");
+	}	
+	
+	/**
+	 * Returns the value of the request-scoped attribute.
 	 * 
 	 * @param key
 	 *   the attribute key.
@@ -1047,8 +1080,11 @@ public final class ActionContext {
 	 *   the value of the request-scoped attribute, or null if not set.
 	 */
 	public static Object getRequestAttribute(String key) {
+		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY); 
-		return map.get(key);
+		Object value = map.get(key);
+		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		return value;
 	}
 
 	/**
@@ -1062,8 +1098,10 @@ public final class ActionContext {
 	 *   the attribute value.
 	 */
 	public static void setRequestAttribute(String key, Object value) {
+		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY); 
-		map.put(key, value);		
+		map.put(key, value);
+		logger.trace("request attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 	}
 	
 	/**
@@ -1075,11 +1113,24 @@ public final class ActionContext {
 	 *   the previous value of the attribute, or null if not set.
 	 */	
 	public static Object removeRequestAttribute(String key) {
+		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY);
 		Object value = map.get(key);
-		map.remove(key);		
+		map.remove(key);
+		logger.trace("request attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 		return value;
 	}
+	
+	/**
+	 * Removes all request-level attributes from the session.
+	 */
+	public static void clearRequestAttributes() {
+		PortletSession session = getContext().request.getPortletSession();				
+		@SuppressWarnings("unchecked")
+		Map<String, Object> attributes = (Map<String, Object>)session.getAttribute(ACTION_SCOPED_ATTRIBUTES_KEY);
+		attributes.clear();
+		logger.trace("all attributes at request scope cleared");
+	}	
 
 	/**
 	 * Returns the value of the given attribute in the proper application-, 
@@ -1111,24 +1162,26 @@ public final class ActionContext {
 	 * @param scope
 	 *   the requested scope.
 	 * @return
-	 *   the map of attributes at the requested scope scope.
+	 *   the <em>immutable</em> map of attributes at the requested scope.
 	 */
 	@SuppressWarnings("unchecked")
 	public static Map<String, Object> getAttributes(Scope scope) {
-		// FIXME !
 		Map<String, Object> map = null;
 		if(getContext().request != null) {
 			PortletSession session = getContext().request.getPortletSession();
-			// TODO: check on this
-			//session.isNew(); 
 			switch(scope) {
 			case APPLICATION:
+				logger.trace("getting application attributes map");				
 				map = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);
+				break;
 			case PORTLET:
+				logger.trace("getting portlet attributes map");
 				map = session.getAttributeMap(PortletSession.PORTLET_SCOPE);
+				break;
 			case REQUEST:
-				Map<String, Object> attributes = session.getAttributeMap(PortletSession.PORTLET_SCOPE);
-				map = (Map<String, Object>)attributes.get(ACTION_SCOPED_ATTRIBUTES_KEY);
+				logger.trace("getting request attributes map");
+				map = (Map<String, Object>)getPortletAttribute(ACTION_SCOPED_ATTRIBUTES_KEY);
+				break;
 			}			
 		}
 		return map;
@@ -1168,7 +1221,7 @@ public final class ActionContext {
 	 * in the attributes map at the <code>PortletSession</code>'s 
 	 * <code>APPLICATION_SCOPE</code>; these attributes will be visible throughout
 	 * the application to all portlets, JSPs and servlets on a per-user basis</li>
-	 * <li>in the case of <em>session</em> scope, the attributes are stored 
+	 * <li>in the case of <em>portlet</em> scope, the attributes are stored 
 	 * in the attributes map at the <code>PortletSession</code>'s 
 	 * <code>PORTLET_SCOPE</code>; these attributes will be visible to the portlet
 	 * itself (but not to other instances of the same portlet), and to JSPs and 
@@ -1196,25 +1249,9 @@ public final class ActionContext {
 	 *   the scope at which the attributes should be set.
 	 */
 	public static void setAttributes(Map<String, Object> attributes, Scope scope) {
-		// FIXME !
-		PortletSession session = getContext().request.getPortletSession();
-		Map<String, Object> map;
-		switch(scope) {
-		case APPLICATION:
-			map = session.getAttributeMap(PortletSession.APPLICATION_SCOPE);		
-			map.putAll(attributes);
-			break;
-		case PORTLET:
-			map = session.getAttributeMap(PortletSession.PORTLET_SCOPE);		
-			map.putAll(attributes);
-			break;
-		case REQUEST:
-			map = session.getAttributeMap(PortletSession.PORTLET_SCOPE);		
-			@SuppressWarnings("unchecked")
-			Map<String, Object> attrs = (Map<String, Object>)map.get(ACTION_SCOPED_ATTRIBUTES_KEY);
-			attrs.putAll(attributes);
-			break;			
-		}
+		for(Entry<String, Object> attribute : attributes.entrySet()) {	
+			setAttribute(attribute.getKey(), attribute.getValue(), scope);
+		}		
 	}
 	
 	/**
@@ -1247,8 +1284,17 @@ public final class ActionContext {
 	 *   the requested scope.
 	 */
 	public static void clearAttributes(Scope scope) {
-		// FIXME
-		getAttributes(scope).clear();
+		switch(scope) {
+		case REQUEST:
+			clearRequestAttributes();
+			break;
+		case PORTLET:
+			clearPortletAttributes();
+			break;
+		case APPLICATION:
+			clearApplicationAttributes();
+			break;
+		}
 	}
 	
 	/**
@@ -1453,7 +1499,7 @@ public final class ActionContext {
 	 *   the parameter value(s).
 	 */
 	public static void setRenderParameter(String key, String... values) throws InvalidPhaseException {
-		if(Strings.isValid(key) && values != null && getContext().response instanceof StateAwareResponse) {
+		if(Strings.isValid(key) && values != null && (isActionPhase() || isEventPhase()) && getContext().response instanceof StateAwareResponse) {
 			logger.trace("setting render parameter '{}'...", key);
 			if(values.length == 1) {
 				logger.trace(" ... value is '{}'", values[0]);

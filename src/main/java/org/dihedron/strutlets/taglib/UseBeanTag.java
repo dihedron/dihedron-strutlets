@@ -225,6 +225,7 @@ public class UseBeanTag extends TagSupport {
 	 * end of the page.</li>
 	 * </ul>
 	 */
+	@SuppressWarnings("unused")
 	private Visibility visibility = DEFAULT_VISIBILITY;	
 	
 	/**
@@ -287,9 +288,17 @@ public class UseBeanTag extends TagSupport {
 		this.visibility = Visibility.fromString(visibility);
 	}	
 
+	/**
+	 * Retrieves the appropriate attribute from the given scope and stores it
+	 * into the page context under the given variable name.
+	 * 
+	 * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
+	 */
 	@Override
 	public int doStartTag() throws JspException {
 		Object value = null;
+		
+		logger.trace("publishing value '{}' from scope '{}' as variable '{}'", name, context, var);
 		
 		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
 		
@@ -297,9 +306,10 @@ public class UseBeanTag extends TagSupport {
 		case RENDER:
 			
 			if(type.equals("java.lang.String")) {
+				logger.trace("retrieving render parameter");
 				value = request.getParameter(name);
-			} else if(type.equals("Ljava.lang.String[")) {
-				// FIXME
+			} else if(type.equals("java.lang.String[]")) {
+				logger.trace("retrieving render parameters list");
 				value = request.getParameterValues(name);
 			}
 			break;
@@ -324,17 +334,31 @@ public class UseBeanTag extends TagSupport {
 		return EVAL_BODY_INCLUDE;
 	}
 	
+	/**
+	 * Retrieves an attribute from the given scope; in doing so, it decodes its name
+	 * and scope (according to the JSR-286 naming conventions and by using the 
+	 * appropriate {@code PortletSessionUtil} methods in order to be completely
+	 * compliant with the standard.
+	 * 
+	 * @param name
+	 *   the (non-decorated) name of the attribute.
+	 * @param scope
+	 *   the scope of the attribute.
+	 * @return
+	 *   the attribute, if found; null otherwise.
+	 */
 	private Object getAttribute(String name, int scope) {
+		logger.trace("looking for attribute '{}' in scope '{}'...", name, scope);
 		HttpSession session = pageContext.getSession();
 		@SuppressWarnings("unchecked")
 		Enumeration<String> names = (Enumeration<String>)session.getAttributeNames();
 		while(names.hasMoreElements()) {
 			String encodedName = names.nextElement();
 			String decodedName = PortletSessionUtil.decodeAttributeName(encodedName);			
-			int decodedScope = PortletSessionUtil.decodeScope(name);
-			logger.trace("analysing attribute '{}' in scope '{}'", decodedName, decodedScope);
+			int decodedScope = PortletSessionUtil.decodeScope(encodedName);
+			logger.trace(" ... analysing attribute '{}' (encoded: '{}') in scope '{}'", decodedName, encodedName, decodedScope);
 			if(decodedName.equals(name) && decodedScope == scope) {
-				logger.trace("attribute '{}' found in PORLTET scope", decodedName);
+				logger.trace("attribute '{}' found in PORTLET scope", decodedName);
 				return session.getAttribute(encodedName);
 			}				
 		}

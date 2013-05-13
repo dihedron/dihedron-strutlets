@@ -547,16 +547,16 @@ public class ActionController extends GenericPortlet {
     	try {
     		if(Strings.isValid(target)) {
     			
-    			// check if the method is read-only
+    			// check that the method is for presentation
     			Target info = configuration.getTarget(target);
-    			if(info.getSemantics() != Semantics.READ_ONLY) {
-    				throw new PortletException("trying to invoke read/write action in render request");
+    			if(info.getSemantics() != Semantics.PRESENTATION) {
+    				throw new PortletException("Trying to invoke business method in render request");
     			}
     			
     			// invoke method
     			logger.debug("invoking target '{}'...", target);    			
 	    		result = invokeTarget(target, request, response);	
-	    		logger.debug("target '{}' result is '{}'", result);
+	    		logger.debug(" ... target '{}' result is '{}'", target, result);
     		}
     		return result;
     	} catch(PortletException e) {
