@@ -35,10 +35,10 @@ public @interface Alias {
 	
 	/**
 	 * The alias for the type; by annotating a class with this information you 
-	 * can provide an alternative name for the type.
+	 * provide an alternative name for the type.
 	 * 
 	 * @return
 	 *   the alias for the type.
 	 */
-	String value() default "";
+	String value();
 }

@@ -40,6 +40,24 @@ public final class Strings {
 	public static boolean isValid(String string) {
 		return (string != null && string.trim().length() > 0);
 	}
+	
+	/**
+	 * Checks whether all the given strings are neither null nor blank.
+	 * 
+	 * @param strings
+	 *   the strings to be checked.
+	 * @return
+	 *   <code>true</code> if all the strings are not null and have some content 
+	 *   besides blank spaces.
+	 */
+	public static boolean areValid(String... strings) {
+		boolean result = true;
+		for(String string : strings) {
+			result = result && isValid(string);
+		}
+		return result;
+	}
+	
 
 	/**
 	 * Trims the input string if it is not null.

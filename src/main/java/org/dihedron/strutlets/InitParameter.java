@@ -56,6 +56,11 @@ public enum InitParameter {
 	INTERCEPTORS_DEFAULT_STACK("interceptors.default.stack"),
 	
 	/**
+	 * The Java package where custom renderer classes are looked for, if non null.
+	 */
+	RENDERERS_JAVA_PACKAGE("renderers.java.package"),
+	
+	/**
 	 * The parameter used to specify the root directory for JSP renderers.
 	 * This is used only when dealing with annotated actions and smart defaults,
 	 * to conjure the name of renderer JSPs based on the action's result and
@@ -133,7 +138,7 @@ public enum InitParameter {
      * @return
      *   the value of the input parameter.
      */
-    public String getValue(GenericPortlet portlet) {
+    public String getValueForPortlet(GenericPortlet portlet) {
     	return portlet.getInitParameter(name);
     }	
     
@@ -146,6 +151,6 @@ public enum InitParameter {
      *   the name and value of the input parameter.
      */
     public String toString(GenericPortlet portlet) {
-    	return "'" + getName() + "':='" + getValue(portlet) + "'";
+    	return "'" + getName() + "':='" + getValueForPortlet(portlet) + "'";
     }
 }

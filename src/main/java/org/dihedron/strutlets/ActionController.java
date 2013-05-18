@@ -49,6 +49,9 @@ import org.dihedron.strutlets.actions.registry.ActionRegistryLoader;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
+import org.dihedron.strutlets.renderers.Renderer;
+import org.dihedron.strutlets.renderers.registry.RendererRegistry;
+import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,43 +61,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ActionController extends GenericPortlet {
 
-
-	       
-	/**
-	 * The default name of the actions configuration file.
-	 */
-	public static final String DEFAULT_ACTIONS_CONFIG_XML = "actions-config.xml";
-	
-	/**
-	 * The name of the file declaring the default interceptor stack.
-	 */
-	public static final String DEFAULT_INTERCEPTORS_CONFIG_XML = "org/dihedron/strutlets/default-interceptors-config.xml";
-
-	/**
-	 * The name of the default interceptors stack.
-	 */
-	public static final String DEFAULT_INTERCEPTORS_STACK = "default";
-	
-	/**
-	 * The name of the parameter under which the requested action's name is stored
-	 * in the <code>ActionRequest</code> parameters map. 
-	 */
-	private static final String ACTION_TARGET = ActionRequest.ACTION_NAME;
-	
-	/**
-	 * The parameter used to pass information about the last action/event execution
-	 * to the render phase. This parameter is internal to the framework and should 
-	 * not be used outside of it (e.g in render URLs). 
-	 */
-	private static final String EXECUTION_TARGET = "org.dihedron.strutlets.action";
-	
-	/**
-	 * The name of the session attribute under which the action's result is stored.
-	 * This parameter is persistent and allows for multiple render request to be 
-	 * serviced while keeping information about the latest action's execution status.
-	 */
-	private static final String EXECUTION_RESULT = "org.dihedron.strutlets.result";
-	
 	/**
 	 * The parameter used to specify the home page to be used by the framework
 	 * in custom XXXX (whatever) mode. This page is the starting point of the custom mode 
@@ -103,22 +69,19 @@ public class ActionController extends GenericPortlet {
 	private static final String RENDER_XXXX_HOMEPAGE = "render.xxxx.homepage";
 	
 	/**
-	 * This parameter is used by Liferay to create render requests that navigate
-	 * directly to the given URL; in order to be compatible with Liferay's
-	 * default JSPs, this parameter is checked before redirecting the client
-	 * to the default, home page.  
-	 */
-	private static final String RENDER_REDIRECT_PARAMETER = "jspPage";
-	
-	/**
 	 * The factory of interceptors' stacks.
 	 */
 	private InterceptorsRegistry interceptors;
 	
 	/**
-	 * The actions configuration.
+	 * The actions registry.
 	 */
 	private ActionRegistry registry;
+	
+	/**
+	 * The registry of renderers.
+	 */
+	private RendererRegistry renderers;
 
     /**
      * Initialises the controller portlet. The process follows these steps:<ol>
@@ -146,9 +109,9 @@ public class ActionController extends GenericPortlet {
     	super.init();
        
         try {
-        	logger.info("   +--------------------------------+   ");
+        	logger.info(              "   +--------------------------------+   ");
         	logger.info(String.format("   |      STRUTLETS ver. %1$-8s   |   ", Strutlets.VERSION));
-        	logger.info("   +--------------------------------+   ");
+        	logger.info(              "   +--------------------------------+   ");
         	
         	logger.info("action controller '{}' starting up...", getPortletName());
         	
@@ -161,7 +124,7 @@ public class ActionController extends GenericPortlet {
 			
         	initialiseInterceptorsRegistry();
         	
-        	initialiseViewRegistry();
+        	initialiseRenderersRegistry();
 			
 			logger.info("portlet '{}''s action controller open for business", getPortletName());
 			
@@ -185,20 +148,22 @@ public class ActionController extends GenericPortlet {
      * @see 
      *   javax.portlet.GenericPortlet#processAction(javax.portlet.ActionRequest, javax.portlet.ActionResponse)
      */
+    @Override
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
     	logger.trace("processing action...");
-    	String target = request.getParameter(ACTION_TARGET);
-    	String result = doBusinessLogic(target, request, response);
+    	
+    	// the target is contained in one of several places
+    	String target = Target.getTargetFromRequest(request);
+    	
+    	String result = invokeBusinessLogic(target, request, response);
+    	
     	logger.trace("... action processing done with result '{}'", result);
     }
     
     /**
-     * Extracts action  from JSR-286 events and and dispatches them to the 
-     * appropriate handler.
-     * This method receives incoming event processing requests and looks up the 
-     * appropriate handler in the target map, then propagates the request to the 
-     * action through the interceptors stack. Once the processing is complete, 
-     * it collects the result string and looks up the appropriate view JSP.
+     * Extracts the name of the event from the JSR-286 events, re-maps it onto a
+     * target (if available) and then dispatches control to the appropriate action
+     * if one was found.
      * 
      *  @param request
      *    the incoming <code>EventRequest</code> object.
@@ -210,11 +175,14 @@ public class ActionController extends GenericPortlet {
     @Override
     public void processEvent(EventRequest request, EventResponse response) throws PortletException, IOException {
     	logger.trace("processing event...");
+    	// get the name of the event and re-map it onto the target through the registry
     	QName qname = request.getEvent().getQName();
     	String target = registry.getEventTarget(qname);
-    	String result = doBusinessLogic(target, request, response);
+    	
+    	String result = invokeBusinessLogic(target, request, response);
+    	
     	logger.trace("... event processing done with result '{}'", result);
-    }    
+    }        
     
     /**
      * The method that perform output rendering; it might include some read-only 
@@ -239,7 +207,7 @@ public class ActionController extends GenericPortlet {
      * "javax.portlet.action" among those in the render request;</li>
      * <li>if found, it proceeds with the dispatching to the appropriate target;</li>
      * <li>if not found, it checks if the render phase follows an action or event 
-     * processing, by testing the EXECUTION_TARGET and EXECUTION_RESULT parameters:
+     * processing, by testing the STRUTLETS_TARGET and STRUTLETS_RESULT parameters:
      * if found, then in dispatches to the appropriate JSP page;</li>
      * <li>if the aforementioned parameters are null, then it tests yet another 
      * parameter: it looks for a value in JSP_PAGE, which is the parameter used by
@@ -251,65 +219,79 @@ public class ActionController extends GenericPortlet {
     @Override
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
-    	String url = null;
+    	String target = null;
+    	String result = null;
+    	
+    	Renderer renderer = null;
     	
     	logger.trace("rendering output...");
     	
-    	// retrieve the name of the target; this may be a target specification 
-    	// or a plain JSP page URL; if it's a target, execute it and then
-    	// proceed to rendering
-    	String target = getTarget(request);
-    	logger.trace("target is '{}'", target);
-    	
-    	if(Target.isValidActionTarget(target)) { // (*)
+    	do {
+	    	// first attempt, check if there is a target to invoke before rendering
+	    	target = Target.getTargetFromRequest(request);
+	    	if(Strings.isValid(target)) { // (*)
+	    		logger.trace("invoking target '{}' as per render request", target);
+		    	
+	    		// this is a valid target specification, dispatch to the appropriate 
+	    		// action and method, then retrieve the result's URL	    		
+	    		result = invokePresentationLogic(target, request, response);
+	    		
+	    		// task invoked, now exit
+	    		break;
+	    	}
+
+	    	// second attempt, check if this is a render request following an action/event request
+    		target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
+    		if(Strings.isValid(target) && Strings.isValid(result)) {
+    			// yes, this is right after a processAction or processEvent
+    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", target, result);
+    			break;
+    		}
     		
-    		logger.trace("target '{}' is an action invocation", target);
-	    	
-    		// this is a valid target specification, dispatch to the appropriate 
-    		// action and method, then retrieve the result's URL	    		
-    		String result = doBusinessLogic(target, request, response);
+    		logger.trace("no business logic to invoke in render phase");
+    	} while(false);   
+
+    	String url = null;
+    	// now, if target and result are valid, get the renderer
+    	if(Strings.areValid(target, result)) {
+    		logger.trace("looking for renderer for ");
+    		// get the renderer for this target
+    		 
+    		// registry.getResult(target, result);
+    		// renderer.setData();
     		
     		// get the URL corresponding to the given target and result
     		url = getUrl(target, result);
-    		
-    		// TODO: get ViewInfo from the target and result, thsn use it to pick the appropriate
-    		// renderer fro the registry, and store a renderere reference, to be called later in this method
+
     	} else {
-			// it's not a pure render request, let's check if we are in a render phase AFTER 
-			// an action or event processing, in which case the following two parameters 
-			// should have been filled by the doProcess and therefore valid    		
-    		target = request.getParameter(EXECUTION_TARGET);
-    		String result = request.getParameter(EXECUTION_RESULT);
-    		if(Strings.isValid(target) && Strings.isValid(result)) {
-    			// yes, this is right after a processAction or processEvent,
-    			// get the URL for this combination
-    			logger.trace("rendering the result of an action invocation: target was '{}', result is '{}'", target, result);
-		    	url = getUrl(target, result);
-    		} else {
-    			// no, this is a plain render request, let's check "jspPage" 
-    			// first, to comply with Liferay's worst practices
-	    		url = request.getParameter(RENDER_REDIRECT_PARAMETER);
-	    		if(Strings.isValid(url)) {
-	    			logger.trace("redirecting to jspPage '{}' as requested by client", url);
-	    		} else {		    			
-	    			// we have to resort to the default URL for the given mode,
-	    			// the ones specified in the portlet parameters; at this point
-	    			// we are sure it's not a target (otherwise it would have been 
-	    			// detected as such above, at (*)		    			
-		    		PortletMode mode = request.getPortletMode();
-		    		logger.trace("redirecting to default page for current mode '{}'", mode.toString());
-		    		url = getDefaultUrl(mode);
-	    		}
+			// no, this is a plain render request, let's check "jspPage" 
+			// first, to comply with Liferay's worst practices
+    		url = request.getParameter(Strutlets.LIFERAY_TARGET);
+    		if(Strings.isValid(url)) {
+    			logger.trace("redirecting to jspPage '{}' as requested by client", url);
+    		} else {		    			
+    			// we have to resort to the default URL for the given mode,
+    			// the ones specified in the portlet parameters; at this point
+    			// we are sure it's not a target (otherwise it would have been 
+    			// detected as such above, at (*)		    			
+	    		PortletMode mode = request.getPortletMode();
+	    		logger.trace("redirecting to default page for current mode '{}'", mode.toString());
+	    		url = getDefaultUrl(mode);
     		}
     	}
 
+    	
 	    	// we're almost done: proceed with the JSP rendering
     	if(Strings.isValid(url)) {
     		logger.info("rendering through URL: '{}'", url);
-    		include(url, request, response);
+    		renderer = renderers.makeRenderer("jsp");
+    		renderer.setData(url);
+    		renderer.render(request, response);
+//    		include(url, request, response);
     	} else {
     		logger.error("invalid render URL");
-    		throw new StrutletsException("no render URL available");
+    		throw new StrutletsException("No render URL available");
     	}
     	logger.trace("... output rendering done");
     }
@@ -325,8 +307,8 @@ public class ActionController extends GenericPortlet {
     	logger.trace("serving resource...");
     	
     	// retrieve the name of the target, if available
-    	String target = getTarget(request);
-    	logger.trace("target is '{}'", target);
+//    	String target = getTarget(request);
+//    	logger.trace("target is '{}'", target);
 //    	
 //    	if(Target.isValidActionTarget(target)) { // (*)
 //    		
@@ -341,6 +323,8 @@ public class ActionController extends GenericPortlet {
     	super.serveResource(request, response);
     }
     
+
+    
     /**
      * Processes an action request in the action and event phases.
      * 
@@ -352,8 +336,9 @@ public class ActionController extends GenericPortlet {
      *   the current action or event response object.
      * @throws PortletException
      */
-    protected String doBusinessLogic(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
+    protected String invokeBusinessLogic(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
     	String res = null;
+    	
     	try {
 			if(Strings.isValid(target)) {
 				// invoke method
@@ -375,24 +360,24 @@ public class ActionController extends GenericPortlet {
 	    		if(Strings.isValid(state.toString()) && request.isWindowStateAllowed(state)) {
 	    			response.setWindowState(state);
 	    		}
-	    		// set renderer URL
-		    	response.setRenderParameter(EXECUTION_TARGET, target);
-		    	response.setRenderParameter(EXECUTION_RESULT, result.getId());	    		
+	    		// set parameters for the following render phase
+		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, target);
+		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
 			} else {			
 				// action not specified, check the current mode and service the
 				// default page, as specified in the initialisation parameters
 				logger.trace("target string not specified, blanking target and result in render parameters and serving default page");
-		    	response.setRenderParameter(EXECUTION_TARGET, (String)null);
-		    	response.setRenderParameter(EXECUTION_RESULT, (String)null);    			
+		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
+		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
 			}
 		} catch(PortletException e) {
 			logger.error("portlet exception servicing action request: {}", e.getMessage());
 			throw e;
-		}
+		}    	
 		return res;
     }
     
-    protected String doBusinessLogic(String target, RenderRequest request, RenderResponse response) throws IOException, PortletException {
+    protected String invokePresentationLogic(String target, RenderRequest request, RenderResponse response) throws IOException, PortletException {
     	String result = null;
     	try {
     		if(Strings.isValid(target)) {
@@ -424,6 +409,12 @@ public class ActionController extends GenericPortlet {
     		
     		// check if there's configuration available for the given action
 			Target info = registry.getTarget(target);
+			
+			if(info == null) {
+				logger.error("target '{}' has no valid configuration in the registry", target);
+				throw new StrutletsException("No valid configuration found in registry for target '" + target + "'");
+			}
+			
 			logger.trace("target configuration:\n{}", info.toString());
     		
 			// instantiate the action
@@ -484,12 +475,12 @@ public class ActionController extends GenericPortlet {
     /**
      * Retrieves the name of the current target from one of the places where it 
      * might have been set by the requester:<ol>
-     * <li>in the {@code EXECUTION_TARGET} render parameter, where it might
+     * <li>in the {@code STRUTLETS_TARGET} render parameter, where it might
      * have been set by a prior action execution (see {@code #doProcess(String, 
      * PortletRequest, StateAwareResponse)}; if this parameter is set, then the 
      * current method is being invoked in the following render phase and it 
      * should render the appropriate JSP page according to the given action's 
-     * result, as per the {@code EXECUTION_RESULT} render parameter, otherwise 
+     * result, as per the {@code STRUTLETS_RESULT} render parameter, otherwise 
      * the process goes on</li>
      * <li>in the {@code javax.portlet.action} parameter, which is the 
      * parameter to use to have a render URL invoke some business logic prior
@@ -509,17 +500,18 @@ public class ActionController extends GenericPortlet {
      *   the portlet request.
      * @return
      *   the target of the request.
-     */
+     *
+    @Deprecated
     private String getTarget(PortletRequest request) {
     	String target = null;
-    	if(!Strings.isValid(request.getParameter(EXECUTION_TARGET))) {
-    		logger.trace("trying to get target as action...");
-	    	target = request.getParameter(ACTION_TARGET);
-			logger.trace("target in ACTION_TARGET is '{}'", target);
-			if(!Target.isValidActionTarget(target)) {
+    	if(!Strings.isValid(request.getParameter(Strutlets.STRUTLETS_TARGET))) {
+    		logger.trace("trying to get target from STRUTLETS_TARGET...");
+	    	target = request.getParameter(Strutlets.PORTLETS_TARGET);
+			logger.trace("target in PORTLETS_TARGET is '{}'", target);
+			if(!Target.isValidTarget(target)) {
 				logger.trace("trying to get target as redirect parameter...");
-				target = request.getParameter(RENDER_REDIRECT_PARAMETER);
-				logger.trace("target in RENDER_REDIRECT_PARAMETER is '{}'", target);
+				target = request.getParameter(Strutlets.LIFERAY_TARGET);
+				logger.trace("target in LIFERAY_TARGET is '{}'", target);
 				if(!Strings.isValid(target)) {	
 		    		PortletMode mode = request.getPortletMode();
 		    		logger.trace("getting default target for mode '{}'", mode);
@@ -532,6 +524,7 @@ public class ActionController extends GenericPortlet {
 		logger.debug("target: '{}'", target);
 		return target;
 	}
+	*/
     
     /**
      * Retrieves the render URL for the given target and its result.
@@ -549,7 +542,7 @@ public class ActionController extends GenericPortlet {
 	    	logger.trace("looking for renderer for target '{}' with result '{}'", target, result);	    	
 	    	Target info = registry.getTarget(target);
 	    	Result renderer = info.getResult(result);
-	    	url = renderer.getUrl();
+	    	url = renderer.getData();
 	    	logger.debug("renderer URL for target '{}' with result '{}' is '{}' (mode '{}', state '{}')", 
 	    			target, result, url, renderer.getPortletMode(), renderer.getWindowState());
     	}
@@ -573,13 +566,13 @@ public class ActionController extends GenericPortlet {
     	String url = null;    	
 		if(mode.equals(PortletMode.VIEW)) {
 			logger.trace("getting default URL for mode 'view'");
-			url = InitParameter.RENDER_VIEW_HOMEPAGE.getValue(this);
+			url = InitParameter.RENDER_VIEW_HOMEPAGE.getValueForPortlet(this);
 		} else if(mode.equals(PortletMode.EDIT)) {
 			logger.trace("getting default URL for mode 'edit'");
-			url = InitParameter.RENDER_EDIT_HOMEPAGE.getValue(this);
+			url = InitParameter.RENDER_EDIT_HOMEPAGE.getValueForPortlet(this);
 		} else if(mode.equals(PortletMode.HELP)) {
 			logger.trace("getting default URL for mode 'help'");
-			url = InitParameter.RENDER_HELP_HOMEPAGE.getValue(this);
+			url = InitParameter.RENDER_HELP_HOMEPAGE.getValueForPortlet(this);
 		} else {
 			logger.trace("getting default URL for custom render mode: '{}'", mode);
 			String parameter = RENDER_XXXX_HOMEPAGE.replaceFirst("xxxx", mode.toString());
@@ -611,28 +604,28 @@ public class ActionController extends GenericPortlet {
 		ActionRegistryLoader loader = new ActionRegistryLoader();
 		
 		// load the actions configuration
-		String file = InitParameter.ACTIONS_CONFIGURATION_FILE.getValue(this);
+		String file = InitParameter.ACTIONS_CONFIGURATION_FILE.getValueForPortlet(this);
 		if(Strings.isValid(file)) {
 			// load the custom configuration
 			logger.info("loading actions configuration from custom location: '{}'", file);
 			loader.loadFromClassPath(registry, file);
 		} else {
 			// load the default			
-			logger.info("loading actions configuration from well-known location: '{}'", DEFAULT_ACTIONS_CONFIG_XML);
-			loader.loadFromClassPath(registry, DEFAULT_ACTIONS_CONFIG_XML);
+			logger.info("loading actions configuration from well-known location: '{}'", ActionRegistryLoader.DEFAULT_ACTIONS_CONFIG_XML);
+			loader.loadFromClassPath(registry, ActionRegistryLoader.DEFAULT_ACTIONS_CONFIG_XML);
 		}
 						
 		// set the default Java package where self-configuring annotated actions are to be located
-		registry.setDefaultActionPackage(InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
+		registry.setDefaultActionPackage(InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
 		
 		// set the root directory for HTML files and JSPs, for auto-configured annotated actions
-		registry.setRootHtmlDirectory(InitParameter.RENDER_ROOT_DIRECTORY.getValue(this));
+		registry.setRootHtmlDirectory(InitParameter.RENDER_ROOT_DIRECTORY.getValueForPortlet(this));
 
 		// set the pattern for the HTML files and JSP paths, for auto-configured annotated actions
-		registry.setHtmlPathPattern(InitParameter.RENDER_PATH_PATTERN.getValue(this));
+		registry.setHtmlPathPattern(InitParameter.RENDER_PATH_PATTERN.getValueForPortlet(this));
 		
 		// pre-scan existing classes and methods in the default actions package
-		loader.loadFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
+		loader.loadFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
 
 		logger.trace("actions configuration:\n{}", registry.toString());    	
     }
@@ -649,12 +642,12 @@ public class ActionController extends GenericPortlet {
 		interceptors = new InterceptorsRegistry();
 		
 		// load the default interceptors stacks ("default" and others)
-		logger.info("loading default interceptors stacks: '{}'", DEFAULT_INTERCEPTORS_CONFIG_XML);
-		interceptors.loadFromClassPath(DEFAULT_INTERCEPTORS_CONFIG_XML);
+		logger.info("loading default interceptors stacks: '{}'", InterceptorsRegistry.DEFAULT_INTERCEPTORS_CONFIG_XML);
+		interceptors.loadFromClassPath(InterceptorsRegistry.DEFAULT_INTERCEPTORS_CONFIG_XML);
 		logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
 		
 		// load the custom interceptors configuration
-		String file = InitParameter.INTERCEPTORS_CONFIGURATION_FILE.getValue(this);
+		String file = InitParameter.INTERCEPTORS_CONFIGURATION_FILE.getValueForPortlet(this);
 		if(Strings.isValid(file)) {
 			logger.info("loading interceptors configuration from custom location: '{}'", file);
 			interceptors.loadFromClassPath(file);
@@ -666,8 +659,11 @@ public class ActionController extends GenericPortlet {
      * Initialises the registry of view renderers
      * @throws StrutletsException
      */
-    private void initialiseViewRegistry() throws StrutletsException {
-    	// TODO
+    private void initialiseRenderersRegistry() throws StrutletsException {
+    	RendererRegistryLoader loader = new RendererRegistryLoader();
+    	renderers = new RendererRegistry(this);
+    	loader.loadFromJavaPackage(renderers, "org.dihedron.strutlets.renderers.impl");
+    	loader.loadFromJavaPackage(renderers, InitParameter.RENDERERS_JAVA_PACKAGE.getValueForPortlet(this));
     }
 
     /**

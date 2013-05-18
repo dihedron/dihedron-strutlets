@@ -57,7 +57,7 @@
 						</xs:simpleType>
 					</xs:attribute>
 					<xs:attribute name="id" type="xs:normalizedString" default="success"/>
-					<xs:attribute name="type" type="xs:normalizedString" default="jsp"/>
+					<xs:attribute name="renderer" type="xs:normalizedString" default="jsp"/>
 				</xs:extension>
 			</xs:simpleContent>
 		</xs:complexType>

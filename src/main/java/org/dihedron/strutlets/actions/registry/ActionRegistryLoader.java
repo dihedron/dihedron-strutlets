@@ -38,11 +38,12 @@ import javax.xml.validation.SchemaFactory;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.PortletMode;
-import org.dihedron.strutlets.actions.ResultType;
 import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.dihedron.strutlets.renderers.registry.RendererRegistry;
+import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
 import org.dihedron.utils.Resource;
 import org.dihedron.utils.Strings;
 import org.dihedron.xml.DomHelper;
@@ -67,6 +68,10 @@ import org.xml.sax.SAXParseException;
  */
 public class ActionRegistryLoader {
 
+	/**
+	 * The default name of the actions configuration file.
+	 */
+	public static final String DEFAULT_ACTIONS_CONFIG_XML = "actions-config.xml";		
 	
 	public class ConfigurationErrorHandler implements ErrorHandler {
 	    public void warning(SAXParseException e) throws SAXException {
@@ -150,7 +155,7 @@ public class ActionRegistryLoader {
 	}
 
 	/**
-	 * Initialises the configuration by parsing the input streaM, if the stream 
+	 * Initialises the configuration by parsing the input stream; if the stream 
 	 * is null, it returns immediately without any error, in order to support 
 	 * automagical self-configuring <code>Actions</code>s, which do not require
 	 * any configuration file.
@@ -181,7 +186,7 @@ public class ActionRegistryLoader {
 			if(xsd == null) {
 				logger.warn("XSD for actions configuration not found");
 			} else {
-				logger.debug("XSD for actions configuration loaded");
+				logger.trace("XSD for actions configuration loaded");
 				SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
 				factory.setSchema(schemaFactory.newSchema(new Source[] {new StreamSource(xsd)}));
 			}
@@ -201,7 +206,7 @@ public class ActionRegistryLoader {
 						actions.getAttribute("id"), classpkg, interceptors);				
 								
 				for(Element action : DomHelper.getChildrenByTagName(actions, "action")) {
-					Target info = null;
+					Target target = null;
 					String actionid = action.getAttribute("id");					
 					String classname = DomHelper.getElementText(DomHelper.getFirstChildByTagName(action, "class"));
 										
@@ -221,16 +226,13 @@ public class ActionRegistryLoader {
 					for(Element method : DomHelper.getChildrenByTagName(DomHelper.getFirstChildByTagName(action, "methods"), "method")) {						
 						String methodid = method.getAttribute("id");
 
-						info = new Target(actionid, methodid, false);
-						info.setPackageName(classpkg);
-						info.setInterceptorsStackId(interceptors);
-						info.setClassName(classname);
-						info.addParameters(params);						
-											
-						boolean idempotent = Boolean.parseBoolean(method.getAttribute("idempotent"));
-						info.setIdempotent(idempotent);
-						logger.debug("   + method {} idempotent", idempotent ? "is" : "is not");
-
+						target = new Target(actionid, methodid, false);
+						target.setPackageName(classpkg);
+						target.setInterceptorsStackId(interceptors);
+						target.setClassName(classname);
+						target.addParameters(params);																	
+						target.setIdempotent(Boolean.parseBoolean(method.getAttribute("idempotent")));
+						logger.debug("   + method {} idempotent", target.isIdempotent() ? "is" : "is not");
 						
 						logger.debug("   + method '{}' supports: ", methodid);						
 						Element events = DomHelper.getFirstChildByTagName(method, "events");
@@ -239,20 +241,20 @@ public class ActionRegistryLoader {
 								String namespace = event.getAttribute("namespace");
 								String name = event.getTextContent();
 								logger.debug("     + event event '{{}}{}'", namespace, name);
-								registry.putEventTarget(new QName(namespace, name), info.getId());
+								registry.putEventTarget(new QName(namespace, name), target.getId());
 							}
 						}
 						
 						for(Element result : DomHelper.getChildrenByTagName(method, "result")) {
 							String resultid = result.getAttribute("id");
-							ResultType type = ResultType.JSP;
+							String renderer = result.getAttribute("renderer");
+							String data = DomHelper.getElementText(result);
 							WindowState state = WindowState.fromString(result.getAttribute("state"));
-							PortletMode mode = PortletMode.fromString(result.getAttribute("mode"));
-							String url = DomHelper.getElementText(result);
-							info.addResult(resultid, type, mode, state, url);
-							logger.debug("     + result '{}' with URL '{}' (mode: '{}', state: '{}')", resultid, url, mode, state);
+							PortletMode mode = PortletMode.fromString(result.getAttribute("mode"));							
+							target.addResult(resultid, renderer, data, mode, state);
+							logger.debug("     + result '{}' with renderer '{}' and data '{}' (mode: '{}', state: '{}')", resultid, renderer, data, mode, state);
 						}
-						registry.putTarget(info.getId(), info);
+						registry.putTarget(target.getId(), target);
 					}
 				}
 			}

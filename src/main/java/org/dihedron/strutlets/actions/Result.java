@@ -19,12 +19,20 @@
 
 package org.dihedron.strutlets.actions;
 
+import org.dihedron.utils.Strings;
+
 
 
 /**
  * @author Andrea Funto'
  */
 public class Result {
+	
+	/**
+	 * The default renderer to be used for results ythat do not have a renderer 
+	 * type specified explicitly in the XML or in the annotations.
+	 */
+	public static final String DEFAULT_RENDERER = "jsp";
 	
 	/**
 	 * The result identifier (e.g. "error", "success").
@@ -34,8 +42,15 @@ public class Result {
 	/**
 	 * the type of result; if not overridden the default is assumed to be JSP.
 	 */
-	private ResultType type = ResultType.JSP;
+	private String renderer = DEFAULT_RENDERER;
 	
+	/**
+	 * The data used by the renderer; this can be a URL, the name of a field
+	 * in the action class or an attribute in the request, portlet o application 
+	 * scope, or anything else for custom renderers.
+	 */
+	private String data;
+
 	/**
 	 * The new mode in which the portlet will be put if this is the action's 
 	 * result.
@@ -48,33 +63,31 @@ public class Result {
 	private WindowState state;
 	
 	/**
-	 * The URL of the JSP or servlet providing the action's view.
-	 */
-	private String url;
-	
-	/**
 	 * Constructor.
 	 * 
 	 * @param id
 	 *   the result identifier (e.g. "success").
-	 * @param type
-	 *   the type of result; by default it will be JSP.  
+	 * @param renderer
+	 *   the renderer of the result; by default it will be the "jsp" renderer.  
+	 * @param data
+	 *   the data to be used by the renderer, e.g. the URL of the JSP or servlet 
+	 *   providing the action's view (for "jsp" renderers), the name of a bean, 
+	 *   etc.
 	 * @param mode
 	 *   the id of the new mode in which the portlet will be put if this is the 
 	 *   action's result.
 	 * @param state
 	 *   the id of the new state of the portlet's window if this is the action's 
 	 *   result.
-	 * @param url
-	 *   the URL of the JSP or servlet providing the action's view.
 	 */
 	@Deprecated
-	public Result(String id, String type, String mode, String state, String url) {
+	public Result(String id, String renderer, String data, String mode, String state) {
 		this.id = id;
-		this.type = ResultType.fromString(type);
+		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER;
+		this.data = data;
 		this.mode = PortletMode.fromString(mode);
 		this.state = WindowState.fromString(state);		
-		this.url = url;
+		
 	}
 
 	/**
@@ -82,22 +95,24 @@ public class Result {
 	 * 
 	 * @param id
 	 *   the result identifier (e.g. "success").
-	 * @param type
-	 *   the type of result; by default it will be JSP.  
+	 * @param renderer
+	 *   the renderer of the result; by default it will be the "jsp" renderer.  
+	 * @param data
+	 *   the data to be used by the renderer, e.g. the URL of the JSP or servlet 
+	 *   providing the action's view (for "jsp" renderers), the name of a bean, 
+	 *   etc.
 	 * @param mode
 	 *   the new mode in which the portlet will be put if this is the action's 
 	 *   result.
 	 * @param state
 	 *   the new state of the portlet's window if this is the action's result.
-	 * @param url
-	 *   the URL of the JSP or servlet providing the action's view.
 	 */
-	public Result(String id, ResultType type, PortletMode mode, WindowState state, String url) {
+	public Result(String id, String renderer, String data, PortletMode mode, WindowState state) {
 		this.id = id;
-		this.type = type;
+		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER;;
+		this.data = data;
 		this.state = state;
-		this.mode = mode;
-		this.url = url;
+		this.mode = mode;		
 	}
 
 	/**
@@ -111,13 +126,27 @@ public class Result {
 	}
 	
 	/**
-	 * Retrieves the type of result (JSP, JSON...).
+	 * Retrieves the renderer of result (JSP, JSON...).
 	 * 
 	 * @return
-	 *   the type of result (JSP, XML, JSON...).
+	 *   the renderer of the result (JSP, XML, JSON...).
 	 */
-	public ResultType getResultType() {
-		return type;
+	public String getRenderer() {
+		return renderer;
+	}
+
+	/**
+	 * Returns the data used by the renderer to return a meaningful result, e.g
+	 * the URL of the JSP or servlet that will provide the actions' view for "jsp"
+	 * renderers, or the name of the attribute (the bean) to be rendered as JSON 
+	 * or XML.
+	 * 
+	 * @return
+	 *   the data to be passed on to the given renderer, e,g, the URL of the JSP 
+	 *   or servlet that will provide the actions' view for "jsp" renderers.
+	 */
+	public String getData() {
+		return data;
 	}
 
 	/**
@@ -139,16 +168,6 @@ public class Result {
 	public WindowState getWindowState() {
 		return state;
 	}
-
-	/**
-	 * Returns the URL of the JSP or servlet that will provide the actions' view.
-	 * 
-	 * @return
-	 *   the URL of the JSP or servlet that will provide the actions' view.
-	 */
-	public String getUrl() {
-		return url;
-	}
 	
 	/**
 	 * Returns a pretty-printed string representation of the object.
@@ -159,12 +178,13 @@ public class Result {
 	 *   java.lang.Object#toString()
 	 */
 	public String toString() {
-		StringBuilder builder = new StringBuilder("result\n");
-		builder.append(String.format(" + id     : '%1$s'\n", id));
-		builder.append(String.format(" + type   : '%1$s'\n", type));
-		builder.append(String.format(" + mode   : '%1$s'\n", mode));
-		builder.append(String.format(" + state  : '%1$s'\n", state));		
-		builder.append(String.format(" + url    : '%1$s'\n", url));
+		StringBuilder builder = new StringBuilder("result {\n");
+		builder.append("  id      ('").append(id).append("')\n");
+		builder.append("  renderer('").append(renderer).append("')\n");
+		builder.append("  data    ('").append(data).append("')\n");
+		builder.append("  mode    ('").append(mode).append("')\n");
+		builder.append("  state   ('").append(state).append("')\n");
+		builder.append("}\n");
 		return builder.toString();		
 	}
 }

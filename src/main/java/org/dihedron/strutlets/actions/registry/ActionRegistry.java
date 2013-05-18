@@ -29,13 +29,13 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.PortletMode;
-import org.dihedron.strutlets.actions.ResultType;
 import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Interceptors;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Result;
+import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class ActionRegistry {
 	 * The default pattern for JSP paths generation, for auto-configured targets.
 	 */
 	public static final String DEFAULT_HTML_PATH_PATTERN = "${rootdir}/${action}/${method}/${result}.jsp";
-		
+			
 	/**
 	 * Constructor.
 	 */
@@ -283,19 +283,19 @@ public class ActionRegistry {
 						logger.trace("auto-configuring results of {}!{}", action, method.getName());
 						for(Result result : invocable.results()) {
 							String id = result.value();
-							ResultType type = ResultType.JSP;
+							String renderer = Target.DEFAULT_RENDERER;
 							PortletMode mode = PortletMode.fromString(result.mode());
 							WindowState state = WindowState.fromString(result.state());
-							String url = result.url();
-							if(!Strings.isValid(url)) {
-								url = makeJspPath(action, method.getName(), id, mode.toString(), state.toString());
+							String data = result.data();
+							if(!Strings.isValid(data) && renderer.equalsIgnoreCase(JspRenderer.ID)) {
+								data = makeJspPath(action, method.getName(), id, mode.toString(), state.toString());
 								logger.trace(" > result '{}' with mode '{}', state '{}' and (auto-configured) url '{}'", 
-										result.value(), result.mode(), result.state(), url);								
+										result.value(), result.mode(), result.state(), data);								
 							} else {
 								logger.trace(" > result '{}' with mode '{}', state '{}' and url '{}'", 
-										result.value(), result.mode(), result.state(), url);								
+										result.value(), result.mode(), result.state(), data);								
 							}
-							info.addResult(id, type, mode, state, url);
+							info.addResult(id, renderer, data, mode, state);
 						}
 					} else {
 						logger.trace("no annotations found for {}!{}", action, method.getName());

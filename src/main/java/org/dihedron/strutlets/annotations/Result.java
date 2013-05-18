@@ -96,20 +96,16 @@ public @interface Result {
 	String renderer() default "jsp";
 	
 	/**
-	 * The URL to be shown, for JSP renderes.
+	 * The data to be passed on to the renderer; in the case of a JSP renderer,
+	 * this data would be the URL of the JSP page to show, whereas in the case 
+	 * of a JSON or XML renderer, this data would be the name of the variable or
+	 * of the parameter to be rendered as JSON or XML.
 	 * 
 	 * @return
-	 *   the URL of the JSP to be rendered, for JSP renderers.
+	 *   the data to be used by the renderer to provide a meaningful output; in 
+	 *   the case of a JSP renderer, this would typically be the URL of the JSP
+	 *   to be included, whereas for JSON and XML it would be the name of the 
+	 *   parameter containing the object to be JSON- or XML-encoded.
 	 */
-	String url() default "";
-	
-	/**
-	 * The name of the parameter to be rendered as JSON, XML or whatever other
-	 * format, as specified through the renderer.
-	 * 
-	 * @return
-	 *   the name of the parameter containing the object to be rendered.
-	 */
-	String parameter() default "";
-
+	String data() default "";	
 }

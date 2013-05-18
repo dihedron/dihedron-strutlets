@@ -20,6 +20,8 @@ package org.dihedron.strutlets;
 
 import java.io.PrintStream;
 
+import javax.portlet.ActionRequest;
+
 /**
  * A class to store general information about the library.
  * 
@@ -31,6 +33,36 @@ public final class Strutlets {
 	 * The library version.
 	 */
 	public static final String VERSION = "0.9.0";
+	
+	/**
+	 * The name of the parameter under which the requested action's name is stored
+	 * in the <code>ActionRequest</code> parameters map. 
+	 */
+	public static final String PORTLETS_TARGET = ActionRequest.ACTION_NAME;
+	
+	/**
+	 * This parameter is used by Liferay to create render requests that navigate
+	 * directly to the given URL; in order to be compatible with Liferay's
+	 * default JSPs, this parameter is checked before redirecting the client
+	 * to the default home page; this parameter may contain the indication of
+	 * a Strutlets target (action + method).  
+	 */
+	public static final String LIFERAY_TARGET = "jspPage";	
+	
+	/**
+	 * The parameter used to pass information about the last action/event execution
+	 * to the render phase. This parameter is internal to the framework and should 
+	 * not be used outside of it (e.g in render URLs). 
+	 */
+	public static final String STRUTLETS_TARGET = "org.dihedron.strutlets.action";
+	
+	/**
+	 * The name of the session attribute under which the action's result is stored.
+	 * This parameter is persistent and allows for multiple render request to be 
+	 * serviced while keeping information about the latest action's execution status.
+	 */
+	public static final String STRUTLETS_RESULT = "org.dihedron.strutlets.result";
+	
 
 	/** 
 	 * The output channel.

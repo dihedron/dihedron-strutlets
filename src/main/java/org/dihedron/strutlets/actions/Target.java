@@ -24,7 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.portlet.PortletRequest;
+
 import org.dihedron.regex.Regex;
+import org.dihedron.strutlets.Strutlets;
+import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +49,18 @@ public class Target {
 	public static final String DEFAULT_METHOD_NAME = "execute";
 	
 	/**
+	 * The default renderer, to be used when no renderer is specified.
+	 */
+	public static final String DEFAULT_RENDERER = JspRenderer.ID;
+	
+	/**
 	 * By default a method is assumed to be non-idempotent, that is it cannot be
 	 * invoked multiple times with the same parameteres yelding the same result.
 	 * This makes it (by default) unfit to be used in a render phase, because
 	 * render URLs can be invoked as many times as the container sees fit, by the
 	 * book.
 	 */
-	public static final boolean DEFAULT_METHOD_IDEMPOTENT = false;
+	public static final boolean DEFAULT_IDEMPOTENT = false;
 	
 	/**
 	 * The default pattern used to make up JSP URLs for automagic Actions.
@@ -81,6 +90,61 @@ public class Target {
 	 */
 	private static final Regex REGEX = new Regex(TARGET_REGEXP);	
 	
+    /**
+     * Retrieves the name of the current target from one of the places where it 
+     * might have been set by the requester:<ol>
+     * <li>in the {@code STRUTLETS_TARGET} render parameter, where it might
+     * have been set by a prior action execution (see {@code #doProcess(String, 
+     * PortletRequest, StateAwareResponse)}; if this parameter is set, then the 
+     * current method is being invoked as parte  following render phase and it 
+     * should render the appropriate JSP page according to the given action's 
+     * result, as per the {@code EXECUTION_RESULT} render parameter, otherwise 
+     * the process goes on</li>
+     * <li>in the {@code javax.portlet.action} parameter, which is the 
+     * parameter to use to have a render URL invoke some business logic prior
+     * to its render phase, e.g. to query a database and then render the query 
+     * results</li>
+     * <li>if nothing valid is found under the previous parameter, then it checks 
+     * if the name of a JSP page was provided in LifeRay's {@code jspPage}
+     * parameter: by default it should be used to provide the name of web page 
+     * (JSP), but this frameworks extends its use to address a target prior to 
+     * the rendering of a web page.</li>
+     * </ol>
+     * 
+     * @param request
+     *   the portlet request.
+     * @return
+     *   the target of the request, or null if none valid found.
+     */
+    public static final String getTargetFromRequest(PortletRequest request) {
+    	String target = null;
+ 
+    	do {
+    		target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+    		if(Strings.isValid(target) && isValidTarget(target)) {
+    			logger.trace("valid target '{}' available through STRUTLETS_TARGET parameter", target);
+    			break;
+    		}
+    		
+    		target = request.getParameter(Strutlets.PORTLETS_TARGET);
+    		if(Strings.isValid(target) && isValidTarget(target)) {
+    			logger.trace("valid target '{}' available through PORTLET_TARGET parameter", target);
+    			break;
+    		}
+    		
+    		target = request.getParameter(Strutlets.LIFERAY_TARGET);
+    		if(Strings.isValid(target) && isValidTarget(target)) {
+    			logger.trace("valid target '{}' available through LIFERAY_TARGET parameter", target);
+    			break;
+    		}
+    		
+    		target = null;
+    		logger.trace("no valid target in request");
+    	} while(false);
+    	
+		return target;
+	}
+    
 	/**
 	 * Checks whether the given string represents a valid target specification.
 	 * 
@@ -90,7 +154,7 @@ public class Target {
 	 * @return
 	 *   whether the given string complies with a target specification. 
 	 */
-	public static final boolean isValidActionTarget(String string) {
+	public static final boolean isValidTarget(String string) {
 		return Strings.isValid(string) && REGEX.matches(string);
 	}
 	
@@ -181,7 +245,7 @@ public class Target {
 	 * Whether the action implements idempotent (that is, reiterable and thus fit 
 	 * to be used in a render URL) or non-idempotent business logic.
 	 */
-	private boolean idempotent = DEFAULT_METHOD_IDEMPOTENT;
+	private boolean idempotent = DEFAULT_IDEMPOTENT;
 	
 	/**
 	 * Whether the target is automatically configured.
@@ -335,6 +399,21 @@ public class Target {
 			this.classname = Strings.trim(classname);
 		}
 	}	
+		
+	/**
+	 * Retrieves the name of the class to be instantiated, either by returning 
+	 * what has been explicitly configured via the <code>classname</code> XML
+	 * tag, or by juxtaposing the <code>package</code> and the id of the action.
+	 * 
+	 * @return
+	 *   the name of the class implementing the action.
+	 */
+	public String getClassName() {
+		if(Strings.isValid(classname)) {
+			return classname;
+		}
+		return packagename + "." + action;
+	}	
 	
 	/**
 	 * Sets the name of the Java package (not including the trailing dot) 
@@ -378,22 +457,6 @@ public class Target {
 			this.htmlPathPattern = Strings.trim(htmlPathPattern);
 		}
 	}	
-	
-	
-	/**
-	 * Retrieves the name of the class to be instantiated, either by returning 
-	 * what has been explicitly configured via the <code>classname</code> XML
-	 * tag, or by juxtaposing the <code>package</code> and the id of the action.
-	 * 
-	 * @return
-	 *   the name of the class implementing the action.
-	 */
-	public String getClassName() {
-		if(Strings.isValid(classname)) {
-			return classname;
-		}
-		return packagename + "." + action;
-	}
 	
 	/**
 	 * Sets the name of the interceptors stack.
@@ -472,39 +535,23 @@ public class Target {
 	 * 
 	 * @param id
 	 *   the result id ("e.g. "success" or "error".
-	 * @param type
+	 * @param renderer
 	 *   the type of renderer to be used to render the result.
+	 * @param data
+	 *   the data used by the renderer to return valid response; this could be
+	 *   the URL of the JSP page (for "jsp" renderers, the default), the name of 
+	 *   a parameter or a field in the current class (for "json" and "xml" renderers)
+	 *   or any other kind of information for custom renderers.
 	 * @param mode
 	 *   the mode in which the portlet should be put. 
 	 * @param state
 	 *   the windows state in which this JSP should be shown.
-	 * @param url
-	 *   the URL of the JSP page.
 	 */
-	@Deprecated
-	public void addResult(String id, String type, String mode, String state, String url) {
-		Result result = new Result(id, type, mode, state, url);
+	public void addResult(String id, String renderer, String data, PortletMode mode, WindowState state) {
+		Result result = new Result(id, renderer, data, mode, state);
 		results.put(id, result);
 	}
 	
-	/**
-	 * Adds a result to the set of expected results for this action method.
-	 * 
-	 * @param id
-	 *   the result id ("e.g. "success" or "error".
-	 * @param type
-	 *   the type of renderer to be used to render the result.
-	 * @param mode
-	 *   the mode in which the portlet should be put. 
-	 * @param state
-	 *   the windows state in which this JSP should be shown.
-	 * @param url
-	 *   the URL of the JSP page.
-	 */
-	public void addResult(String id, ResultType type, PortletMode mode, WindowState state, String url) {
-		Result result = new Result(id, type, mode, state, url);
-		results.put(id, result);
-	}
 	
 	/**
 	 * Returns the map of result identifiers and <code>Result</code> objects.
@@ -541,10 +588,10 @@ public class Target {
 			
 			Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
 			logger.trace("synthetic URL for result '{}' on action '{}', method '{}' is '{}'", rid, action, method, url);
-			ResultType type = ResultType.JSP; 
+			String renderer = DEFAULT_RENDERER; 
 			PortletMode mode = PortletMode.SAME;
 			WindowState state = WindowState.SAME;
-			result = new Result(rid, type, mode, state, url);
+			result = new Result(rid, renderer, url, mode, state);
 			results.put(rid, result);
 		}
 		return result;
@@ -574,40 +621,15 @@ public class Target {
 			buffer.append("  results {\n");
 			for(Entry<String, Result> result : results.entrySet()) {
 				buffer.append("    result  ('").append(result.getKey()).append("') { \n");
-				buffer.append("      mode  ('").append(result.getValue().getPortletMode()).append("')\n");
-				buffer.append("      state ('").append(result.getValue().getWindowState()).append("')\n");
-				buffer.append("      type  ('").append(result.getValue().getResultType()).append("')\n");
-				buffer.append("      url   ('").append(result.getValue().getUrl()).append("')\n");
+				buffer.append("      renderer ('").append(result.getValue().getRenderer()).append("')\n");
+				buffer.append("      data     ('").append(result.getValue().getData()).append("')\n");
+				buffer.append("      mode     ('").append(result.getValue().getPortletMode()).append("')\n");
+				buffer.append("      state    ('").append(result.getValue().getWindowState()).append("')\n");
 				buffer.append("    }\n");
 			}
 			buffer.append("  }\n");
 		}
 		buffer.append("}\n");
-		
-//		buffer.append("target\n");
-//		buffer.append(String.format("+ action         : '%1$s'\n", action));
-//		buffer.append(String.format("+ method         : '%1$s'\n", method));
-//		buffer.append(String.format("+ automagic      : '%1$s'\n", automagic));
-//		buffer.append(String.format("+ interceptors   : '%1$s'\n", interceptors));
-//		buffer.append(String.format("+ class name     : '%1$s'\n", classname));
-//		buffer.append(String.format("+ package        : '%1$s'\n", packagename));
-//		buffer.append(String.format("+ java class     : '%1$s'\n", getClassName()));
-//		if(!parameters.isEmpty()) {
-//			buffer.append(" + parameters\n");
-//			for(Entry<String, String> pentry : parameters.entrySet()) {
-//				buffer.append("  + parameter\n");
-//				buffer.append(String.format("   + key         : '%1$s'\n", pentry.getKey()));	
-//				buffer.append(String.format("   + value       : '%1$s'\n", pentry.getValue()));
-//			}
-//		}
-//		buffer.append("   + results\n");
-//		for(Entry<String, Result> rentry : results.entrySet()) {
-//			buffer.append("    + result\n");
-//			buffer.append(String.format("     + id        : '%1$s'\n", rentry.getKey()));
-//			buffer.append(String.format("     + mode      : '%1$s'\n", rentry.getValue().getPortletMode()));
-//			buffer.append(String.format("     + state     : '%1$s'\n", rentry.getValue().getWindowState()));
-//			buffer.append(String.format("     + url       : '%1$s'\n", rentry.getValue().getUrl()));
-//		}
 		return buffer.toString();
 	}	
 }

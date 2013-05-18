@@ -46,9 +46,9 @@ public class MyAction extends Action {
 	
 	@Invocable (
 		results= {
-			@Result(value="success", url="/jsp/html/MyAction/execute_success.jsp"),
-			@Result(value="error", url="/jsp/html/MyAction/execute_error.jsp"),
-			@Result(value="input", url="/jsp/html/MyAction/execute_input.jsp")
+			@Result(value="success", data="/jsp/html/MyAction/execute_success.jsp"),
+			@Result(value="error", data="/jsp/html/MyAction/execute_error.jsp"),
+			@Result(value="input", data="/jsp/html/MyAction/execute_input.jsp")
 		},
 		events = {				
 		}
@@ -60,9 +60,9 @@ public class MyAction extends Action {
 	
 	@Invocable (
 		results = {
-			@Result(value="success", url="/jsp/html/MyAction/myMethod_success.jsp"),
-			@Result(value="error", url="/jsp/html/MyAction/myMethod_error.jsp"),
-			@Result(value="input", url="/jsp/html/MyAction/myMethod_input.jsp"),
+			@Result(value="success", data="/jsp/html/MyAction/myMethod_success.jsp"),
+			@Result(value="error", data="/jsp/html/MyAction/myMethod_error.jsp"),
+			@Result(value="input", data="/jsp/html/MyAction/myMethod_input.jsp"),
 			@Result(value="whatever")
 		}
 	)	

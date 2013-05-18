@@ -21,6 +21,7 @@ package org.dihedron.strutlets.renderers;
 
 import java.io.IOException;
 
+import javax.portlet.GenericPortlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -32,6 +33,32 @@ import javax.portlet.RenderResponse;
  * @author Andrea Funto'
  */
 public interface Renderer {
+	
+	/**
+	 * returns the identifier of the renderer, e.g. "jsp" for the JSP include
+	 * renderer.
+	 * 
+	 * @return
+	 *   the id of the renderer.
+	 */
+	String getId();
+	
+	/**
+	 * Sets a reference to the portlet that will be using this renderer.
+	 * 
+	 * @param portlet
+	 *   a reference to the portlet that will be using this renderer.
+	 */
+	public void setPortlet(GenericPortlet portlet);
+	
+	/**
+	 * Sets the data that helps the {@code Renderer} perform its task.
+	 * 
+	 * @param data
+	 *   the {@code Renderer}-specific data, e.g. the URL for the JSP renderer,
+	 *   the name of a java bean for the JSON and XML renderers, etc.
+	 */
+	void setData(String data);
 	
 	/**
 	 * Renders the output to the client.
