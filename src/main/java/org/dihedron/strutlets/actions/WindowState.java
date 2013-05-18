@@ -61,7 +61,7 @@ public final class WindowState extends javax.portlet.WindowState {
 	 *   one of the supported <code>WindowState</code> objects or a brand new 
 	 *   one.
 	 */
-	public static WindowState getWindowState(String id) {
+	public static WindowState fromString(String id) {
 		assert(id != null);
 		if(SAME.equals(id)) {
 			return SAME;

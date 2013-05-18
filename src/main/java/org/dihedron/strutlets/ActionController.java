@@ -42,14 +42,13 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
-import org.dihedron.strutlets.actions.Semantics;
 import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
-import org.dihedron.strutlets.configuration.Configuration;
-import org.dihedron.strutlets.configuration.ConfigurationLoader;
+import org.dihedron.strutlets.actions.registry.ActionRegistry;
+import org.dihedron.strutlets.actions.registry.ActionRegistryLoader;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
-import org.dihedron.strutlets.interceptors.factory.InterceptorsFactory;
+import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,134 +58,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ActionController extends GenericPortlet {
 
-	/**
-	 * The enumeration of supported initialisation parameters.
-	 * 
-	 * @author Andrea Funto'
-	 */
-	public enum InitParameter {
-		/**
-		 * The parameter used to specify the path to the actions configuration file;
-		 * If no value is specified, the framework will try locale a file called
-		 * "actions-config.xml" under the root directory in the classpath. This
-		 * parameter can be used to provide a different configuration file.
-		 */
-		ACTIONS_CONFIGURATION_FILE("actions.configuration.filename"),
-		
-		/**
-		 * The parameter used to specify the default Java package where non-
-		 * configured, annotated actions are to be located. This is used only 
-		 * when dealing with annotated actions and smart defaults.
-		 */
-		ACTIONS_JAVA_PACKAGE("actions.java.package"),
-		
-		/**
-		 * The parameter used to override the name of the interceptors stack
-		 * configuration XML file; by default it is called "interceptors-config.xml".
-		 */
-		INTERCEPTORS_CONFIGURATION_FILE("interceptors.configuration.filename"),
-		
-		/**
-		 * The parameter used to override the default interceptors stack to be 
-		 * used when invoking non-configured or non-fully-configured actions; by
-		 * default it is the "default" stack. 
-		 */
-		INTERCEPTORS_DEFAULT_STACK("interceptors.default.stack"),
-		
-		/**
-		 * The parameter used to specify the root directory for JSP renderers.
-		 * This is used only when dealing with annotated actions and smart defaults,
-		 * to conjure the name of renderer JSPs based on the action's result and
-		 * the current portlet mode.
-		 */
-		RENDER_ROOT_DIRECTORY("render.root.directory"),
-				
-		/**
-		 * The parameter used to specify the pattern to create the path to JSP 
-		 * pages for auto-configured targets. Accepted variables include:<ul>
-		 * <li><b>${rootdir}</b>: the root directory, as specified via 
-		 * parameter <code>render.root.directory</code>;</li>
-		 * <li><b>${action}</b>: the name of the action;<li>
-		 * <li><b>${method}</b>: the name of the method;<li>
-		 * <li><b>${result}</b>: the result id of the execution, e.g. "success";<li>
-		 * <li><b>${mode}</b>: the new portlet mode after the method execution, 
-		 * e.g. "maximised";<li>
-		 * <li><b>${state}</b>: the new portlet window state after the method 
-		 * execution, e.g. "success".<li></ul>
-		 */
-		RENDER_PATH_PATTERN("render.path.pattern"),
 
-		/**
-		 * The parameter used to specify the home page to be used by the framework
-		 * in VIEW mode. This page is the starting point of the VIEW mode HTML 
-		 * navigation tree.
-		 */
-		RENDER_VIEW_HOMEPAGE("render.view.homepage"),
-		
-		/**
-		 * The parameter used to specify the home page to be used by the framework
-		 * in EDIT mode. This page is the starting point of the EDIT mode HTML 
-		 * navigation tree.
-		 */
-		RENDER_EDIT_HOMEPAGE("render.edit.homepage"),
-
-		/**
-		 * The parameter used to specify the home page to be used by the framework
-		 * in HELP mode. This page is the starting point of the HELP mode HTML 
-		 * navigation tree.
-		 */
-		RENDER_HELP_HOMEPAGE("render.help.homepage");
-				
-		/**
-		 * Constructor.
-		 * 
-		 * @param name
-		 *   the initialisation parameter name.
-		 */
-		private InitParameter(String name) {
-			this.name = name;
-		}
-		
-		/**
-		 * The string representing the name of the initialisation parameter.
-		 */
-		private String name;
-		
-		/**
-		 * Returns the name of the initialisation parameter.
-		 * 
-		 * @return
-		 *   the name of the initialisation parameter.
-		 */
-		public String getName() {
-			return name;
-		}
-		
-	    /**
-	     * Retrieves the value of the input parameter for the given portlet.
-	     * 
-	     * 
-	     * @param portlet
-	     *   the portlet whose parameter's value is to be retrieved.
-	     * @return
-	     *   the value of the input parameter.
-	     */
-	    public String getValue(GenericPortlet portlet) {
-	    	return portlet.getInitParameter(name);
-	    }	
-	    
-	    /**
-	     * Returns the parameter's name and value as a String.
-	     * 
-	     * @param portlet
-	     *   the portlet whose parameter's name and value is to be printed.
-	     * @return
-	     *   the name and value of the input parameter.
-	     */
-	    public String toString(GenericPortlet portlet) {
-	    	return "'" + getName() + "':='" + getValue(portlet) + "'";
-	    }
-	}
 	       
 	/**
 	 * The default name of the actions configuration file.
@@ -241,12 +113,12 @@ public class ActionController extends GenericPortlet {
 	/**
 	 * The factory of interceptors' stacks.
 	 */
-	private InterceptorsFactory interceptors;
+	private InterceptorsRegistry interceptors;
 	
 	/**
 	 * The actions configuration.
 	 */
-	private Configuration configuration;
+	private ActionRegistry registry;
 
     /**
      * Initialises the controller portlet. The process follows these steps:<ol>
@@ -284,57 +156,12 @@ public class ActionController extends GenericPortlet {
         	for(InitParameter parameter : InitParameter.values()) {
         		logger.info(" + parameter: {}", parameter.toString(this));
         	}
-            
-            // get the actions configuration repository
-        	configuration = new Configuration();
-                      
-            // try to load the actions configuration, in the following order:
-            // a. see if there's a user-specified configuration file
-            // b. if not, try the default actions-config-xml under the root
-            // self-configuring actions will be configured as requests come
-			ConfigurationLoader loader = new ConfigurationLoader();
-			
-			// load the actions configuration
-			String file = InitParameter.ACTIONS_CONFIGURATION_FILE.getValue(this);
-			if(Strings.isValid(file)) {
-				// load the custom configuration
-				logger.info("loading actions configuration from custom location: '{}'", file);
-				loader.loadFromClassPath(configuration, file);
-			} else {
-				// load the default			
-				logger.info("loading actions configuration from well-known location: '{}'", DEFAULT_ACTIONS_CONFIG_XML);
-				loader.loadFromClassPath(configuration, DEFAULT_ACTIONS_CONFIG_XML);
-			}
-							
-			// set the default Java package where self-configuring annotated actions are to be located
-			configuration.setDefaultActionPackage(InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
-			
-			// set the root directory for HTML files and JSPs, for auto-configured annotated actions
-			configuration.setRootHtmlDirectory(InitParameter.RENDER_ROOT_DIRECTORY.getValue(this));
 
-			// set the pattern for the HTML files and JSP paths, for auto-configured annotated actions
-			configuration.setHtmlPathPattern(InitParameter.RENDER_PATH_PATTERN.getValue(this));
+        	initialiseActionRegistry();
 			
-			// pre-scan existing classes and methods in the default actions package
-			loader.loadFromJavaPackage(configuration, InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
-
-			logger.trace("actions configuration:\n{}", configuration.toString());
-			
-			// now initialise the interceptors stacks
-			interceptors = new InterceptorsFactory();
-			
-			// load the default interceptors stack and others
-			logger.info("loading default interceptors stacks: '{}'", DEFAULT_INTERCEPTORS_CONFIG_XML);
-			interceptors.loadFromClassPath(DEFAULT_INTERCEPTORS_CONFIG_XML);
-			logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
-			
-			// load the custom interceptors configuration
-			file = InitParameter.INTERCEPTORS_CONFIGURATION_FILE.getValue(this);
-			if(Strings.isValid(file)) {
-				logger.info("loading interceptors configuration from custom location: '{}'", file);
-				interceptors.loadFromClassPath(file);
-				logger.trace("interceptors stacks:\n{}", interceptors.toString());
-			}
+        	initialiseInterceptorsRegistry();
+        	
+        	initialiseViewRegistry();
 			
 			logger.info("portlet '{}''s action controller open for business", getPortletName());
 			
@@ -361,8 +188,8 @@ public class ActionController extends GenericPortlet {
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
     	logger.trace("processing action...");
     	String target = request.getParameter(ACTION_TARGET);
-    	doProcess(target, request, response);
-    	logger.trace("... action processing done");
+    	String result = doBusinessLogic(target, request, response);
+    	logger.trace("... action processing done with result '{}'", result);
     }
     
     /**
@@ -384,9 +211,9 @@ public class ActionController extends GenericPortlet {
     public void processEvent(EventRequest request, EventResponse response) throws PortletException, IOException {
     	logger.trace("processing event...");
     	QName qname = request.getEvent().getQName();
-    	String target = configuration.getEventTarget(qname);
-    	doProcess(target, request, response);
-    	logger.trace("... event processing done");
+    	String target = registry.getEventTarget(qname);
+    	String result = doBusinessLogic(target, request, response);
+    	logger.trace("... event processing done with result '{}'", result);
     }    
     
     /**
@@ -440,9 +267,13 @@ public class ActionController extends GenericPortlet {
 	    	
     		// this is a valid target specification, dispatch to the appropriate 
     		// action and method, then retrieve the result's URL	    		
-    		String result = doProcess(target, request, response);
+    		String result = doBusinessLogic(target, request, response);
+    		
     		// get the URL corresponding to the given target and result
     		url = getUrl(target, result);
+    		
+    		// TODO: get ViewInfo from the target and result, thsn use it to pick the appropriate
+    		// renderer fro the registry, and store a renderere reference, to be called later in this method
     	} else {
 			// it's not a pure render request, let's check if we are in a render phase AFTER 
 			// an action or event processing, in which case the following two parameters 
@@ -489,29 +320,48 @@ public class ActionController extends GenericPortlet {
      * @see javax.portlet.GenericPortlet#serveResource(javax.portlet.ResourceRequest, javax.portlet.ResourceResponse)
      */
     public void serveResource(ResourceRequest request, ResourceResponse response) throws PortletException, IOException {
-        super.serveResource(request, response);
+//    	String url = null;
+    	
+    	logger.trace("serving resource...");
+    	
+    	// retrieve the name of the target, if available
+    	String target = getTarget(request);
+    	logger.trace("target is '{}'", target);
+//    	
+//    	if(Target.isValidActionTarget(target)) { // (*)
+//    		
+//    		logger.trace("target '{}' is an action invocation", target);
+//	    	
+//    		// this is a valid target specification, dispatch to the appropriate 
+//    		// action and method, then retrieve the result's URL	    		
+//    		String result = doProcess(target, request, response);
+//    		// get the URL corresponding to the given target and result
+//    		url = getUrl(target, result);        
+    	
+    	super.serveResource(request, response);
     }
     
     /**
-     * Processes an action request, both in the action, in the event and in the render phase.
+     * Processes an action request in the action and event phases.
      * 
      * @param target
      *   the requested target (in the form "MyAction!myMethod").
      * @param request
      *   the current request object.
      * @param response
-     *   the current response object.
+     *   the current action or event response object.
      * @throws PortletException
      */
-    protected void doProcess(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
+    protected String doBusinessLogic(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
+    	String res = null;
     	try {
 			if(Strings.isValid(target)) {
 				// invoke method
 				logger.debug("invoking target '{}'...", target);    			
-	    		String res = invokeTarget(target, request, response);
+	    		res = invokeTarget(target, request, response);
 	    		
 	    		// get routing configuration for given result string
-	    		Result result = configuration.getTarget(target).getResult(res);
+	    		Result result = registry.getTarget(target).getResult(res);
 	    		PortletMode mode = result.getPortletMode();
 	    		WindowState state = result.getWindowState();
 	    		
@@ -539,18 +389,18 @@ public class ActionController extends GenericPortlet {
 			logger.error("portlet exception servicing action request: {}", e.getMessage());
 			throw e;
 		}
-		
+		return res;
     }
     
-    protected String doProcess(String target, RenderRequest request, RenderResponse response) throws IOException, PortletException {
+    protected String doBusinessLogic(String target, RenderRequest request, RenderResponse response) throws IOException, PortletException {
     	String result = null;
     	try {
     		if(Strings.isValid(target)) {
     			
     			// check that the method is for presentation
-    			Target info = configuration.getTarget(target);
-    			if(info.getSemantics() != Semantics.PRESENTATION) {
-    				throw new PortletException("Trying to invoke business method in render request");
+    			Target info = registry.getTarget(target);
+    			if(!info.isIdempotent()) {
+    				throw new PortletException("Trying to invoke non-idempotent method in render request");
     			}
     			
     			// invoke method
@@ -573,7 +423,7 @@ public class ActionController extends GenericPortlet {
     		logger.info("invoking target '{}'", target);
     		
     		// check if there's configuration available for the given action
-			Target info = configuration.getTarget(target);
+			Target info = registry.getTarget(target);
 			logger.trace("target configuration:\n{}", info.toString());
     		
 			// instantiate the action
@@ -582,7 +432,7 @@ public class ActionController extends GenericPortlet {
 				logger.info("action '{}' ready", info.getClassName());
 			} else {    			 	
 				logger.error("no action found for target '{}'", target);
-				throw new StrutletsException("no action could be found for target '" + target + "'");
+				throw new StrutletsException("No action could be found for target '" + target + "'");
 			}
 			
 			// get the stack for the given action
@@ -601,8 +451,8 @@ public class ActionController extends GenericPortlet {
 	    	result = invocation.invoke();
 	    	
     	} finally {
-    		// unbind the invocation context from the thread-loca storage to
-    		// prevent memory leanks and complaints by the app-server
+    		// unbind the invocation context from the thread-local storage to
+    		// prevent memory leaks and complaints by the application server
     		ActionContext.unbindContext();
     	}
     	return result;
@@ -697,7 +547,7 @@ public class ActionController extends GenericPortlet {
     	String url = null;
     	if(Strings.isValid(target) && Strings.isValid(result)) {	    	
 	    	logger.trace("looking for renderer for target '{}' with result '{}'", target, result);	    	
-	    	Target info = configuration.getTarget(target);
+	    	Target info = registry.getTarget(target);
 	    	Result renderer = info.getResult(result);
 	    	url = renderer.getUrl();
 	    	logger.debug("renderer URL for target '{}' with result '{}' is '{}' (mode '{}', state '{}')", 
@@ -736,6 +586,88 @@ public class ActionController extends GenericPortlet {
 			url = getInitParameter(parameter);
 		}
     	return url;
+    }
+    
+    /**
+     * Initialises the action registry with information taken from:<ol>
+     * <li> the custom actions-config.xml file (if a custom name is provided 
+     * among the initialisation parameters)</li>
+     * <li> the default actions-config.xml file, if found on the classpath</li>
+     * <li> the actions package, if one is provided among the initialisation 
+     * parameters.</li>
+     * </ol>
+     * 
+     * @throws StrutletsException 
+     */
+    private void initialiseActionRegistry() throws StrutletsException {
+        // get the actions configuration repository
+    	registry = new ActionRegistry();
+                  
+        // try to load the actions configuration registry, in the following 
+    	// order:
+        // a. see if there's a user-specified configuration file
+        // b. if not, try the default actions-config-xml under the root
+        // self-configuring actions will be configured as requests come
+		ActionRegistryLoader loader = new ActionRegistryLoader();
+		
+		// load the actions configuration
+		String file = InitParameter.ACTIONS_CONFIGURATION_FILE.getValue(this);
+		if(Strings.isValid(file)) {
+			// load the custom configuration
+			logger.info("loading actions configuration from custom location: '{}'", file);
+			loader.loadFromClassPath(registry, file);
+		} else {
+			// load the default			
+			logger.info("loading actions configuration from well-known location: '{}'", DEFAULT_ACTIONS_CONFIG_XML);
+			loader.loadFromClassPath(registry, DEFAULT_ACTIONS_CONFIG_XML);
+		}
+						
+		// set the default Java package where self-configuring annotated actions are to be located
+		registry.setDefaultActionPackage(InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
+		
+		// set the root directory for HTML files and JSPs, for auto-configured annotated actions
+		registry.setRootHtmlDirectory(InitParameter.RENDER_ROOT_DIRECTORY.getValue(this));
+
+		// set the pattern for the HTML files and JSP paths, for auto-configured annotated actions
+		registry.setHtmlPathPattern(InitParameter.RENDER_PATH_PATTERN.getValue(this));
+		
+		// pre-scan existing classes and methods in the default actions package
+		loader.loadFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValue(this));
+
+		logger.trace("actions configuration:\n{}", registry.toString());    	
+    }
+    
+    /**
+     * Initialises the interceptors stack registry (factory) by loading the default 
+     * stacks first and then any custom stacks provided in the initialisation 
+     * parameters.
+     * 
+     * @throws StrutletsException
+     */
+    private void initialiseInterceptorsRegistry() throws StrutletsException {
+
+		interceptors = new InterceptorsRegistry();
+		
+		// load the default interceptors stacks ("default" and others)
+		logger.info("loading default interceptors stacks: '{}'", DEFAULT_INTERCEPTORS_CONFIG_XML);
+		interceptors.loadFromClassPath(DEFAULT_INTERCEPTORS_CONFIG_XML);
+		logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
+		
+		// load the custom interceptors configuration
+		String file = InitParameter.INTERCEPTORS_CONFIGURATION_FILE.getValue(this);
+		if(Strings.isValid(file)) {
+			logger.info("loading interceptors configuration from custom location: '{}'", file);
+			interceptors.loadFromClassPath(file);
+			logger.trace("interceptors stacks:\n{}", interceptors.toString());
+		}    	
+    }
+    
+    /**
+     * Initialises the registry of view renderers
+     * @throws StrutletsException
+     */
+    private void initialiseViewRegistry() throws StrutletsException {
+    	// TODO
     }
 
     /**

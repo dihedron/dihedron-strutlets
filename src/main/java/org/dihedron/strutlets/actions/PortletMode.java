@@ -54,7 +54,7 @@ public final class PortletMode extends javax.portlet.PortletMode {
 	 *   the corresponding portlet mode from the static instances if supported, 
 	 *   or a brand new mode otherwise.
 	 */
-	public static PortletMode getPortletMode(String id) {
+	public static PortletMode fromString(String id) {
 		assert(id != null);
 		if(SAME.equals(id)) {
 			return SAME;
@@ -68,10 +68,26 @@ public final class PortletMode extends javax.portlet.PortletMode {
 		return new PortletMode(id);
 	}
 	
+	/**
+	 * Returns whether the given string represents one of the supported modes.
+	 * 
+	 * @param id
+	 *   the portlet mode, as a string.
+	 * @return
+	 *   <code>true</code> if supported, <code>false</code> otherwise.
+	 */
 	public static boolean isSupported(String id) {
 		return (SAME.equals(id) || VIEW.equals(id) || EDIT.equals(id) || HELP.equals(id));	
 	}
 
+	/**
+	 * Returns whether the given portlet mode is one of the supported modes.
+	 * 
+	 * @param id
+	 *   the portlet mode, as a string.
+	 * @return
+	 *   <code>true</code> if supported, <code>false</code> otherwise.
+	 */
 	public static boolean isSupported(PortletMode mode) {
 		assert(mode != null);
 		return isSupported(mode.toString());	

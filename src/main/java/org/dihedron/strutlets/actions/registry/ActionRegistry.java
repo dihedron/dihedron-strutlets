@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strutlets.configuration;
+package org.dihedron.strutlets.actions.registry;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -29,7 +29,7 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.PortletMode;
-import org.dihedron.strutlets.actions.Semantics;
+import org.dihedron.strutlets.actions.ResultType;
 import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.annotations.Event;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class Configuration {
+public class ActionRegistry {
 	
 	/**
 	 * The default pattern for JSP paths generation, for auto-configured targets.
@@ -59,7 +59,7 @@ public class Configuration {
 	/**
 	 * Constructor.
 	 */
-	public Configuration() {
+	public ActionRegistry() {
 		logger.info("creating action info repository");
 	}
 	
@@ -269,9 +269,9 @@ public class Configuration {
 					Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);	
 					if(invocable != null) {
 						
-						Semantics semantics = invocable.semantics();
-						logger.trace("auto-configured semantics of '{}!{}' is '{}'", action, method.getName(), semantics);
-						info.setSemantics(semantics);						
+						boolean idempotent = invocable.idempotent();
+						logger.trace("target '{}!{}' {} idempotent", action, method.getName(), idempotent ? "is" : "is not");
+						info.setIdempotent(idempotent);						
 						
 						logger.trace("auto-configuring events of '{}!{}'", action, method.getName());
 						for(Event event : invocable.events()) {
@@ -283,8 +283,9 @@ public class Configuration {
 						logger.trace("auto-configuring results of {}!{}", action, method.getName());
 						for(Result result : invocable.results()) {
 							String id = result.value();
-							PortletMode mode = PortletMode.getPortletMode(result.mode());
-							WindowState state = WindowState.getWindowState(result.state());
+							ResultType type = ResultType.JSP;
+							PortletMode mode = PortletMode.fromString(result.mode());
+							WindowState state = WindowState.fromString(result.state());
 							String url = result.url();
 							if(!Strings.isValid(url)) {
 								url = makeJspPath(action, method.getName(), id, mode.toString(), state.toString());
@@ -294,7 +295,7 @@ public class Configuration {
 								logger.trace(" > result '{}' with mode '{}', state '{}' and url '{}'", 
 										result.value(), result.mode(), result.state(), url);								
 							}
-							info.addResult(id, mode, state, url);
+							info.addResult(id, type, mode, state, url);
 						}
 					} else {
 						logger.trace("no annotations found for {}!{}", action, method.getName());
@@ -322,14 +323,15 @@ public class Configuration {
 	}
 	
 	public String toString() {
-		StringBuilder buffer = new StringBuilder();
+		StringBuilder buffer = new StringBuilder("");
 		
-		for(Entry<String, Target> entry : store.entrySet()) {
-			buffer.append("----------- ACTION -----------\n");
-			buffer.append(">>>" + entry.getKey() + "<<<\n");
-			buffer.append(entry.getValue().toString());
+		if(!store.isEmpty()) {
+			for(Entry<String, Target> entry : store.entrySet()) {
+				buffer.append("----------- ACTION -----------\n");
+				buffer.append(entry.getValue().toString());
+			}
+			buffer.append("------------------------------\n");
 		}
-		buffer.append("------------------------------\n");
 		return buffer.toString();
 	}	
 	
@@ -361,7 +363,7 @@ public class Configuration {
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
+	private static final Logger logger = LoggerFactory.getLogger(ActionRegistry.class);
 
 	/**
 	 * The actual set of actions' targets. 

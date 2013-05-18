@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strutlets.interceptors.factory;
+package org.dihedron.strutlets.interceptors.registry;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +49,7 @@ import org.xml.sax.SAXParseException;
 /**
  * @author Andrea Funto'
  */
-public class InterceptorsFactory {
+public class InterceptorsRegistry {
 	
 	public class ConfigurationErrorHandler implements ErrorHandler {
 	    public void warning(SAXParseException e) throws SAXException {
@@ -68,7 +68,7 @@ public class InterceptorsFactory {
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(InterceptorsFactory.class);
+	private static final Logger logger = LoggerFactory.getLogger(InterceptorsRegistry.class);
 	
 	/**
 	 * Whether the input XML file should be validated.

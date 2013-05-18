@@ -57,6 +57,7 @@
 						</xs:simpleType>
 					</xs:attribute>
 					<xs:attribute name="id" type="xs:normalizedString" default="success"/>
+					<xs:attribute name="type" type="xs:normalizedString" default="jsp"/>
 				</xs:extension>
 			</xs:simpleContent>
 		</xs:complexType>
@@ -102,14 +103,7 @@
 				<xs:element ref="result" maxOccurs="unbounded" />
 			</xs:sequence>
 			<xs:attribute name="id" type="xs:normalizedString" default="execute"/>
-			<xs:attribute name="semantics" default="read/write">
-				<xs:simpleType>
-					<xs:restriction base="xs:normalizedString">
-						<xs:enumeration value="read/write"/>
-						<xs:enumeration value="read-only"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>			
+			<xs:attribute name="idempotent" type="xs:boolean" default="false" />
 		</xs:complexType>
 	</xs:element>
 	<xs:element name="key" type="xs:normalizedString">

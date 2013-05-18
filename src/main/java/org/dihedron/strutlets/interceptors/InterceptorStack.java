@@ -62,16 +62,23 @@ public class InterceptorStack extends ArrayList<Interceptor> {
 	 */
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("stack('").append(id).append("') {\n");
-		for(Interceptor interceptor : this ) {
-			buffer.append("  interceptor('").append(interceptor.getId()).append("') {\n");
-			for(Entry<String, String> entry : interceptor.getParameters().entrySet()) {
-				buffer.append("    parameter('").append(entry.getKey()).append("') = '").append(entry.getValue()).append("'\n");
+		buffer.append("stack('").append(id).append("')");
+		if(!this.isEmpty()) {
+			buffer.append(" {\n");
+			for(Interceptor interceptor : this ) {
+				buffer.append("  interceptor('").append(interceptor.getId()).append("')");
+				if(!interceptor.getParameters().isEmpty()) {
+					buffer.append(" {\n");
+					for(Entry<String, String> entry : interceptor.getParameters().entrySet()) {
+						buffer.append("    parameter('").append(entry.getKey()).append("') = '").append(entry.getValue()).append("'\n");
+					}
+					buffer.append("  }");
+				}
+				buffer.append("\n");			
 			}
-			buffer.append("  }\n");
+			buffer.append("}");
 		}
-		buffer.append("}\n");
+		buffer.append("\n");
 		return buffer.toString();
 	}
-	
 }

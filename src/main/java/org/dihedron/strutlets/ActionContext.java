@@ -681,7 +681,7 @@ public final class ActionContext {
 	 *   the current portlet mode.
 	 */
 	public PortletMode getPortletMode() {
-		return PortletMode.getPortletMode(request.getPortletMode().toString());
+		return PortletMode.fromString(request.getPortletMode().toString());
 	}
 
 	/**
@@ -720,7 +720,7 @@ public final class ActionContext {
 	 *   the current portlet window state.
 	 */
 	public WindowState getWindowState() {
-		return WindowState.getWindowState(request.getWindowState().toString());
+		return WindowState.fromString(request.getWindowState().toString());
 	}
 	
 	/**

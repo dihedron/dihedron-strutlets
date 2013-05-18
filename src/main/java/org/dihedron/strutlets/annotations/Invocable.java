@@ -24,12 +24,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.dihedron.strutlets.actions.Semantics;
-
 /**
- * Annotation representing the list of outcomes for the given
- * action; each outcome will describe the renderer to be used 
- * for the given result.
+ * Annotation to be placed on methods that will be exposed as action, event, 
+ * render or resource targets.
  * 
  * @author Andrea Funto'
  */
@@ -39,22 +36,31 @@ public @interface Invocable {
 	
 	/**
 	 * Indicates the behaviour of the annotated method with respect to the
-	 * system's internal state. READ_ONLY methods are supposed not to change the
-	 * state in any way and are fit to be used in render requests; READ_WRITE 
-	 * methods, on the contrary, may change the system's internal state and can 
-	 * only be used in the context of action or event processing.
+	 * system's internal state. Idempotent methods are supposed not to change the
+	 * state in any way or to be able to handle multiple invocations with the
+	 * same parameters in a row, the way it happens when a target is used in render 
+	 * URL: the portlet container may invoke the same method, with the same URL
+	 * parameters multiple times depending on its need to refresh the page 
+	 * contents; non-idempotent targets are not fit to be used in render URLs,
+	 * but they have access to additional portal functionalities such as the
+	 * ability to set render parameters, to change the portlet state and mode, 
+	 * and the capability to fire events.
 	 * No enforcement is made about the compliance of the method's behaviour
-	 * with what's declared in the annotation; failure to keep status unchanged 
-	 * in READ_ONLY methods can lead to unpredictable behaviour in the application.
-	 * indicating a READ_WRITE method in a render request will result in an
-	 * exception being thrown. 
+	 * with what's declared in the annotation; failure to be able to handle 
+	 * multiple requests returning consistent results and leaving the system in 
+	 * a consistent state may lead to unexpected behaviour and a bad user 
+	 * experience.
+	 * Indicating a non-idempotent target in a render URL request will result
+	 * is an exception being thrown; the association of this check and the default
+	 * for this attribute being {@code false} is supposed to help the developer 
+	 * spot bugs in her code. 
 	 *  
 	 * @return
-	 *   whether the method may change the system's status (BUSINESS, the 
-	 *   default) or will leave it untouched (PRESENTATION). 
+	 *   whether the method may be invoked multiple times in a row and still 
+	 *   yield consistent results and leave the system in a consistent state.
 	 * 
 	 */
-	Semantics semantics() default Semantics.BUSINESS;
+	boolean idempotent() default false;
 	
 	/**
 	 * A list containing the names of the fields whose value should be automatically
@@ -80,6 +86,15 @@ public @interface Invocable {
 	 *   @{code value} fields!</em>). 
 	 */
 	String[] outputs() default {};
+		
+	/**
+	 * The array of portlet events that the annotated action method is declared 
+	 * to support.
+	 * 
+	 * @return
+	 *   the array of supported events.
+	 */
+	Event[] events() default {};		
 	
 	/**
 	 * The array of expected results; each of them will map to the appropriate 
@@ -90,12 +105,4 @@ public @interface Invocable {
 	 *   the array of expected results.
 	 */
 	Result[] results() default {};
-	
-	/**
-	 * The array of portlet events that an action method is declared to support.
-	 * 
-	 * @return
-	 *   the array of supported events.
-	 */
-	Event[] events() default {};	
 }

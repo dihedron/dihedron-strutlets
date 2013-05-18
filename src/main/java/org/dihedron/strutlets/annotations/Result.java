@@ -48,12 +48,11 @@ public @interface Result {
 	String value() default "success";
 	
 	/**
-	 * The class of the view handler, which will format the output
-	 * based on the annotated action's outcome and the parameters,
-	 * as a class name; this property can be used when the renderer
-	 * is loaded lazily, and only bound at runtime, e.g. because it is 
-	 * in a plug-in and must be located by name; if it is known at build
-	 * time, use the <code>classref</code> property instead.
+	 * The new mode of the portlet, after the action has been executed; this
+	 * parameter only makes sense when the action is executed in an action  or
+	 * event phase, since portlets cannot change mode in render or resource 
+	 * phase. If "same" is specified here (the default), the portlet mode is
+	 * not changed.
 	 * 
 	 * @return
 	 *   the name of the renderer class.
@@ -61,6 +60,11 @@ public @interface Result {
 	String mode() default "same";
 	
 	/**
+	 * The window state after the action has been executed; an action can only 
+	 * change its state while in the action or event phase, otherwise this 
+	 * parameter is not considered. If "same" is specified here, the portlet 
+	 * does not change state.
+	 * 
 	 * The class of the view handler, which will format the output
 	 * based on the annotated action's outcome and the parameters,
 	 * as a class object; this propery can be used when the renderer
@@ -68,6 +72,11 @@ public @interface Result {
 	 * at build time, e.g. because it is in a plug-in that is only 
 	 * loaded at runtime, use the <code>classname</code> property 
 	 * instead.
+	 * based on the annotated action's outcome and the parameters,
+	 * as a class name; this property can be used when the renderer
+	 * is loaded lazily, and only bound at runtime, e.g. because it is 
+	 * in a plug-in and must be located by name; if it is known at build
+	 * time, use the <code>classref</code> property instead.
 	 * 
 	 * @return
 	 *   the renderer class.
@@ -75,12 +84,32 @@ public @interface Result {
 	String state() default "same";	
 	
 	/**
-	 * Constants to be passed.
+	 * The type of renderer; this parameter can contain the name of a registered
+	 * renderer, e.g. "jsp", which must have been registered. A set of core 
+	 * renderers are registered by default by the framework, while the user can
+	 * specify some additional ones which must implement the {@code Renderer}
+	 * interface and be located in a package, as per the portlet's initialisation.
+	 *  
+	 * @return
+	 *   the alias of the renderer.
+	 */
+	String renderer() default "jsp";
+	
+	/**
+	 * The URL to be shown, for JSP renderes.
 	 * 
 	 * @return
-	 *   the parameters to be passed to the renderer 
-	 *   at instantiation time.
+	 *   the URL of the JSP to be rendered, for JSP renderers.
 	 */
 	String url() default "";
+	
+	/**
+	 * The name of the parameter to be rendered as JSON, XML or whatever other
+	 * format, as specified through the renderer.
+	 * 
+	 * @return
+	 *   the name of the parameter containing the object to be rendered.
+	 */
+	String parameter() default "";
 
 }

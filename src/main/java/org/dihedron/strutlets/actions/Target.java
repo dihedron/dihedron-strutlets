@@ -45,9 +45,13 @@ public class Target {
 	public static final String DEFAULT_METHOD_NAME = "execute";
 	
 	/**
-	 * The default method semantics: business.
+	 * By default a method is assumed to be non-idempotent, that is it cannot be
+	 * invoked multiple times with the same parameteres yelding the same result.
+	 * This makes it (by default) unfit to be used in a render phase, because
+	 * render URLs can be invoked as many times as the container sees fit, by the
+	 * book.
 	 */
-	public static final Semantics DEFAULT_METHOD_SEMANTICS = Semantics.BUSINESS;
+	public static final boolean DEFAULT_METHOD_IDEMPOTENT = false;
 	
 	/**
 	 * The default pattern used to make up JSP URLs for automagic Actions.
@@ -174,10 +178,10 @@ public class Target {
 	private String method;
 	
 	/**
-	 * Whether the action implements read-only or read-write business logic 
-	 * semantics.
+	 * Whether the action implements idempotent (that is, reiterable and thus fit 
+	 * to be used in a render URL) or non-idempotent business logic.
 	 */
-	private Semantics semantics = DEFAULT_METHOD_SEMANTICS;
+	private boolean idempotent = DEFAULT_METHOD_IDEMPOTENT;
 	
 	/**
 	 * Whether the target is automatically configured.
@@ -297,23 +301,27 @@ public class Target {
 	}
 
 	/**
-	 * Returns whether the method implements read-only or read-write semantics.
+	 * Returns whether the method implements idempotent business logic, which 
+	 * makes it fir to be the target odf a render URL, or non-idempotent logic,
+	 * which restraints its utility to action and event phases only, whose 
+	 * execution is strictly under the user's control..
 	 * 
 	 * @return
-	 *   whether the method implements read-only or read-write semantics.
+	 *   whether the method is idempotent.
 	 */
-	public Semantics getSemantics() {
-		return semantics;
+	public boolean isIdempotent() {
+		return idempotent;
 	}
 	
 	/**
-	 * Sets whether the method implements read-only or read-write semantics.
+	 * Sets whether the method implements idempotent (repeatable) business logic
+	 * or it is a one-shot-at-a-time action method.
 	 * 
-	 * @param semantics
-	 *   whether the method implements read-only or read-write semantics.
+	 * @param idempotent
+	 *   whether the method is idempotent.
 	 */
-	public void setSemantics(Semantics semantics) {
-		this.semantics = semantics;
+	public void setIdempotent(boolean idempotent) {
+		this.idempotent = idempotent;
 	}
 	
 	/**
@@ -464,6 +472,8 @@ public class Target {
 	 * 
 	 * @param id
 	 *   the result id ("e.g. "success" or "error".
+	 * @param type
+	 *   the type of renderer to be used to render the result.
 	 * @param mode
 	 *   the mode in which the portlet should be put. 
 	 * @param state
@@ -472,8 +482,8 @@ public class Target {
 	 *   the URL of the JSP page.
 	 */
 	@Deprecated
-	public void addResult(String id, String mode, String state, String url) {
-		Result result = new Result(id, mode, state, url);
+	public void addResult(String id, String type, String mode, String state, String url) {
+		Result result = new Result(id, type, mode, state, url);
 		results.put(id, result);
 	}
 	
@@ -482,6 +492,8 @@ public class Target {
 	 * 
 	 * @param id
 	 *   the result id ("e.g. "success" or "error".
+	 * @param type
+	 *   the type of renderer to be used to render the result.
 	 * @param mode
 	 *   the mode in which the portlet should be put. 
 	 * @param state
@@ -489,8 +501,8 @@ public class Target {
 	 * @param url
 	 *   the URL of the JSP page.
 	 */
-	public void addResult(String id, PortletMode mode, WindowState state, String url) {
-		Result result = new Result(id, mode, state, url);
+	public void addResult(String id, ResultType type, PortletMode mode, WindowState state, String url) {
+		Result result = new Result(id, type, mode, state, url);
 		results.put(id, result);
 	}
 	
@@ -529,9 +541,10 @@ public class Target {
 			
 			Strings.concatenate(rootHtmlDirectory, action, "/", method, "_", rid, ".jsp");
 			logger.trace("synthetic URL for result '{}' on action '{}', method '{}' is '{}'", rid, action, method, url);
+			ResultType type = ResultType.JSP; 
 			PortletMode mode = PortletMode.SAME;
 			WindowState state = WindowState.SAME;
-			result = new Result(rid, mode, state, url);
+			result = new Result(rid, type, mode, state, url);
 			results.put(rid, result);
 		}
 		return result;
@@ -542,30 +555,59 @@ public class Target {
 	 */
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("target\n");
-		buffer.append(String.format("+ action         : '%1$s'\n", action));
-		buffer.append(String.format("+ method         : '%1$s'\n", method));
-		buffer.append(String.format("+ automagic      : '%1$s'\n", automagic));
-		buffer.append(String.format("+ interceptors   : '%1$s'\n", interceptors));
-		buffer.append(String.format("+ class name     : '%1$s'\n", classname));
-		buffer.append(String.format("+ package        : '%1$s'\n", packagename));
-		buffer.append(String.format("+ java class     : '%1$s'\n", getClassName()));
+		buffer.append("target('").append(action).append("!").append(method).append("') {\n");
+		buffer.append("  action    ('").append(action).append("')\n");
+		buffer.append("  method    ('").append(method).append("')\n");
+		buffer.append("  automagic ('").append(automagic).append("')\n");
+		buffer.append("  stack     ('").append(interceptors).append("')\n");
+		buffer.append("  classname ('").append(classname).append("')\n");
+		buffer.append("  package   ('").append(packagename).append("')\n");
+		buffer.append("  javaclass ('").append(getClassName()).append("')\n");
 		if(!parameters.isEmpty()) {
-			buffer.append(" + parameters\n");
-			for(Entry<String, String> pentry : parameters.entrySet()) {
-				buffer.append("  + parameter\n");
-				buffer.append(String.format("   + key         : '%1$s'\n", pentry.getKey()));	
-				buffer.append(String.format("   + value       : '%1$s'\n", pentry.getValue()));
+			buffer.append("  parameters {\n");
+			for(Entry<String, String> parameter : parameters.entrySet()) {
+				buffer.append("    parameter('").append(parameter.getKey()).append("') = '").append(parameter.getValue()).append("'\n");
 			}
+			buffer.append("  }\n");
 		}
-		buffer.append("   + results\n");
-		for(Entry<String, Result> rentry : results.entrySet()) {
-			buffer.append("    + result\n");
-			buffer.append(String.format("     + id        : '%1$s'\n", rentry.getKey()));
-			buffer.append(String.format("     + mode      : '%1$s'\n", rentry.getValue().getPortletMode()));
-			buffer.append(String.format("     + state     : '%1$s'\n", rentry.getValue().getWindowState()));
-			buffer.append(String.format("     + url       : '%1$s'\n", rentry.getValue().getUrl()));
+		if(!results.isEmpty()) {
+			buffer.append("  results {\n");
+			for(Entry<String, Result> result : results.entrySet()) {
+				buffer.append("    result  ('").append(result.getKey()).append("') { \n");
+				buffer.append("      mode  ('").append(result.getValue().getPortletMode()).append("')\n");
+				buffer.append("      state ('").append(result.getValue().getWindowState()).append("')\n");
+				buffer.append("      type  ('").append(result.getValue().getResultType()).append("')\n");
+				buffer.append("      url   ('").append(result.getValue().getUrl()).append("')\n");
+				buffer.append("    }\n");
+			}
+			buffer.append("  }\n");
 		}
+		buffer.append("}\n");
+		
+//		buffer.append("target\n");
+//		buffer.append(String.format("+ action         : '%1$s'\n", action));
+//		buffer.append(String.format("+ method         : '%1$s'\n", method));
+//		buffer.append(String.format("+ automagic      : '%1$s'\n", automagic));
+//		buffer.append(String.format("+ interceptors   : '%1$s'\n", interceptors));
+//		buffer.append(String.format("+ class name     : '%1$s'\n", classname));
+//		buffer.append(String.format("+ package        : '%1$s'\n", packagename));
+//		buffer.append(String.format("+ java class     : '%1$s'\n", getClassName()));
+//		if(!parameters.isEmpty()) {
+//			buffer.append(" + parameters\n");
+//			for(Entry<String, String> pentry : parameters.entrySet()) {
+//				buffer.append("  + parameter\n");
+//				buffer.append(String.format("   + key         : '%1$s'\n", pentry.getKey()));	
+//				buffer.append(String.format("   + value       : '%1$s'\n", pentry.getValue()));
+//			}
+//		}
+//		buffer.append("   + results\n");
+//		for(Entry<String, Result> rentry : results.entrySet()) {
+//			buffer.append("    + result\n");
+//			buffer.append(String.format("     + id        : '%1$s'\n", rentry.getKey()));
+//			buffer.append(String.format("     + mode      : '%1$s'\n", rentry.getValue().getPortletMode()));
+//			buffer.append(String.format("     + state     : '%1$s'\n", rentry.getValue().getWindowState()));
+//			buffer.append(String.format("     + url       : '%1$s'\n", rentry.getValue().getUrl()));
+//		}
 		return buffer.toString();
 	}	
 }

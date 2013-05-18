@@ -32,6 +32,11 @@ public class Result {
 	private String id;
 	
 	/**
+	 * the type of result; if not overridden the default is assumed to be JSP.
+	 */
+	private ResultType type = ResultType.JSP;
+	
+	/**
 	 * The new mode in which the portlet will be put if this is the action's 
 	 * result.
 	 */
@@ -51,7 +56,9 @@ public class Result {
 	 * Constructor.
 	 * 
 	 * @param id
-	 *   the result identifier (e.g. "success");
+	 *   the result identifier (e.g. "success").
+	 * @param type
+	 *   the type of result; by default it will be JSP.  
 	 * @param mode
 	 *   the id of the new mode in which the portlet will be put if this is the 
 	 *   action's result.
@@ -62,10 +69,11 @@ public class Result {
 	 *   the URL of the JSP or servlet providing the action's view.
 	 */
 	@Deprecated
-	public Result(String id, String mode, String state, String url) {
+	public Result(String id, String type, String mode, String state, String url) {
 		this.id = id;
-		this.mode = PortletMode.getPortletMode(mode);
-		this.state = WindowState.getWindowState(state);		
+		this.type = ResultType.fromString(type);
+		this.mode = PortletMode.fromString(mode);
+		this.state = WindowState.fromString(state);		
 		this.url = url;
 	}
 
@@ -73,7 +81,9 @@ public class Result {
 	 * Constructor.
 	 * 
 	 * @param id
-	 *   the result identifier (e.g. "success");
+	 *   the result identifier (e.g. "success").
+	 * @param type
+	 *   the type of result; by default it will be JSP.  
 	 * @param mode
 	 *   the new mode in which the portlet will be put if this is the action's 
 	 *   result.
@@ -82,8 +92,9 @@ public class Result {
 	 * @param url
 	 *   the URL of the JSP or servlet providing the action's view.
 	 */
-	public Result(String id, PortletMode mode, WindowState state, String url) {
+	public Result(String id, ResultType type, PortletMode mode, WindowState state, String url) {
 		this.id = id;
+		this.type = type;
 		this.state = state;
 		this.mode = mode;
 		this.url = url;
@@ -97,6 +108,16 @@ public class Result {
 	 */
 	public String getId() {
 		return id;
+	}
+	
+	/**
+	 * Retrieves the type of result (JSP, JSON...).
+	 * 
+	 * @return
+	 *   the type of result (JSP, XML, JSON...).
+	 */
+	public ResultType getResultType() {
+		return type;
 	}
 
 	/**
@@ -140,6 +161,7 @@ public class Result {
 	public String toString() {
 		StringBuilder builder = new StringBuilder("result\n");
 		builder.append(String.format(" + id     : '%1$s'\n", id));
+		builder.append(String.format(" + type   : '%1$s'\n", type));
 		builder.append(String.format(" + mode   : '%1$s'\n", mode));
 		builder.append(String.format(" + state  : '%1$s'\n", state));		
 		builder.append(String.format(" + url    : '%1$s'\n", url));
