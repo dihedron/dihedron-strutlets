@@ -25,6 +25,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.dihedron.strutlets.renderers.impl.JspRenderer;
+
 /**
  * Annotation representing the view handler that will 
  * create the visual representation for the given result.
@@ -93,7 +95,7 @@ public @interface Result {
 	 * @return
 	 *   the alias of the renderer.
 	 */
-	String renderer() default "jsp";
+	String renderer() default JspRenderer.ID;
 	
 	/**
 	 * The data to be passed on to the renderer; in the case of a JSP renderer,

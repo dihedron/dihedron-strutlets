@@ -42,8 +42,6 @@ import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.strutlets.renderers.registry.RendererRegistry;
-import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
 import org.dihedron.utils.Resource;
 import org.dihedron.utils.Strings;
 import org.dihedron.xml.DomHelper;

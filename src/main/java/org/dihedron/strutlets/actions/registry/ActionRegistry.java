@@ -283,7 +283,7 @@ public class ActionRegistry {
 						logger.trace("auto-configuring results of {}!{}", action, method.getName());
 						for(Result result : invocable.results()) {
 							String id = result.value();
-							String renderer = Target.DEFAULT_RENDERER;
+							String renderer = result.renderer();//Target.DEFAULT_RENDERER;
 							PortletMode mode = PortletMode.fromString(result.mode());
 							WindowState state = WindowState.fromString(result.state());
 							String data = result.data();

@@ -19,7 +19,13 @@
 
 package org.dihedron.strutlets.renderers.impl;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import javax.portlet.GenericPortlet;
+import javax.portlet.PortletResponse;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceResponse;
 
 import org.dihedron.strutlets.renderers.Renderer;
 
@@ -78,5 +84,24 @@ public abstract class AbstractRenderer implements Renderer {
 	 */
 	protected GenericPortlet getPortlet() {
 		return portlet;
+	}
+	
+	/**
+	 * Returns the {@code PrintWriter} associated with the response object.
+	 * 
+	 * @param response
+	 *   the response object.
+	 * @return
+	 *   the {@code PrintWriter} associated with the response object.
+	 * @throws IOException
+	 */
+	protected PrintWriter getWriter(PortletResponse response) throws IOException{
+		PrintWriter writer = null;
+		if(response instanceof RenderResponse) {
+			writer = ((RenderResponse)response).getWriter();
+		} else if(response instanceof ResourceResponse) {
+			writer = ((ResourceResponse)response).getWriter();
+		}
+		return writer;
 	}
 }

@@ -20,10 +20,13 @@
 package org.dihedron.strutlets.renderers.impl;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceResponse;
 
 import org.dihedron.strutlets.annotations.Alias;
 import org.slf4j.Logger;
@@ -72,6 +75,6 @@ public class JsonRenderer extends BeanRenderer {
 		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		String json = mapper.writeValueAsString(object);
 		logger.trace("json object is:\n{}", json);
-
+        getWriter(response).print(json);
 	}
 }
