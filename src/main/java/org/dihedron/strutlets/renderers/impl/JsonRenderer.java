@@ -23,26 +23,30 @@ import java.io.IOException;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletRequestDispatcher;
 import javax.portlet.PortletResponse;
 
 import org.dihedron.strutlets.annotations.Alias;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 /**
- * The {@code}
  * @author Andrea Funto'
  */
-@Alias("jsp")
-public class JspRenderer extends AbstractRenderer {
+@Alias("json")
+public class JsonRenderer extends BeanRenderer {
 	
-	public static final String ID = "jsp";
+	/**
+	 * The renderer unique id.
+	 */
+	public static final String ID = "json";
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JspRenderer.class);
+	private static final Logger logger = LoggerFactory.getLogger(JsonRenderer.class);
 	
 	/**
 	 * @see org.dihedron.strutlets.renderers.Renderer#getId()
@@ -51,15 +55,23 @@ public class JspRenderer extends AbstractRenderer {
 	public String getId() {
 		return ID;
 	}
-	
+
+	/**
+	 * @see org.dihedron.strutlets.renderers.Renderer#render(javax.portlet.PortletRequest, javax.portlet.PortletResponse)
+	 */
 	@Override
 	public void render(PortletRequest request, PortletResponse response) throws IOException, PortletException {
-        PortletRequestDispatcher dispatcher = getPortlet().getPortletContext().getRequestDispatcher(response.encodeURL(getData()));
+		
+		String bean = getData();
+		logger.trace("rendering bean '{}'", bean);
 
-        if (dispatcher == null) {
-            logger.error("'{}' is not a valid include path (jsp)", getData());
-        } else {
-            dispatcher.include(request, response);
-        }		
+		Object object = getBean(request, bean);
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.enable(SerializationFeature.INDENT_OUTPUT);
+		mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+		String json = mapper.writeValueAsString(object);
+		logger.trace("json object is:\n{}", json);
+
 	}
 }

@@ -23,8 +23,8 @@ import java.io.IOException;
 
 import javax.portlet.GenericPortlet;
 import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletResponse;
 
 
 /**
@@ -72,5 +72,5 @@ public interface Renderer {
 	 * @throws PortletException
 	 *   if any portlet-specific error occurs during the processing.
 	 */
-	void render(RenderRequest request, RenderResponse response) throws IOException, PortletException; 
+	void render(PortletRequest request, PortletResponse response) throws IOException, PortletException; 
 }
