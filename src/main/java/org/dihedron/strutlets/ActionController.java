@@ -227,9 +227,20 @@ public class ActionController extends GenericPortlet {
     	logger.trace("rendering output...");
     	
     	do {
-	    	// first attempt, check if there is a target to invoke before rendering
+	    	// first attempt, check if this is a render request following an action/event request
+    		target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
+    		if(Strings.isValid(target) && Strings.isValid(result)) {
+    			// yes, this is right after a processAction or processEvent
+    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", target, result);
+    			break;
+    		}
+    		
+    		logger.trace("no prior action/event phase to get renderer from");
+    		
+	    	// second attempt, check if there is a target to invoke before rendering
 	    	target = Target.getTargetFromRequest(request);
-	    	if(Strings.isValid(target)) { // (*)
+	    	if(Strings.isValid(target)) {
 	    		logger.trace("invoking target '{}' as per render request", target);
 		    	
 	    		// this is a valid target specification, dispatch to the appropriate 
@@ -239,17 +250,22 @@ public class ActionController extends GenericPortlet {
 	    		// task invoked, now exit
 	    		break;
 	    	}
-
-	    	// second attempt, check if this is a render request following an action/event request
-    		target = request.getParameter(Strutlets.STRUTLETS_TARGET);
-    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
-    		if(Strings.isValid(target) && Strings.isValid(result)) {
-    			// yes, this is right after a processAction or processEvent
-    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", target, result);
-    			break;
+	    	
+	    	// last attempt, check if there is a target in the default URL    		
+    		target = getDefaultUrl(request.getPortletMode());
+    		if(Strings.isValid(target)) { // (*)
+	    		logger.trace("invoking target '{}' as per default URL for mode '{}'", target, request.getPortletMode());
+		    	
+	    		// this is a valid target specification, dispatch to the appropriate 
+	    		// action and method, then retrieve the result's URL	    		
+	    		result = invokePresentationLogic(target, request, response);
+	    		
+	    		// task invoked, now exit
+	    		break;
     		}
     		
     		logger.trace("no business logic to invoke in render phase");
+    		
     	} while(false);   
 
     	String url = null;

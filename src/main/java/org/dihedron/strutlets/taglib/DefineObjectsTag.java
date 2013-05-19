@@ -44,7 +44,7 @@ public class DefineObjectsTag extends SimpleTagSupport {
 		HttpServletRequest request = (HttpServletRequest)context.getRequest();
 		String lifecycle = (String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
 		
-		logger.error("handling tag in {} phase", lifecycle);
+		logger.trace("current phase is '{}'", lifecycle);
 		
 		//pageContext.
 	}

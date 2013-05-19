@@ -32,7 +32,7 @@ public final class Strutlets {
 	/**
 	 * The library version.
 	 */
-	public static final String VERSION = "0.9.0";
+	public static final String VERSION = "0.9.1";
 	
 	/**
 	 * The name of the parameter under which the requested action's name is stored
@@ -63,7 +63,6 @@ public final class Strutlets {
 	 */
 	public static final String STRUTLETS_RESULT = "org.dihedron.strutlets.result";
 	
-
 	/** 
 	 * The output channel.
 	 */
