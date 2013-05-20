@@ -76,5 +76,7 @@ public class JsonRenderer extends BeanRenderer {
 		String json = mapper.writeValueAsString(object);
 		logger.trace("json object is:\n{}", json);
         getWriter(response).print(json);
+        getWriter(response).flush();
+        
 	}
 }

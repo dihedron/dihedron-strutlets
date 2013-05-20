@@ -19,6 +19,10 @@
 
 package org.dihedron.strutlets.exceptions;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+
 import javax.portlet.PortletException;
 
 /**
@@ -71,13 +75,13 @@ public class StrutletsException extends PortletException {
 		super(message, cause);
 	}
 	
-//	/**
-//	 * Prints the exception's stack trace to a String. 
-//	 */
-//	public String toString() {
-//		Writer writer = new StringWriter();
-//		PrintWriter printWriter = new PrintWriter(writer);
-//		this.printStackTrace(printWriter);
-//		return writer.toString();		
-//	}
+	/**
+	 * Prints the exception's stack trace to a String. 
+	 */
+	public String getStackTraceAsString() {
+		Writer writer = new StringWriter();
+		PrintWriter printWriter = new PrintWriter(writer);
+		this.printStackTrace(printWriter);
+		return writer.toString();		
+	}
 }

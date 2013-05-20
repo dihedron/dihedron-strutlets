@@ -46,6 +46,12 @@ public final class WindowState extends javax.portlet.WindowState {
 	public static final WindowState POP_UP = new WindowState("pop_up");
 	
 	/**
+	 * The result is not enriched with the portal's contents: the raw HTML is returned.
+	 * This approach is good for AJAX requests.
+	 */
+	public static final WindowState EXCLUSIVE = new WindowState("exclusive");
+	
+	/**
 	 * The conventional window state to indicate that the window appearance 
 	 * should stay the same as in the previous request
 	 */
@@ -71,6 +77,8 @@ public final class WindowState extends javax.portlet.WindowState {
 			return MAXIMISED;
 		} else if(MINIMISED.equals(id)) {
 			return MINIMISED;
+		} else if(EXCLUSIVE.equals(id)) {
+			return EXCLUSIVE;
 		} else if(POP_UP.equals(id)) {
 			return POP_UP;
 		}
@@ -88,7 +96,7 @@ public final class WindowState extends javax.portlet.WindowState {
 	 */
 	public static boolean isSupported(String id) {
 		if(id != null) {
-			return (SAME.equals(id) || NORMAL.equals(id) || MAXIMISED.equals(id) || MINIMISED.equals(id) || POP_UP.equals(id));		
+			return (SAME.equals(id) || NORMAL.equals(id) || MAXIMISED.equals(id) || MINIMISED.equals(id) || EXCLUSIVE.equals(id) || POP_UP.equals(id));		
 		}
 		return false;
 	}
