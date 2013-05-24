@@ -157,12 +157,12 @@ public class Outputs extends Interceptor {
 				case PORTLET:
 					value = reflector.getFieldValue(field.getName());				
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-					ActionContext.setPortletAttribute(parameter, (String [])value);
+					ActionContext.setPortletAttribute(parameter, value);
 					break;
 				case APPLICATION:
 					value = reflector.getFieldValue(field.getName());				
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-					ActionContext.setApplicationAttribute(parameter, (String [])value);
+					ActionContext.setApplicationAttribute(parameter, value);
 					break;
 				default:
 					logger.error("cannot store an output value into a '{}' scope: this is probably a bug!", annotation.scope().name());
