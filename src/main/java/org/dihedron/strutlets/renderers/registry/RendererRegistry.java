@@ -19,71 +19,39 @@
 
 package org.dihedron.strutlets.renderers.registry;
 
-import java.util.HashMap;
-
-import javax.portlet.GenericPortlet;
-
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.renderers.Renderer;
-import org.dihedron.utils.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrea Funto'
  */
-public class RendererRegistry extends HashMap<String, String> {
+public interface RendererRegistry {
 	
-	/**
-	 * Serial version id.
-	 */
-	private static final long serialVersionUID = -4808717733886640936L;
-
 	/**
 	 * The Java package where the default set of renderers is located.
 	 */
 	public static final String DEFAULT_RENDERER_PACKAGE = "org.dihedron.strutlets.renderers.impl";
 	
 	/**
-	 * The logger.
+	 * Adds information about a {@code Renderer} type.
+	 * 
+	 * @param id
+	 *   the id of the renderer.
+	 * @param clazz
+	 *   the class of the renderer.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(RendererRegistry.class);
-
-	/**
-	 * The portlet this registry belongs to.
-	 */
-	private GenericPortlet portlet;
+	public void addRenderer(String id, Class<? extends Renderer> clazz) throws StrutletsException;
 	
 	/**
-	 * Constructor.
+	 * Returns an instance of {@code Renderer} for the given input type; implementing
+	 * classes may choose to create a new instance of renderer class for each 
+	 * request, or to recycle instances since renderers are assumed to be stateless.
+	 * 
+	 * @param id
+	 *   the type of the renderer to return.
+	 * @return
+	 *   the {@code Renderer} instance.
+	 * @throws StrutletsException
 	 */
-	public RendererRegistry(GenericPortlet portlet) {
-		logger.info("instantiating renderers registry...");
-		this.portlet = portlet;
-		this.put("jsp", "org.dihedron.strutlets.renderers.impl.JspRenderer");
-	}
-	
-	public Renderer makeRenderer(String type) throws StrutletsException {
-		String classname = null;
-		Renderer renderer = null;
-		try {
-			if(Strings.areValid(type, this.get(type))) {
-				classname = this.get(type);
-				@SuppressWarnings("unchecked")
-				Class<? extends Renderer> clazz = (Class<? extends Renderer>) Class.forName(classname);
-				renderer = clazz.newInstance();
-				renderer.setPortlet(portlet);
-			}
-		} catch (ClassNotFoundException e) {
-			logger.error("class '{}' not found on classpath", classname);
-			throw new StrutletsException("Renderer class '" + classname + "' not found on classpath");
-		} catch (InstantiationException e) {
-			logger.error("error instantiating object of class '{}'", classname);
-			throw new StrutletsException("Error instantiating renderer class '" + classname + "'");
-		} catch (IllegalAccessException e) {
-			logger.error("error accessing class '{}'", classname);
-			throw new StrutletsException("Error accessing renderer class '" + classname + "'");
-		}
-		return renderer;
-	}
+	public Renderer getRenderer(String id) throws StrutletsException;
 }

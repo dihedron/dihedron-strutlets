@@ -22,6 +22,7 @@ package org.dihedron.strutlets.renderers.registry;
 import java.util.Set;
 
 import org.dihedron.strutlets.annotations.Alias;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.renderers.Renderer;
 import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
@@ -45,7 +46,7 @@ public class RendererRegistryLoader {
      * This method performs the automatic scanning of renderers at startup time, 
      * to get any custom, user-provided renderers.
      */
-    public void loadFromJavaPackage(RendererRegistry registry, String javaPackage) {
+    public void loadFromJavaPackage(RendererRegistry registry, String javaPackage) throws StrutletsException {
     	
     	if(Strings.isValid(javaPackage)) {
     		logger.trace("looking for renderer classes in package '{}'", javaPackage);
@@ -58,12 +59,12 @@ public class RendererRegistryLoader {
     					.setUrls(ClasspathHelper.forPackage(javaPackage))
     					.setScanners(new SubTypesScanner()));    		
     		Set<Class<? extends Renderer>> renderers = reflections.getSubTypesOf(Renderer.class);
-	        for(Class<?> clazz : renderers) {
+	        for(Class<? extends Renderer> clazz : renderers) {
 	        	logger.trace("analysing renderer class: '{}'...", clazz.getName());
 	        	if(clazz.isAnnotationPresent(Alias.class)) {
 	        		Alias alias = clazz.getAnnotation(Alias.class);
 	        		logger.trace("... registering '{}' renderer: '{}'", alias.value(), clazz.getCanonicalName());
-	        		registry.put(alias.value(), clazz.getName());
+	        		registry.addRenderer(alias.value(), clazz);
 	        	} else {
 	        		logger.trace("... skipping renderer '{}'", clazz.getCanonicalName());
 	        	}

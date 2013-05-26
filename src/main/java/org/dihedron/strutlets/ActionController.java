@@ -46,6 +46,8 @@ import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
 import org.dihedron.strutlets.renderers.Renderer;
+import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
+import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
 import org.dihedron.strutlets.targets.TargetData;
@@ -58,15 +60,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The Strutlets framework controller portlet.
+ * 
+ * The role of the Strutlets controller is that of:<ol>
+ * <li>analysing the incoming request, no matter whether an action, render, event 
+ * or resource request, and checks if it contains a valid target identifier</li>
+ * <li>dispatching control to the appropriate target handler</li>
+ * <li>gathering the target's results and identifying the appropriate renderer</li>
+ * <li>dispatching control to the renderer.</li></ol>
  */
 public class ActionController extends GenericPortlet {
-
-	/**
-	 * The parameter used to specify the home page to be used by the framework
-	 * in custom XXXX (whatever) mode. This page is the starting point of the custom mode 
-	 * HTML navigation tree.
-	 */	
-	private static final String RENDER_XXXX_HOMEPAGE = "render.xxxx.homepage";
 	
 	/**
 	 * The registry of interceptors' stacks.
@@ -84,23 +86,21 @@ public class ActionController extends GenericPortlet {
 	private RendererRegistry renderers;
 
     /**
-     * Initialises the controller portlet. The process follows these steps:<ol>
-     * <li><b>loading the actions configuration into the single instance of the
-     * <code>Configuration</code><b>: this object is responsible for providing
-     * relevant information about all the actions, whether explicitly configured 
-     * or self-configured through annotations, such as supported methods, which 
-     * interceptors stack to apply, and which page (in which mode and which window 
-     * state) to apply for each result. The loading process in is two phases, first
-     * the initialisation parameter is checked for the name of the file to load,:
-     * if provided, the configuration is loaded from there; if not provided, then 
-     * the default location (WEB-INF/)is scanned for the existence of a file 
-     * named <code>actions-config.xml</code> and if found it is loaded.</li>
+     * Initialises the controller portlet. 
+     * 
+     * The process follows these steps:<ol>
+     * <li><b>loading the targets registry</b>: the target registry is responsible 
+     * for providing the right action and method combination (the so-called 
+     * "target") for the current request; for more details on targets see 
+     * {@link org.dihedron.strutlets.targets.TargetId TargetId} and 
+     * {@link org.dihedron.strutlets.targets.TargetData TargetData}</li>
      * <li><b>loading the interceptors stacks</b>: the framework already provides 
      * a standard set of interceptors, but the user can provide her own by 
      * setting a value for the <code>???</code> parameter and placing a file with
      * the relevant information under the same path. User stacks override default 
      * stacks if names collide.</li>
-     * ... 
+     * <li><b>loading the renderers registry</b>: this is the registry of available 
+     * renderers.</li></ol>
      * </ol>
      * 
      * @see javax.portlet.GenericPortlet#init()
@@ -139,7 +139,7 @@ public class ActionController extends GenericPortlet {
      * This method receives incoming action requests and looks up the appropriate
      * handler in the target map, then propagates the request to the action through
      * the interceptors stack. Once the processing is complete, it gathers the 
-     * result string and looks up the appropriate view JSP.
+     * result string and looks up the appropriate renderer (e.g. a JSP).
      * 
      *  @param request
      *    the incoming <code>ActionRequest</code> object.
@@ -152,7 +152,7 @@ public class ActionController extends GenericPortlet {
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
     	logger.trace("processing action...");
     	
-    	// the target is contained in one of several places
+    	// check if the target is contained in the request
     	TargetId targetId = TargetId.makeFromRequest(request);
     	    	
     	String result = invokeBusinessLogic(targetId, request, response);
@@ -311,14 +311,14 @@ public class ActionController extends GenericPortlet {
 	    // we're almost done: proceed with the JSP rendering
     	if(Strings.isValid(url)) {
     		logger.info("rendering through URL: '{}'", url);
-    		renderer = renderers.makeRenderer("jsp");
+    		renderer = renderers.getRenderer(JspRenderer.ID);
     		renderer.setData(url);
-    		renderer.render(request, response);
-    		logger.trace("... output rendering done");
+    		renderer.render(request, response);    		
     	} else {
     		logger.error("invalid render URL");
     		throw new StrutletsException("No valid render URL available");
     	}    	
+    	logger.trace("... output rendering done");
     }
     
     /**
@@ -337,14 +337,14 @@ public class ActionController extends GenericPortlet {
     		
     		String res = invokeResourceLogic(targetId, request, response);
     		
-    		logger.trace("target '{}' returned '{}'", target, res);
+    		logger.trace("target '{}' returned '{}'", targetId, res);
     		
-			TargetData info = registry.getTarget(target);
-			Result result = info.getResult(res);
+			TargetData data = registry.getTarget(target);
+			Result result = data.getResult(res);
 			
 			logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
     		
-    		Renderer renderer = renderers.makeRenderer(result.getRenderer());
+    		Renderer renderer = renderers.getRenderer(result.getRenderer());
     		renderer.setData(result.getData());
         	renderer.render(request, response);
         	
@@ -601,13 +601,21 @@ public class ActionController extends GenericPortlet {
      */
     private void initialiseRenderersRegistry() throws StrutletsException {
     	RendererRegistryLoader loader = new RendererRegistryLoader();
-    	renderers = new RendererRegistry(this);
-    	loader.loadFromJavaPackage(renderers, "org.dihedron.strutlets.renderers.impl");
+    	renderers = new CachingRendererRegistry(this);
+    	//renderers = new RenewingRendererRegistry(this);
+    	loader.loadFromJavaPackage(renderers, RendererRegistry.DEFAULT_RENDERER_PACKAGE);
     	loader.loadFromJavaPackage(renderers, InitParameter.RENDERERS_JAVA_PACKAGE.getValueForPortlet(this));
     }
 
-    /**
+	/**
+	 * The parameter used to specify the home page to be used by the framework
+	 * in custom XXXX (whatever) mode. This page is the starting point of the custom mode 
+	 * HTML navigation tree.
+	 */	
+	private static final String RENDER_XXXX_HOMEPAGE = "render.xxxx.homepage";    
+
+	/**
      * The logger.
      */
-    private static Logger logger = LoggerFactory.getLogger(ActionController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ActionController.class);
 }
