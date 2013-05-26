@@ -18,6 +18,10 @@
  */
 
 /**
+ * Classes belonging to this package cooperate to the loading and efficient use
+ * of the @{code TargetId} and @{code TargetData} which make up the core of the
+ * framework.
+ *  
  * @author Andrea Funto'
  */
-package org.dihedron.strutlets.actions.registry;
+package org.dihedron.strutlets.targets.registry;

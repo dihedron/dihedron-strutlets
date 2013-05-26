@@ -64,6 +64,7 @@ public class Dumper extends Interceptor {
 		dumpAttributes(Scope.REQUEST, builder);
 		dumpAttributes(Scope.PORTLET, builder);
 		dumpAttributes(Scope.APPLICATION, builder);
+		builder.append(SECTION_FOOTER).append("\n");
 		logger.debug("action context BEFORE execution:\n{}", builder);
 		builder.setLength(0);
 		String result = invocation.invoke();

@@ -87,21 +87,16 @@ public class Outputs extends Interceptor {
 	private void extractOutputs(ActionInvocation invocation) throws ReflectorException, StrutletsException {
 		
 		logger.trace("extracting outputs for method '{}' on action '{}'", invocation.getMethod(), invocation.getAction().getClass().getSimpleName());
-		// get the method through reflection
-		Set<Method> methods = Reflector.getMethods(invocation.getAction().getClass(), invocation.getMethod());
-		if(methods.size() == 1) {
-			// now get the output fields for the given method, as declared in the annotation
-			String [] filter = {};
-			Method method = (Method)methods.toArray()[0];
-			if(method.isAnnotationPresent(Invocable.class)) {
-				Invocable annotation = method.getAnnotation(Invocable.class);
-				filter = annotation.outputs();
-				// get the corresponding fields
-				Set<Field> fields = Reflector.getFields(invocation.getAction().getClass(), filter);
-				for(Field field : fields) {
-					extractField(field, invocation);
-				}		
-			}
+		String [] filter = {};
+		Method method = invocation.getMethod();
+		if(method.isAnnotationPresent(Invocable.class)) {
+			Invocable annotation = method.getAnnotation(Invocable.class);
+			filter = annotation.outputs();
+			// get the corresponding fields
+			Set<Field> fields = Reflector.getFields(invocation.getAction().getClass(), filter);
+			for(Field field : fields) {
+				extractField(field, invocation);
+			}		
 		}
 	}
 

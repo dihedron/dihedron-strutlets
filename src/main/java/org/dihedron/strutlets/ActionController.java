@@ -41,16 +41,17 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
-import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
-import org.dihedron.strutlets.actions.registry.ActionRegistry;
-import org.dihedron.strutlets.actions.registry.ActionRegistryLoader;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
 import org.dihedron.strutlets.renderers.Renderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
+import org.dihedron.strutlets.targets.TargetData;
+import org.dihedron.strutlets.targets.TargetId;
+import org.dihedron.strutlets.targets.registry.TargetFactory;
+import org.dihedron.strutlets.targets.registry.TargetRegistry;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,17 +69,17 @@ public class ActionController extends GenericPortlet {
 	private static final String RENDER_XXXX_HOMEPAGE = "render.xxxx.homepage";
 	
 	/**
-	 * The factory of interceptors' stacks.
+	 * The registry of interceptors' stacks.
 	 */
 	private InterceptorsRegistry interceptors;
 	
 	/**
-	 * The actions registry.
+	 * The registry of supported targets.
 	 */
-	private ActionRegistry registry;
+	private TargetRegistry registry;
 	
 	/**
-	 * The registry of renderers.
+	 * The registry of supported renderers.
 	 */
 	private RendererRegistry renderers;
 
@@ -119,7 +120,7 @@ public class ActionController extends GenericPortlet {
         		logger.info(" + parameter: {}", parameter.toString(this));
         	}
 
-        	initialiseActionRegistry();
+        	initialiseTargetsRegistry();
 			
         	initialiseInterceptorsRegistry();
         	
@@ -152,9 +153,9 @@ public class ActionController extends GenericPortlet {
     	logger.trace("processing action...");
     	
     	// the target is contained in one of several places
-    	String target = Target.getTargetFromRequest(request);
-    	
-    	String result = invokeBusinessLogic(target, request, response);
+    	TargetId targetId = TargetId.makeFromRequest(request);
+    	    	
+    	String result = invokeBusinessLogic(targetId, request, response);
     	
     	logger.trace("... action processing done with result '{}'", result);
     }
@@ -176,9 +177,9 @@ public class ActionController extends GenericPortlet {
     	logger.trace("processing event...");
     	// get the name of the event and re-map it onto the target through the registry
     	QName qname = request.getEvent().getQName();
-    	String target = registry.getEventTarget(qname);
+    	TargetId targetId = registry.getEventTarget(qname);
     	
-    	String result = invokeBusinessLogic(target, request, response);
+    	String result = invokeBusinessLogic(targetId, request, response);
     	
     	logger.trace("... event processing done with result '{}'", result);
     }        
@@ -189,7 +190,7 @@ public class ActionController extends GenericPortlet {
      * 
      * This method performs some action in order to understand whether the render
      * phase is immediately following the processing of an action or an event (in 
-     * which case we should not expect any further Target to be invoked), or it
+     * which case we should not expect any further TargetData to be invoked), or it
      * is in response to a render request.
      * In the former case, the method will simply identify the JSP page to invoke
      * by accessing the appropriate {@code Result} in the targets registry and 
@@ -229,7 +230,7 @@ public class ActionController extends GenericPortlet {
     @Override
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
-    	String target = null;
+    	TargetId targetId = null;
     	String result = null;
     	
     	Renderer renderer = null;
@@ -238,24 +239,25 @@ public class ActionController extends GenericPortlet {
     	
     	do {
 	    	// first attempt, check if this is a render request following an action/event request
-    		target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+    		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
     		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
-    		if(Strings.isValid(target) && Strings.isValid(result)) {
+    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
     			// yes, this is right after a processAction or processEvent
-    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", target, result);
+    			targetId = new TargetId(target);
+    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
     			break;
     		}
     		
     		logger.trace("no prior action/event phase to get renderer from");
     		
 	    	// second attempt, check if there is a target to invoke before rendering
-	    	target = Target.getTargetFromRequest(request);
-	    	if(Strings.isValid(target)) {
-	    		logger.trace("invoking target '{}' as per render request", target);
+	    	targetId = TargetId.makeFromRequest(request);
+	    	if(targetId != null) {
+	    		logger.trace("invoking target '{}' as per render request", targetId);
 		    	
 	    		// this is a valid target specification, dispatch to the appropriate 
 	    		// action and method, then retrieve the result's URL	    		
-	    		result = invokePresentationLogic(target, request, response);
+	    		result = invokePresentationLogic(targetId, request, response);
 	    		
 	    		// task invoked, now exit
 	    		break;
@@ -265,12 +267,13 @@ public class ActionController extends GenericPortlet {
 	    	// then this is the initial page and we might have a target there too 
 	    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
 	    		target = getDefaultUrl(request.getPortletMode());
-	    		if(Target.isValidTarget(target)) { // (*)
-		    		logger.trace("invoking target '{}' as per default URL for mode '{}'", target, request.getPortletMode());
+	    		if(TargetId.isValidTarget(target)) { // (*)
+	    			targetId = new TargetId(target);
+		    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
 			    	
 		    		// this is a valid target specification, dispatch to the appropriate 
 		    		// action and method, then retrieve the result's URL	    		
-		    		result = invokePresentationLogic(target, request, response);
+		    		result = invokePresentationLogic(targetId, request, response);
 		    		
 		    		// task invoked, now exit
 		    		break;
@@ -285,9 +288,9 @@ public class ActionController extends GenericPortlet {
 
     	String url = null;
     	// now, if target and result are valid, get the renderer
-    	if(Strings.areValid(target, result)) {
+    	if(targetId != null && Strings.isValid(result)) {
     		// get the URL corresponding to the given target and result
-    		url = getUrl(target, result);
+    		url = getUrl(targetId, result);
     	} else {
 			// no, this is a plain render request, let's check "jspPage" 
 			// first, to comply with Liferay's worst practices
@@ -327,14 +330,16 @@ public class ActionController extends GenericPortlet {
     	
     	String target = request.getResourceID();
     	logger.trace("serving resource '{}'...", target);
-    	if(Target.isValidTarget(target)) {
+    	if(TargetId.isValidTarget(target)) {
     		logger.trace("... executing business logic to gather the resource");
     		
-    		String res = invokeResourceLogic(target, request, response);
+    		TargetId targetId = new TargetId(target);
+    		
+    		String res = invokeResourceLogic(targetId, request, response);
     		
     		logger.trace("target '{}' returned '{}'", target, res);
     		
-			Target info = registry.getTarget(target);
+			TargetData info = registry.getTarget(target);
 			Result result = info.getResult(res);
 			
 			logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
@@ -355,7 +360,7 @@ public class ActionController extends GenericPortlet {
     /**
      * Processes an action request in the action and event phases.
      * 
-     * @param target
+     * @param targetId
      *   the requested target (in the form "MyAction!myMethod").
      * @param request
      *   the current request object.
@@ -363,21 +368,21 @@ public class ActionController extends GenericPortlet {
      *   the current action or event response object.
      * @throws PortletException
      */
-    protected String invokeBusinessLogic(String target, PortletRequest request, StateAwareResponse response) throws PortletException {
+    protected String invokeBusinessLogic(TargetId targetId, PortletRequest request, StateAwareResponse response) throws PortletException {
     	String res = null;
     	
     	try {
-			if(Strings.isValid(target)) {
+			if(targetId != null) {
 				// invoke method
-				logger.debug("invoking target '{}'...", target);    			
-	    		res = invokeTarget(target, request, response);
+				logger.debug("invoking target '{}'...", targetId);    			
+	    		res = invokeTarget(targetId, request, response);
 	    		
 	    		// get routing configuration for given result string
-	    		Result result = registry.getTarget(target).getResult(res);
+	    		Result result = registry.getTarget(targetId).getResult(res);
 	    		PortletMode mode = result.getPortletMode();
 	    		WindowState state = result.getWindowState();
 	    		
-	    		logger.debug("... target '{}' returned result: '{}', mode: '{}', state: '{}'", target, result.getId(), mode, state);
+	    		logger.debug("... target '{}' returned result: '{}', mode: '{}', state: '{}'", targetId, result.getId(), mode, state);
 	
 	    		// change portlet mode	    		
 	    		if(Strings.isValid(mode.toString()) && request.isPortletModeAllowed(mode)) {
@@ -388,12 +393,12 @@ public class ActionController extends GenericPortlet {
 	    			response.setWindowState(state);
 	    		}
 	    		// set parameters for the following render phase
-		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, target);
+		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, targetId.toString());
 		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
 			} else {			
 				// action not specified, check the current mode and service the
 				// default page, as specified in the initialisation parameters
-				logger.trace("target string not specified, blanking target and result in render parameters and serving default page");
+				logger.trace("target not specified, blanking target and result in render parameters and serving default page");
 		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
 		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
 			}
@@ -404,21 +409,21 @@ public class ActionController extends GenericPortlet {
 		return res;
     }
     
-    protected String invokePresentationLogic(String target, RenderRequest request, RenderResponse response) throws IOException, PortletException {
+    protected String invokePresentationLogic(TargetId targetId, RenderRequest request, RenderResponse response) throws IOException, PortletException {
     	String result = null;
     	try {
-    		if(Strings.isValid(target)) {
+    		if(targetId != null) {
     			
     			// check that the method is for presentation
-    			Target info = registry.getTarget(target);
-    			if(!info.isIdempotent()) {
+    			TargetData targetData = registry.getTarget(targetId);
+    			if(!targetData.isIdempotent()) {
     				throw new PortletException("Trying to invoke non-idempotent method in render request");
     			}
     			
     			// invoke method
-    			logger.debug("invoking target '{}'...", target);    			
-	    		result = invokeTarget(target, request, response);	
-	    		logger.debug("... target '{}' result is '{}'", target, result);
+    			logger.debug("invoking target '{}'...", targetId);    			
+	    		result = invokeTarget(targetId, request, response);	
+	    		logger.debug("... target '{}' result is '{}'", targetId, result);
     		}
     		return result;
     	} catch(PortletException e) {
@@ -427,13 +432,13 @@ public class ActionController extends GenericPortlet {
 		}
     }    
     
-    protected String invokeResourceLogic(String target, ResourceRequest request, ResourceResponse response) throws IOException, PortletException {
+    protected String invokeResourceLogic(TargetId targetId, ResourceRequest request, ResourceResponse response) throws IOException, PortletException {
     	String result = null;
     	try {
-    		if(Strings.isValid(target)) {    			
-    			logger.debug("invoking target '{}'...", target);    			
-	    		result = invokeTarget(target, request, response);	
-	    		logger.debug("... target '{}' result is '{}'", target, result);	    		
+    		if(targetId != null) {    			
+    			logger.debug("invoking target '{}'...", targetId);    			
+	    		result = invokeTarget(targetId, request, response);	
+	    		logger.debug("... target '{}' result is '{}'", targetId, result);	    		
     		}
     	} catch(PortletException e) {
     		logger.error("portlet exception servicing render request: {}", e.getMessage());
@@ -443,38 +448,31 @@ public class ActionController extends GenericPortlet {
     }        
     
     
-    protected String invokeTarget(String target, PortletRequest request, PortletResponse response) throws StrutletsException {
+    protected String invokeTarget(TargetId targetId, PortletRequest request, PortletResponse response) throws StrutletsException {
     	Action action = null;
     	String result = null;
     	try {
-    		logger.info("invoking target '{}'", target);
+    		logger.info("invoking target '{}'", targetId);
     		
     		// check if there's configuration available for the given action
-			Target info = registry.getTarget(target);
+			TargetData targetData = registry.getTarget(targetId);
 			
-			if(info == null) {
-				logger.error("target '{}' has no valid configuration in the registry", target);
-				throw new StrutletsException("No valid configuration found in registry for target '" + target + "'");
-			}
-			
-			logger.trace("target configuration:\n{}", info.toString());
+			logger.trace("target configuration:\n{}", targetData.toString());
     		
 			// instantiate the action
-			action = ActionFactory.makeAction(info);
+			action = ActionFactory.makeAction(targetData);
 			if(action != null) {
-				logger.info("action '{}' ready", info.getClassName());
+				logger.info("action '{}' ready", targetData.getAction().getSimpleName());
 			} else {    			 	
-				logger.error("no action found for target '{}'", target);
-				throw new StrutletsException("No action could be found for target '" + target + "'");
+				logger.error("no action found for target '{}'", targetId);
+				throw new StrutletsException("No action could be found for target '" + targetId + "'");
 			}
 			
 			// get the stack for the given action
-			InterceptorStack stack = interceptors.getStackOrDefault(info.getInterceptorStackId());
+			InterceptorStack stack = interceptors.getStackOrDefault(targetData.getInterceptorStackId());
 
-	    	// get action name, interceptor stack and method from interceptors
-			String method = Target.getMethodName(target);
-
-	    	ActionInvocation invocation = new ActionInvocation(action, method, stack, request, response);
+			// create the invocation object
+	    	ActionInvocation invocation = new ActionInvocation(action, targetData.getMethod(), stack, request, response);
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
@@ -494,22 +492,23 @@ public class ActionController extends GenericPortlet {
     /**
      * Retrieves the render URL for the given target and its result.
      * 
-     * @param target
+     * @param targetId
      *   the target.
      * @param result
      *   the target's result.
      * @return
      *   the URL that will provide the view for the given actiontarget's result.
+     * @throws StrutletsException 
      */
-    private String getUrl(String target, String result){
+    private String getUrl(TargetId targetId, String result) throws StrutletsException{
     	String url = null;
-    	if(Strings.isValid(target) && Strings.isValid(result)) {	    	
-	    	logger.trace("looking for renderer for target '{}' with result '{}'", target, result);	    	
-	    	Target info = registry.getTarget(target);
-	    	Result renderer = info.getResult(result);
+    	if(targetId != null && Strings.isValid(result)) {	    	
+	    	logger.trace("looking for renderer for target '{}' with result '{}'", targetId, result);	    	
+	    	TargetData targetData = registry.getTarget(targetId);
+	    	Result renderer = targetData.getResult(result);
 	    	url = renderer.getData();
 	    	logger.debug("renderer URL for target '{}' with result '{}' is '{}' (mode '{}', state '{}')", 
-	    			target, result, url, renderer.getPortletMode(), renderer.getWindowState());
+	    			targetId, result, url, renderer.getPortletMode(), renderer.getWindowState());
     	}
     	return url;
     }
@@ -557,40 +556,16 @@ public class ActionController extends GenericPortlet {
      * 
      * @throws StrutletsException 
      */
-    private void initialiseActionRegistry() throws StrutletsException {
+    private void initialiseTargetsRegistry() throws StrutletsException {
         // get the actions configuration repository
-    	registry = new ActionRegistry();
-                  
-        // try to load the actions configuration registry, in the following 
-    	// order:
-        // a. see if there's a user-specified configuration file
-        // b. if not, try the default actions-config-xml under the root
-        // self-configuring actions will be configured as requests come
-		ActionRegistryLoader loader = new ActionRegistryLoader();
-		
-		// load the actions configuration
-		String file = InitParameter.ACTIONS_CONFIGURATION_FILE.getValueForPortlet(this);
-		if(Strings.isValid(file)) {
-			// load the custom configuration
-			logger.info("loading actions configuration from custom location: '{}'", file);
-			loader.loadFromClassPath(registry, file);
-		} else {
-			// load the default			
-			logger.info("loading actions configuration from well-known location: '{}'", ActionRegistryLoader.DEFAULT_ACTIONS_CONFIG_XML);
-			loader.loadFromClassPath(registry, ActionRegistryLoader.DEFAULT_ACTIONS_CONFIG_XML);
-		}
-						
-		// set the default Java package where self-configuring annotated actions are to be located
-		registry.setDefaultActionPackage(InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
-		
+    	registry = new TargetRegistry();
+    	
 		// set the root directory for HTML files and JSPs, for auto-configured annotated actions
-		registry.setRootHtmlDirectory(InitParameter.RENDER_ROOT_DIRECTORY.getValueForPortlet(this));
-
-		// set the pattern for the HTML files and JSP paths, for auto-configured annotated actions
-		registry.setHtmlPathPattern(InitParameter.RENDER_PATH_PATTERN.getValueForPortlet(this));
+		registry.setHtmlPathInfo(InitParameter.RENDER_ROOT_DIRECTORY.getValueForPortlet(this), InitParameter.RENDER_PATH_PATTERN.getValueForPortlet(this));
 		
 		// pre-scan existing classes and methods in the default actions package
-		loader.loadFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
+		TargetFactory loader = new TargetFactory();
+		loader.makeFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
 
 		logger.trace("actions configuration:\n{}", registry.toString());    	
     }
@@ -621,7 +596,7 @@ public class ActionController extends GenericPortlet {
     }
     
     /**
-     * Initialises the registry of view renderers
+     * Initialises the registry of view renderers.
      * @throws StrutletsException
      */
     private void initialiseRenderersRegistry() throws StrutletsException {

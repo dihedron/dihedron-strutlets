@@ -19,6 +19,7 @@
 
 package org.dihedron.strutlets;
 
+import java.lang.reflect.Method;
 import java.util.Iterator;
 
 import javax.portlet.ActionRequest;
@@ -46,7 +47,7 @@ public class ActionInvocation {
 	/**
 	 * The method being invoked on the action.
 	 */
-	private String method;
+	private Method method;
 	
 	/**
 	 * The <code>ActionRequest</code>, <code>EventRequest</code> or
@@ -80,7 +81,7 @@ public class ActionInvocation {
 	 * @param action
 	 *   the action being invoked.
 	 * @param method
-	 *   the name of the method being invoked.
+	 *   the method being invoked.
 	 * @param interceptors
 	 *   the <code>InterceptorStack</code> representing the set of interceptors 
 	 * @param request
@@ -88,7 +89,7 @@ public class ActionInvocation {
 	 * @param response
 	 *   the <code>PortletResponse</code> object.
 	 */
-	public ActionInvocation(Action action, String method, InterceptorStack interceptors, 
+	public ActionInvocation(Action action, Method method, InterceptorStack interceptors, 
 			PortletRequest request, PortletResponse response) {
 		this.action = action;
 		this.method = method;
@@ -109,12 +110,12 @@ public class ActionInvocation {
 	}
 	
 	/**
-	 * Returns the name of the method being invoked.
+	 * Returns the method being invoked.
 	 * 
 	 * @return
-	 *   the name of the method being invoked.
+	 *   the method being invoked.
 	 */
-	public String getMethod() {
+	public Method getMethod() {
 		return method;
 	}
 	

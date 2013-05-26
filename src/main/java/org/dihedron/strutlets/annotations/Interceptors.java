@@ -37,10 +37,15 @@ import java.lang.annotation.Target;
 public @interface Interceptors {
 
 	/**
+	 * The name of the default stack.
+	 */
+	public static final String DEFAULT_STACK = "default";	
+	
+	/**
 	 * The id of the interceptors' stack to be used with this action.
 	 * 
 	 * @return
 	 *   the id if the interceptors' stack.
 	 */
-	String value() default "default";
+	String value() default DEFAULT_STACK;
 }

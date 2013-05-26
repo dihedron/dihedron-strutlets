@@ -20,8 +20,8 @@
 package org.dihedron.strutlets.actions.factory;
 
 import org.dihedron.strutlets.actions.Action;
-import org.dihedron.strutlets.actions.Target;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.dihedron.strutlets.targets.TargetData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +42,12 @@ public final class ActionFactory {
 	 * @throws StrutletsException 
 	 * @throws Exception
 	 */
-	public static Action makeAction(Target target) throws StrutletsException {
+	public static Action makeAction(TargetData target) throws StrutletsException {
 		Action action = null;
 		if(target != null) {
-			String classname = target.getClassName();
-			logger.trace("instantiating action of class '{}'", classname);
+			logger.trace("instantiating action of class '{}'", target.getAction().getSimpleName());
 			try {
-				action = (Action)Class.forName(classname).newInstance();
+				action = target.getAction().newInstance();
 			} catch (Exception e) {
 				logger.error("error instantiating action for target '{}'", target);
 				throw new StrutletsException("Error instantiating action", e);

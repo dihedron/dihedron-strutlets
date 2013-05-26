@@ -20,11 +20,11 @@
 package org.dihedron.strutlets.actions;
 
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.dihedron.reflection.Reflector;
-import org.dihedron.reflection.ReflectorException;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.ActionException;
 import org.slf4j.Logger;
@@ -93,21 +93,26 @@ public abstract class Action {
 	 *   the name of the method to be invoked.
 	 * @return
 	 *   the invocation result string, e.g. "success".
-	 * @throws Exception
+	 * @throws ActionException
 	 */
-	public String invoke(String method) throws ActionException {
-		String meth = method;		
+	public String invoke(Method method) throws ActionException {		
 		try {
-			if(meth == null) {
-				meth = Target.DEFAULT_METHOD_NAME;
+			String result = null;
+			if(method != null) {
+				logger.info("invoking method '{}'...", method.getName());
+				result = (String)method.invoke(this);
+			} else {
+				logger.error("no method specified");
+				throw new ActionException("No valid method in target");
 			}
-			logger.info("invoking method '{}'...", meth);
-			Reflector helper = new Reflector(this);
-			String result = (String)helper.invoke(meth);
-			logger.info("... method '{}' invocation returned '{}'", meth, result);
+			logger.info("... method invocation returned '{}'", result);
 			return result;
-		} catch(ReflectorException e) {
-			throw new ActionException("error invoking action", e);
+		} catch (IllegalArgumentException e) {
+			throw new ActionException("Illegal argument invoking action", e);
+		} catch (IllegalAccessException e) {
+			throw new ActionException("Illegal access invoking action", e);
+		} catch (InvocationTargetException e) {
+			throw new ActionException("Invocation target error", e);
 		}
 	}
 	
