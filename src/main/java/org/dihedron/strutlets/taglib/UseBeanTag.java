@@ -198,11 +198,11 @@ public class UseBeanTag extends TagSupport {
 	 * it can have the following values:<ul>
 	 * <li>{@code render}: the bean is supposed to be among the render parameters,</li>
 	 * <li>{@code request}: the attribute is supposed to be in the request (for
-	 * details see {@link ActionContext.Scope#REQUEST},</li>
+	 * details see {@link ActionContextImpl.Scope#REQUEST},</li>
 	 * <li>{@code session}: the attribute is supposed to be in the session (for
-	 * details see {@link ActionContext.Scope#SESSION},</li>
+	 * details see {@link ActionContextImpl.Scope#SESSION},</li>
 	 * <li>{@code application}: the attribute is supposed to be in the application
-	 * (for details see {@link ActionContext.Scope#SESSION}.</li>
+	 * (for details see {@link ActionContextImpl.Scope#SESSION}.</li>
 	 * </ol>
 	 */
 	private Scope context = DEFAULT_SCOPE;

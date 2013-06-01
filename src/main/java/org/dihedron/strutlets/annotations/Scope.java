@@ -42,21 +42,21 @@ public enum Scope {
 	/**
 	 * The parameter is to be looked up or stored  in the current request scope
 	 * 
-	 * @see org.dihedron.strutlets.ActionContext.Scope.REQUEST.
+	 * @see org.dihedron.strutlets.ActionContextImpl.Scope.REQUEST.
 	 */
 	REQUEST,
 
 	/**
 	 * The parameter is to be looked up or stored in the current session scope.
 	 * 
-	 * @see org.dihedron.strutlets.ActionContext.Scope.PORTLET.
+	 * @see org.dihedron.strutlets.ActionContextImpl.Scope.PORTLET.
 	 */
 	PORTLET,
 	
 	/**
 	 * The parameter is to be looked up or stored in the current application scope.
 	 * 
-	 * @see org.dihedron.strutlets.ActionContext.Scope.APPLICATION.
+	 * @see org.dihedron.strutlets.ActionContextImpl.Scope.APPLICATION.
 	 */
 	APPLICATION,
 	

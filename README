@@ -1,0 +1,19 @@
+--------------------------------------------------------------------------------
+VERSION 0.11.0 (released on 2013-06-01)
+
+Implemented the BusinessContext and PresentationContext classes to shield 
+unavailable functionalities away from developers at compile time. Developers can 
+now choose to access portal functionalities through the classic ActionContext
+(which provides all the available functionalities and may throw an exception
+at runtime if something is invoked in the wrong phase) or a restricted view, e.g.
+the BusinessContext, which filters methods that would throw at runtime if invoked 
+in one of the "business" phases: ACTION and EVENT [thanks to A.Aidala and
+R.Longobardi for pointing out this improvement].
+
+Fixed a bug in the @Outputs interceptor that caused Strings to be stored as 
+String[] in the Request scope [thanks to R.Sorbi for providing feedback on this
+issue].
+
+Improved handling of complex object types as render parameters in the @Output
+interceptor.  
+--------------------------------------------------------------------------------  

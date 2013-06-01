@@ -32,12 +32,13 @@ import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 
 /**
- * A view on all portal functionalities available in both the business ("action" 
- * and "event") and presentation ("render") phases. 
+ * A view on the portal functionalities available in the business ("action" 
+ * and "event") phases. Some functionalities, those that are more closely related 
+ * to event handling, are only available in the "event" phase.  
  * 
  * @author Andrea Funto'
  */
-public final class ActionContext extends ActionContextImpl {
+public final class BusinessContext extends ActionContextImpl {
 
 	/**
 	 * Fires an event, for inter-portlet communication.
@@ -220,21 +221,8 @@ public final class ActionContext extends ActionContextImpl {
 	}
 	
 	/**
-	 * Sets the title of the portlet; this method can only be invoked in the render 
-	 * phase.
-	 * 
-	 * @param title
-	 *   the new title of the portlet.
-	 * @throws InvalidPhaseException 
-	 *   if the method is invoked out of the "render" phase.
-	 */
-	public static void setPortletTitle(String title) throws InvalidPhaseException {
-		ActionContextImpl.setPortletTitle(title);
-	}
-		
-	/**
 	 * Private constructor, to prevent instantiation.
 	 */
-	private ActionContext() {
+	private BusinessContext() {
 	}
 }

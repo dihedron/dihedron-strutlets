@@ -19,8 +19,10 @@
 
 package org.dihedron.strutlets.interceptors.impl;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import org.dihedron.reflection.Reflector;
@@ -51,6 +53,19 @@ public class Outputs extends Interceptor {
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(Outputs.class);
 
+	/**
+	 * A reference to the LIst class, used to detect outputs that are subclasses 
+	 * of java.util.List.  
+	 */
+	private static Class<?> listClass;
+	static { 
+		try {
+			listClass = Class.forName("java.util.List");
+		} catch (ClassNotFoundException e) {
+			logger.error("cannot load java.util.List class");
+		}
+	}
+	
 	/**
 	 * Scans the {@code Action}'s invocable method's fields for @Out annotations,
 	 * and then invokes the output extraction method for each of them. 
@@ -129,25 +144,45 @@ public class Outputs extends Interceptor {
 			if(value != null) {
 				switch(annotation.scope()) {
 				case RENDER:
-					if(field.getType().isArray()) {				
-						logger.trace("storing field '{}' as '{}' into scope '{}' (String[])", field.getName(), parameter, annotation.scope().name());
-						ActionContext.setRenderParameter(parameter, (String [])value);
+					if(ActionContext.isActionPhase()) {
+						String [] array = null;
+						Class<?> type = field.getType();
+						if(type.isArray()) {
+							logger.trace("storing array field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
+							int length = Array.getLength(value);
+							array = new String[length];
+							for(int i = 0; i < length; ++i) {
+								array[i] = Array.get(value, i).toString();
+							}
+						} else if (listClass.isAssignableFrom(type)) { 
+							logger.trace("storing array list '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
+							int length = ((List<?>)value).size();
+							array = new String[length];
+							for(int i = 0; i < length; ++i) {
+								array[i] = Array.get(value, i).toString();
+							}
+						} else {
+							logger.trace("storing single field '{}' as '{}' into scope '{}' (String)", field.getName(), parameter, annotation.scope().name());
+							array = new String[1];
+							array[0] = value.toString();
+						}
+						ActionContext.setRenderParameter(parameter, array);						
 					} else {
-						logger.trace("storing field '{}' as '{}' into scope '{}' (String)", field.getName(), parameter, annotation.scope().name());
-						ActionContext.setRenderParameter(parameter, value.toString());
+						logger.trace("cannot set render parameters out of action phase, skipping");
 					}
 					break;
 				case REQUEST:
 					value = reflector.getFieldValue(field.getName());		
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-					String [] array = null;
-					// TODO: handle String array too, and Object[] through loop and toString()
-					if(value instanceof String) {
-						array = new String [] { (String)value };
-					} else if(value.getClass().isArray()) {
-						array = (String [])value;
-					}
-					ActionContext.setRequestAttribute(parameter, array);
+//					String [] array = null;
+//					// TODO: handle String array too, and Object[] through loop and toString()
+//					if(value instanceof String) {
+//						array = new String [] { (String)value };
+//					} else if(value.getClass().isArray()) {
+//						array = (String [])value;
+//					}
+//					ActionContext.setRequestAttribute(parameter, array);
+					ActionContext.setRequestAttribute(parameter, value);
 					break;
 				case PORTLET:
 					value = reflector.getFieldValue(field.getName());				

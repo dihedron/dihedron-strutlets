@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.dihedron.strutlets.ActionContext;
-import org.dihedron.strutlets.ActionContext.Scope;
+import org.dihedron.strutlets.ActionContextImpl.Scope;
 import org.dihedron.strutlets.ActionInvocation;
+import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.dihedron.utils.Strings;
@@ -103,15 +104,21 @@ public class Dumper extends Interceptor {
 	 *   the buffer used for output accumulation.
 	 */
 	private void dumpRenderParameters(StringBuilder builder) {
-		Map<String, String[]> parameters = ActionContext.getRenderParameterMap();		
-		builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
-		if(parameters != null) {
-			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				builder.append("'").append(entry.getKey()).append("' = [ ");
-				for(String value : entry.getValue()) {
-					builder.append("'").append(value).append("', ");
+		if(ActionContext.isRenderPhase()) {
+			try {
+				Map<String, String[]> parameters = ActionContext.getRenderParameterMap();		
+				builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
+				if(parameters != null) {
+					for(Entry<String, String[]> entry : parameters.entrySet()) {
+						builder.append("'").append(entry.getKey()).append("' = [ ");
+						for(String value : entry.getValue()) {
+							builder.append("'").append(value).append("', ");
+						}
+						builder.append("]\n");
+					}
 				}
-				builder.append("]\n");
+			} catch(InvalidPhaseException e) {
+				logger.error("if you see this message there is a bug in Strutlets");
 			}
 		}
 		//builder.append(SECTION_FOOTER).append("\n");

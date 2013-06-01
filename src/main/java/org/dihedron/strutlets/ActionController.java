@@ -217,7 +217,7 @@ public class ActionController extends GenericPortlet {
      * <li>the initial homepage URL is a target;</li>
      * <li>the initial homepage is a plain URL.</li>
      * </ol>
-     * The method cheks for targets and executes them, unless a plain URL has been 
+     * The method checks for targets and executes them, unless a plain URL has been 
      * given; then it moves on to rendering <em>in JSP mode</em> the resulting URL.
      * Render URLs are expected to only return JSPs.
      *   
@@ -476,7 +476,7 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
-	    	ActionContext.bindContext(this, request, response, invocation);
+	    	ActionContextImpl.bindContext(this, request, response, invocation);
 	    	
 	    	// fire the action stack invocation
 	    	result = invocation.invoke();
@@ -484,7 +484,7 @@ public class ActionController extends GenericPortlet {
     	} finally {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
-    		ActionContext.unbindContext();
+    		ActionContextImpl.unbindContext();
     	}
     	return result;
     }
