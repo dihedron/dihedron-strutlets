@@ -1,0 +1,15 @@
+--------------------------------------------------------------------------------
+FEATURE:
+	Implement sendRedirect() properly in ACTION phase, with annotation-based
+	redirection provided no prior call to setWindowState(), setPortletMode() or 
+	setRenderParameter() has been issued (see JSR-168 for details). URL must be
+	complete (http://...) or full (/my/path...), no relative URLs are admitted.
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+	Allow object passing from action to JSON/XML renderer through a class field
+	instead of only through session state.
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------

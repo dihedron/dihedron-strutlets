@@ -1,7 +1,12 @@
 --------------------------------------------------------------------------------
+VERSION 0.11.1 (release on 2013-06-02)
+
+FEATURE: Started backlog tracking.
+
+--------------------------------------------------------------------------------
 VERSION 0.11.0 (released on 2013-06-01)
 
-Implemented the BusinessContext and PresentationContext classes to shield 
+FEATURE: Implemented the BusinessContext and PresentationContext classes to shield 
 unavailable functionalities away from developers at compile time. Developers can 
 now choose to access portal functionalities through the classic ActionContext
 (which provides all the available functionalities and may throw an exception
@@ -10,10 +15,11 @@ the BusinessContext, which filters methods that would throw at runtime if invoke
 in one of the "business" phases: ACTION and EVENT [thanks to A.Aidala and
 R.Longobardi for pointing out this improvement].
 
-Fixed a bug in the @Outputs interceptor that caused Strings to be stored as 
+BUGFIX: Fixed a bug in the @Outputs interceptor that caused Strings to be stored as 
 String[] in the Request scope [thanks to R.Sorbi for providing feedback on this
 issue].
 
-Improved handling of complex object types as render parameters in the @Output
-interceptor.  
+BUGFIX: Improved handling of complex object types as render parameters in the 
+@Output interceptor.
+  
 --------------------------------------------------------------------------------  
