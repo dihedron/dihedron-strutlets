@@ -13,3 +13,33 @@ FEATURE:
 PRIORITY:
 	MEDIUM
 --------------------------------------------------------------------------------
+FEATURE:
+  Check if multiple instances of a Portlet can be instantiated by the portlet 
+  container (by the standard) and, if so, provide a way to optimise initial
+  registry loading by sharing configuration info across portlet instances, e.g. 
+  by having registries as per portlet singletons.
+PRIORITY:
+  LOW
+--------------------------------------------------------------------------------
+FEATURE:
+  Set the Content-Type in non-JSP renderers: JSON renderer and XML renderer
+  should set the response MIME type, whereas JSP renderer must not (this is 
+  optional since JSR-286).
+PRIORITY:
+  MEDIUM
+--------------------------------------------------------------------------------  
+FEATURE:
+  Check forms with server side validation: forms that fail validation should
+  be presented to the end users with fields partially filled. This can probably
+  be achieved by a simple combination of @In and @Out(Scope.RENDER) annotations
+  that help the following render phase pre-fill the form fields.
+PRIORITY:
+  MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+  Implement a mechanism (based on form submittal date, available in AlloyUI tags,
+  or on an equivalent mecahnism provided by a custom or standard tag, see Struts2 
+  for details) to check double submits of forms with a frw milliseconds.
+PRIORITY:
+  LOW
+--------------------------------------------------------------------------------
