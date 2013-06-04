@@ -67,6 +67,20 @@ import org.slf4j.LoggerFactory;
  * <li>dispatching control to the appropriate target handler</li>
  * <li>gathering the target's results and identifying the appropriate renderer</li>
  * <li>dispatching control to the renderer.</li></ol>
+ * According to JSR-286, there can only be one single instance of each declared
+ * action controller portlet per virtual machine, so no issues can arise regarding
+ * the cost of initialising the registries: the operation is performed only once
+ * per portlet container:<br>
+ * <b>PLT.5.1 Number of Portlet Instances</b>
+ * The portlet definition sections in the deployment descriptor of a portlet 
+ * application control how the portlet container creates portlet instances.
+ * For a portlet, not hosted in a distributed environment (the default), the portlet
+ * container <em>must instantiate and use only one portlet object per portlet 
+ * definition</em>.
+ * In the case where a portlet is deployed as part of a portlet application marked as
+ * distributable, in the web.xml deployment descriptor, a portlet container <em>may 
+ * instantiate only one portlet object per portlet definition -in the deployment 
+ * descriptor- per virtual machine (VM)</em>.
  */
 public class ActionController extends GenericPortlet {
 	
