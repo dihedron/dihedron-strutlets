@@ -1,25 +1,52 @@
+================================================================================
+VERSION 0.11.2 (released on 2013-06-04)
 --------------------------------------------------------------------------------
-VERSION 0.11.1 (release on 2013-06-02)
-
-FEATURE: Started backlog tracking.
-
+FEATURE:
+	Check if multiple instances of a Portlet can be instantiated by the portlet 
+	container (by the standard) and, if so, provide a way to optimise initial
+	registry loading by sharing configuration info across portlet instances, e.g. 
+	by having registries as per portlet singletons.
+PRIORITY:
+	LOW
 --------------------------------------------------------------------------------
+FEATURE:
+	Set the Content-Type in non-JSP renderers: JSON renderer and XML renderer
+	should set the response MIME type, whereas JSP renderer must not (this is 
+	optional since JSR-286).
+PRIORITY:
+	MEDIUM
+================================================================================
+VERSION 0.11.1 (released on 2013-06-02)
+--------------------------------------------------------------------------------
+FEATURE: 
+  Started backlog tracking.
+PRIORITY:
+  LOW
+================================================================================
 VERSION 0.11.0 (released on 2013-06-01)
-
-FEATURE: Implemented the BusinessContext and PresentationContext classes to shield 
-unavailable functionalities away from developers at compile time. Developers can 
-now choose to access portal functionalities through the classic ActionContext
-(which provides all the available functionalities and may throw an exception
-at runtime if something is invoked in the wrong phase) or a restricted view, e.g.
-the BusinessContext, which filters methods that would throw at runtime if invoked 
-in one of the "business" phases: ACTION and EVENT [thanks to A.Aidala and
-R.Longobardi for pointing out this improvement].
-
-BUGFIX: Fixed a bug in the @Outputs interceptor that caused Strings to be stored as 
-String[] in the Request scope [thanks to R.Sorbi for providing feedback on this
-issue].
-
-BUGFIX: Improved handling of complex object types as render parameters in the 
-@Output interceptor.
-  
+--------------------------------------------------------------------------------
+FEATURE: 
+	Implemented the BusinessContext and PresentationContext classes to shield
+	unavailable functionalities away from developers at compile time. Developers
+	can now choose to access portal functionalities through the classic
+	ActionContext (which provides all the available functionalities and may throw
+	an exception at runtime if something is invoked in the wrong phase) or a 
+	restricted view, e.g. the BusinessContext, which filters methods that would 
+	throw at runtime if invoked in one of the "business" phases: ACTION and EVENT 
+	[thanks to A.Aidala and R.Longobardi for pointing out this improvement].
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------
+BUGFIX: 
+	Fixed a bug in the @Outputs interceptor that caused Strings to be stored as 
+	String[] in the Request scope [thanks to R.Sorbi for providing feedback on 
+	this issue].
+PRIORITY:
+	HIGH
 --------------------------------------------------------------------------------  
+BUGFIX: 
+	Improved handling of complex object types as render parameters in the 
+	@Output interceptor.
+PRIORITY:
+	HIGH
+================================================================================  
