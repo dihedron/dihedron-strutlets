@@ -49,6 +49,7 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -991,6 +992,62 @@ public class ActionContextImpl {
 	 */
 	public static PortletPreferences getPortletPreferences() {
 		return getContext().request.getPreferences();
+	}
+	
+	/**
+	 * Looks for a parameter in any of the provided scopes, in the given order.
+	 *  
+	 * @param key
+	 *   the name of the parameter to look for.
+	 * @param scopes
+	 *   the ordered list of scopes to look into.
+	 * @return
+	 *   the value of the parameter, as soon as it is found; null otherwise. 
+	 * @throws StrutletsException
+	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
+	 *   APPLICATION and CONFIGURATION. 
+	 */
+	public static Object findValueInScopes(String key, org.dihedron.strutlets.annotations.Scope ... scopes) throws StrutletsException {
+		// now, depending on the scope, try to locate the parameter in the appropriate context 
+		Object value = null;
+		for(org.dihedron.strutlets.annotations.Scope scope : scopes) {
+			logger.trace("scanning input scope '{}' for parameter '{}'...", scope.name(), key);
+			if(scope == org.dihedron.strutlets.annotations.Scope.FORM) {
+				value = ActionContext.getParameterValues(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in FORM parameters: '{}'", key, value);
+					break;
+				}
+			} else if(scope == org.dihedron.strutlets.annotations.Scope.REQUEST) {
+				value = ActionContext.getRequestAttribute(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in REQUEST attributes: '{}'", key, value);
+					break;
+				}
+			} else if(scope == org.dihedron.strutlets.annotations.Scope.PORTLET) {
+				value = ActionContext.getPortletAttribute(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in PORTLET attributes: '{}'", key, value);
+					break;
+				}
+			} else if(scope == org.dihedron.strutlets.annotations.Scope.APPLICATION) {
+				value = ActionContext.getApplicationAttribute(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", key, value);
+					break;
+				}
+			} else if(scope == org.dihedron.strutlets.annotations.Scope.CONFIGURATION) {
+				value = ActionContext.getActionInvocation().getAction().getParameter(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
+					break;
+				}
+			} else {
+				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
+				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
+			}
+		}
+		return value;
 	}
 	
 	/**

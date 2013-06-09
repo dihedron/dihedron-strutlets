@@ -32,7 +32,7 @@ public final class Strutlets {
 	/**
 	 * The library version.
 	 */
-	public static final String VERSION = "0.11.2";
+	public static final String VERSION = "0.12.0";
 	
 	/**
 	 * The name of the parameter under which the requested action's name is stored

@@ -24,6 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javassist.ClassClassPath;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.NotFoundException;
+
 import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
@@ -161,6 +166,8 @@ public class TargetRegistry {
 			QName qname = new QName(namespace, name);
 			events.put(qname.toString(), id);
 		}
+		
+		instrumentTarget(action, method);
 		
 		this.store.put(id,  data);
 	}
@@ -335,6 +342,18 @@ public class TargetRegistry {
 		return buffer.toString();
 	}	
 	
-
 	
+	private Class<? extends Action> instrumentTarget(Class<? extends Action> action, Method method) {
+		/*
+		try {
+			ClassPool pool = new ClassPool();
+			pool.insertClassPath(new ClassClassPath(action));
+			CtClass clazz = pool.get(action.getCanonicalName());
+			CtClass proxy = pool.makeClass(action.getCanonicalName() + "$Proxy");
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		}
+		*/
+		return null;
+	}	
 }

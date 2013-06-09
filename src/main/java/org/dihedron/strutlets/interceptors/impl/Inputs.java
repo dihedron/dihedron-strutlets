@@ -30,7 +30,6 @@ import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
-import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.InterceptorException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
@@ -123,46 +122,9 @@ public class Inputs extends Interceptor {
 			// get the name of the parameter to look up; if none provided in the annotation,
 			// take the name of the field itself			
 			String parameter = annotation.value().length() > 0 ? annotation.value() : field.getName();
-			
-			// now, depending on the scope, try to locate the parameter in the appropriate context 
-			Object value = null;
-			for(Scope scope : annotation.scopes()) {
-				logger.trace("scanning input scope '{}' for parameter '{}'...", scope.name(), parameter);
-				if(scope == Scope.FORM) {
-					value = ActionContext.getParameterValues(parameter);
-					if(value != null) {
-						logger.trace("... value for '{}' found in FORM parameters: '{}'", parameter, value);
-						break;
-					}
-				} else if(scope == Scope.REQUEST) {
-					value = ActionContext.getRequestAttribute(parameter);
-					if(value != null) {
-						logger.trace("... value for '{}' found in REQUEST attributes: '{}'", parameter, value);
-						break;
-					}
-				} else if(scope == Scope.PORTLET) {
-					value = ActionContext.getPortletAttribute(parameter);
-					if(value != null) {
-						logger.trace("... value for '{}' found in PORTLET attributes: '{}'", parameter, value);
-						break;
-					}
-				} else if(scope == Scope.APPLICATION) {
-					value = ActionContext.getApplicationAttribute(parameter);
-					if(value != null) {
-						logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", parameter, value);
-						break;
-					}
-				} else if(scope == Scope.CONFIGURATION) {
-					value = invocation.getAction().getParameter(parameter);
-					if(value != null) {
-						logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", parameter, value);
-						break;
-					}
-				} else {
-					logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
-					throw new StrutletsException("Cannot extract an input value from a " + scope.name() + "scope: this is probably a bug!");					
-				}
-			}
+						
+			// now, depending on the scope, try to locate the parameter in the appropriate context
+			Object value = ActionContext.findValueInScopes(parameter, annotation.scopes());
 			
 			if(value != null) {
 				Action action = invocation.getAction();
