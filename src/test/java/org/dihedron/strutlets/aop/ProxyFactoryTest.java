@@ -50,7 +50,7 @@ public class ProxyFactoryTest {
 	 * @throws InstantiationException 
 	 */
 	@Test
-//	@Ignore
+	@Ignore
 	public void testMakeProxyMethod() throws CannotCompileException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, InstantiationException {
 		try {
 			ActionProxyFactory factory = new ActionProxyFactory();
@@ -65,7 +65,7 @@ public class ProxyFactoryTest {
 			
 			Object proxy = factory.getProxyFor(MyAction.class);
 			
-			logger.trace("proxy objct is of class '{}'", proxy.getClass().getCanonicalName());
+			logger.trace("proxy object is of class '{}'", proxy.getClass().getCanonicalName());
 			
 			for(Method method : proxy.getClass().getDeclaredMethods()) {
 				logger.trace("method: '{}!{}'", proxy.getClass().getCanonicalName(), method.getName());

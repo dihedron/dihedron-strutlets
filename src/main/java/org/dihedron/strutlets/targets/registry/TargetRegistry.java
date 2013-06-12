@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.targets.TargetData;
 import org.dihedron.strutlets.targets.TargetId;
@@ -86,10 +87,17 @@ public class TargetRegistry {
 	private volatile String pattern = DEFAULT_HTML_PATH_PATTERN;
 	
 	/**
+	 * The factory of target methods proxies; this object will create an AOP 
+	 * proxy for each method, in order to reduce reflection usage at untime. 
+	 */
+	private ActionProxyFactory factory;
+	
+	/**
 	 * Constructor.
 	 */
 	public TargetRegistry() {
 		logger.info("creating target repository");
+		factory = new ActionProxyFactory();
 	}
 	
 	/**
@@ -140,13 +148,17 @@ public class TargetRegistry {
 	 *   the method annotation, from which some information might be extracted.
 	 * @param interceptors
 	 *   the name of the interceptor stack to be used for the given action.
+	 * @throws StrutletsException 
 	 */
-	public void addTarget(Class<? extends Action> action, Method method, Invocable invocable, String interceptors) {
+	public void addTarget(Class<? extends Action> action, Method method, Invocable invocable, String interceptors) throws StrutletsException {
 		logger.info("adding target '{}!{}'", action.getSimpleName(), method.getName());
 		TargetId id = new TargetId(action, method);
 		
 		// instantiate the information object
 		TargetData data = new TargetData(id);
+		// TODO: instrument action here!
+		factory.addProxyMethod(action, method);
+		// TODO: grab proxy class and proxy method
 		data.setAction(action);
 		data.setMethod(method);
 		data.setIdempotent(invocable.idempotent());
@@ -160,10 +172,7 @@ public class TargetRegistry {
 			String namespace = event.namespace();
 			QName qname = new QName(namespace, name);
 			events.put(qname.toString(), id);
-		}
-		
-//		instrumentTarget(action, method);
-		
+		}		
 		this.store.put(id,  data);
 	}
 	

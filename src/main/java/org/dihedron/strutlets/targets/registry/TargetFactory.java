@@ -88,8 +88,9 @@ public class TargetFactory {
      *   the repository where new targets will be stored.
      * @param action
      *   the action to be scanned for annotated methods (targets).
+     * @throws StrutletsException 
      */
-    public void makeFromJavaClass(TargetRegistry registry, Class<? extends Action> action) {
+    public void makeFromJavaClass(TargetRegistry registry, Class<? extends Action> action) throws StrutletsException {
     	logger.trace("analysing action class: '{}'", action.getName());
     	
     	String interceptors = "default";

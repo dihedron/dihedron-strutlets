@@ -33,6 +33,7 @@ import javassist.NotFoundException;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
+import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,28 +135,30 @@ public class ActionProxyFactory {
 					if(annotation instanceof In) {					
 						In in = (In)annotation;
 						String parameter = in.value();
-	//					code
-	//						.append("\t")
-	//						.append(types[i].getCanonicalName())
-	//						.append(" arg")
-	//						.append(i).append(" = (")
-	//						.append(types[i].getCanonicalName()).append(") ")
-	//						.append("org.dihedron.strutlets.ActionContext.findValueInScopes(\"")
-	//						.append(parameter)
-	//						.append("\", new org.dihedron.strutlets.annotations.Scope[] {");
-	//					boolean first = true;
-	//					for(Scope scope : in.scopes()) {
-	//						code
-	//							.append(first ? "" : ", ")
-	//							.append("org.dihedron.strutlets.annotations.Scope.")
-	//							.append(scope);
-	//						first = false;
-	//					}
-	//					code.append(" });\n");
-						code.append("\tjava.lang.String arg").append(i).append(" = ").append("\"value of '").append(in.value()).append("'\";\n");
+						code
+							.append("\t")
+							.append(types[i].getCanonicalName())
+							.append(" arg")
+							.append(i).append(" = (")
+							.append(types[i].getCanonicalName()).append(") ")
+							.append("org.dihedron.strutlets.ActionContext.findValueInScopes(\"")
+							.append(parameter)
+							.append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+						boolean first = true;
+						for(Scope scope : in.scopes()) {
+							code
+								.append(first ? "" : ", ")
+								.append("org.dihedron.strutlets.annotations.Scope.")
+								.append(scope);
+							first = false;
+						}
+						code.append(" });\n");
+//						code.append("\tjava.lang.String arg").append(i).append(" = ").append("\"value of '").append(in.value()).append("'\";\n");
+						code.append("\tlogger.trace(\"arg").append(i).append(" is '{}'\", arg").append(i).append(");\n");
 					}
 				}
 				args.append(args.length() > 0 ? ", arg" : "arg").append(i);
+				
 			}
 			code
 				.append("\tjava.lang.String result = ((")
@@ -165,6 +168,7 @@ public class ActionProxyFactory {
 				.append("(")
 				.append(args)
 				.append(");\n");
+			code.append("\tlogger.trace(\"result is '{}'\", result);\n");
 			code.append("\treturn result;\n").append("}");
 		
 			logger.trace("compiling code:\n{}'", code);
@@ -172,6 +176,7 @@ public class ActionProxyFactory {
 			CtMethod proxyMethod = CtNewMethod.make(code.toString(), proxyClass);
 			proxyClass.addMethod(proxyMethod);
 			proxyClass.freeze();
+			
 		} catch (CannotCompileException e) {
 			logger.error("error compiling AOP code in method creation", e);
 			throw new StrutletsException("error compiling AOP code in method creation", e);
@@ -179,7 +184,7 @@ public class ActionProxyFactory {
 	}
 	
 	private String makeProxyClassName(Class<?> clazz) {
-		return clazz.getPackage().getName() + ".deploy.$$" + clazz.getSimpleName() + "Stub";
+		return clazz.getPackage().getName() + ".deploy." + clazz.getSimpleName() + "$Stub";
 	}
 	
 	private String makeProxyMethodName(Method method) {
