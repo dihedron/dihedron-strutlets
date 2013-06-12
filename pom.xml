@@ -4,15 +4,15 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets</artifactId>
-	<version>0.12.0</version>
+	<version>0.12.2</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime library</name>
-	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>	
+	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>
 	<url>http://www.dihedron.org/strutlets</url>
-  	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sonar.language>java</sonar.language>
+		<sonar.language>java</sonar.language>
 	</properties>
 	<build>
 		<plugins>
@@ -29,28 +29,27 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.9</version>
-        <configuration>
-          <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-          <bottom>
+				<configuration>
+					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+					<bottom>
             <![CDATA[
               Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
             ]]>
-          </bottom>
-        </configuration>
-			</plugin>			
-		</plugins>
-	</build>
-	<!--
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9</version>
+					</bottom>
+				</configuration>
 			</plugin>
 		</plugins>
-	</reporting>
-	-->	
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
+	<!-- <reporting> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
+		<artifactId>maven-javadoc-plugin</artifactId> <version>2.9</version> </plugin> 
+		</plugins> </reporting> -->
 	<dependencies>
 		<dependency>
 			<groupId>javax.portlet</groupId>
@@ -64,16 +63,16 @@
 			<version>2.5</version>
 			<scope>provided</scope>
 		</dependency>
-    <dependency>
-      <groupId>javax.servlet.jsp</groupId>
-      <artifactId>javax.servlet.jsp-api</artifactId>
-      <version>2.3.1</version>
-      <scope>provided</scope>
-    </dependency>
+		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>javax.servlet.jsp-api</artifactId>
+			<version>2.3.1</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
-			<version>0.9.9-RC1</version>			
+			<version>0.9.9-RC1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
@@ -87,13 +86,13 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.2.1</version>
 			<scope>compile</scope>
-		</dependency>		
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.5</version>
 			<scope>test</scope>
-		</dependency>		
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

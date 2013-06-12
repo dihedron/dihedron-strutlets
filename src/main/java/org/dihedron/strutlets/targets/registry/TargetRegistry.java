@@ -24,11 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javassist.ClassClassPath;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.NotFoundException;
-
 import javax.xml.namespace.QName;
 
 import org.dihedron.strutlets.actions.Action;
@@ -167,7 +162,7 @@ public class TargetRegistry {
 			events.put(qname.toString(), id);
 		}
 		
-		instrumentTarget(action, method);
+//		instrumentTarget(action, method);
 		
 		this.store.put(id,  data);
 	}
