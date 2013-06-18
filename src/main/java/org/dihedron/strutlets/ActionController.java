@@ -126,7 +126,7 @@ public class ActionController extends GenericPortlet {
        
         try {
         	logger.info(              "   +--------------------------------+   ");
-        	logger.info(String.format("   |      STRUTLETS ver. %1$-8s   |   ", Strutlets.VERSION));
+        	logger.info(String.format("   |      STRUTLETS ver. %1$-8s   |   ", Strutlets.getVersion()));
         	logger.info(              "   +--------------------------------+   ");
         	
         	logger.info("action controller '{}' starting up...", getPortletName());

@@ -18,7 +18,10 @@
  */
 package org.dihedron.strutlets;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Properties;
 
 import javax.portlet.ActionRequest;
 
@@ -28,11 +31,31 @@ import javax.portlet.ActionRequest;
  * @author Andrea Funto'
  */
 public final class Strutlets {
+		
+	/**
+	 * A map containing the library properties, partially populated by the build
+	 * process using information in the propject's POM (e.g. the library version).
+	 */
+	private static final Properties properties = new Properties();
 	
 	/**
-	 * The library version.
+	 * Initialises the library properties.
 	 */
-	public static final String VERSION = "0.12.0";
+	static {
+		InputStream stream = null;
+		try {
+			stream = Strutlets.class.getClassLoader().getResourceAsStream("strutlets.properties");
+			properties.load(stream);
+		} catch(IOException e) {
+		} finally {
+			if(stream != null) {
+				try {
+					stream.close();
+				} catch(IOException e) {					
+				}
+			}
+		}
+	}
 	
 	/**
 	 * The name of the parameter under which the requested action's name is stored
@@ -62,6 +85,26 @@ public final class Strutlets {
 	 * serviced while keeping information about the latest action's execution status.
 	 */
 	public static final String STRUTLETS_RESULT = "org.dihedron.strutlets.result";
+
+	/**
+	 * Returns the framework's version (as per the project's POM).
+	 * 
+	 * @return
+	 *   the framework's version (as per the project's POM).
+	 */
+	public static final String getVersion() {
+		return properties.getProperty("strutlets.version");
+	}
+	
+	/**
+	 * Returns the Strutlets framework's web site.
+	 * 
+	 * @return
+	 *   the Strutlets framework web site.
+	 */
+	public static final String getWebSite() {
+		return properties.getProperty("strutlets.website");
+	}
 	
 	/** 
 	 * The output channel.
@@ -78,7 +121,7 @@ public final class Strutlets {
 	 */
 	public static void main(String args[]) {
     	out.println("   +--------------------------------+");
-    	out.println(String.format("   |      STRUTLETS ver. %1$-8s   |", Strutlets.VERSION));
+    	out.println(String.format("   |      STRUTLETS ver. %1$-8s   |", Strutlets.getVersion()));
     	out.println("   +--------------------------------+");
     	
     	if(args.length == 0 || args[0].equalsIgnoreCase(HELP_COMMAND)) {

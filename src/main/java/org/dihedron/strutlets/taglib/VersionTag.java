@@ -37,6 +37,6 @@ public class VersionTag extends SimpleTagSupport {
 	 * @see javax.servlet.jsp.tagext.SimpleTagSupport#doTag()
 	 */
 	public void doTag() throws IOException { 
-		getJspContext().getOut().println("<a href=\"https://code.google.com/p/dihedron-strutlets/\">Strutlets " + Strutlets.VERSION + "</a>");
+		getJspContext().getOut().println("<a href=\"" + Strutlets.getWebSite() + "\">Strutlets " + Strutlets.getVersion() + "</a>");
 	}
 }

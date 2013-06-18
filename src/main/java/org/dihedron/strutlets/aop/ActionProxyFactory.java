@@ -26,6 +26,7 @@ import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
@@ -33,6 +34,7 @@ import javassist.NotFoundException;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Scope;
+import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,19 +59,42 @@ public class ActionProxyFactory {
 		classpool = new ClassPool();
 	}
 	
-	public Object getProxyFor(Class<? extends Action> action) throws CannotCompileException, InstantiationException, IllegalAccessException {
-		return getProxyClass(action).toClass().newInstance();		
+	/**
+	 * Returns an instance of the AOP proxy for a given class, from the class pool 
+	 * if already available, or by instantiating and loading a brand-new AOP proxy
+	 * and then creating anew instance if not available yet.
+	 * 
+	 * @param action
+	 *   the action for which a proxy must be retrieved.
+	 * @return
+	 *   an instance of the AOP proxy for the given class.
+	 * @throws StrutletsException
+	 */
+	public Object getProxyFor(Class<? extends Action> action) throws StrutletsException {
+		try {
+			return getProxyClass(action).toClass().newInstance();
+		} catch (InstantiationException e) {
+			logger.error("error instantiating AOP proxy class", e);
+			throw new StrutletsException("error instantiating AOP proxy class", e);
+		} catch (IllegalAccessException e) {
+			logger.error("illegal access creating AOP proxy class", e);
+			throw new StrutletsException("illegal access creating AOP proxy class", e);
+		} catch (CannotCompileException e) {
+			logger.error("error compiling AOP code in class creation", e);
+			throw new StrutletsException("error compiling AOP code in class creation", e);
+		}		
 	}
 		
 	/**
-	 * Gets an instance of the generated class proxy.
+	 * Gets an instance of the generated AOP proxy.
 	 * 
 	 * @param action
 	 *   the action proxied by the returned class. 
 	 * @return
 	 *   the proxy class for the given action class.
+	 * @throws StrutletsException 
 	 */
-	private CtClass getProxyClass(Class<? extends Action> action) {
+	private CtClass getProxyClass(Class<? extends Action> action) throws StrutletsException {
 		CtClass proxy = null;
 		String proxyname = makeProxyClassName(action);		
 		try {
@@ -78,70 +103,88 @@ public class ActionProxyFactory {
 			proxy.defrost();
 			logger.trace("... proxy found");
 		} catch (NotFoundException e) {
-			logger.warn("... proxy not found in class pool, adding");
+			logger.info("... proxy not found in class pool, adding");
 			classpool.insertClassPath(new ClassClassPath(action));
-			proxy = classpool.makeClass(makeProxyClassName(action));
+			String classname = makeProxyClassName(action);
+			proxy = classpool.makeClass(classname);			
+			try {
+				CtField log = CtField.make("private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(" + classname + ".class);", proxy);
+				proxy.addField(log);
+				logger.info("... proxy added, with built-in SLF4J support");
+			} catch (CannotCompileException e1) {
+				logger.error("error compiling SLF4J logger expression", e);
+				throw new StrutletsException("error compiling AOP code in class creation", e);
+			}			
 		}
 		return proxy;
 	}
 	
-	public void addProxyMethod(Class<? extends Action> action, Method method) throws CannotCompileException {
-		StringBuilder code = new StringBuilder("public java.lang.String ")
-			.append(makeProxyMethodName(method))
-			.append("( org.dihedron.strutlets.actions.Action action ) {\n");
-				
-		CtClass proxyClass = getProxyClass(action);
-		Annotation[][] annotations = method.getParameterAnnotations();
-		Class<?>[] types = method.getParameterTypes();
-				
-		StringBuilder args = new StringBuilder();
-		for(int i = 0; i < types.length; ++i) {
-			for(Annotation annotation : annotations[i]) {
-				if(annotation instanceof In) {					
-					In in = (In)annotation;
-					String parameter = in.value();
-//					code
-//						.append("\t")
-//						.append(types[i].getCanonicalName())
-//						.append(" arg")
-//						.append(i).append(" = (")
-//						.append(types[i].getCanonicalName()).append(") ")
-//						.append("org.dihedron.strutlets.ActionContext.findValueInScopes(\"")
-//						.append(parameter)
-//						.append("\", new org.dihedron.strutlets.annotations.Scope[] {");
-//					boolean first = true;
-//					for(Scope scope : in.scopes()) {
-//						code
-//							.append(first ? "" : ", ")
-//							.append("org.dihedron.strutlets.annotations.Scope.")
-//							.append(scope);
-//						first = false;
-//					}
-//					code.append(" });\n");
-					code.append("\tjava.lang.String arg").append(i).append(" = ").append("\"value of '").append(in.value()).append("'\";\n");
+	public void addProxyMethod(Class<? extends Action> action, Method method) throws StrutletsException {
+		try {
+			StringBuilder code = new StringBuilder("public java.lang.String ")
+				.append(makeProxyMethodName(method))
+				.append("( org.dihedron.strutlets.actions.Action action ) {\n");
+					
+			CtClass proxyClass = getProxyClass(action);
+			Annotation[][] annotations = method.getParameterAnnotations();
+			Class<?>[] types = method.getParameterTypes();
+					
+			StringBuilder args = new StringBuilder();
+			for(int i = 0; i < types.length; ++i) {
+				for(Annotation annotation : annotations[i]) {
+					if(annotation instanceof In) {					
+						In in = (In)annotation;
+						String parameter = in.value();
+						code
+							.append("\t")
+							.append(types[i].getCanonicalName())
+							.append(" arg")
+							.append(i).append(" = (")
+							.append(types[i].getCanonicalName()).append(") ")
+							.append("org.dihedron.strutlets.ActionContext.findValueInScopes(\"")
+							.append(parameter)
+							.append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+						boolean first = true;
+						for(Scope scope : in.scopes()) {
+							code
+								.append(first ? "" : ", ")
+								.append("org.dihedron.strutlets.annotations.Scope.")
+								.append(scope);
+							first = false;
+						}
+						code.append(" });\n");
+//						code.append("\tjava.lang.String arg").append(i).append(" = ").append("\"value of '").append(in.value()).append("'\";\n");
+						code.append("\tlogger.trace(\"arg").append(i).append(" is '{}'\", arg").append(i).append(");\n");
+					}
 				}
+				args.append(args.length() > 0 ? ", arg" : "arg").append(i);
+				
 			}
-			args.append(args.length() > 0 ? ", arg" : "arg").append(i);
+			code
+				.append("\tjava.lang.String result = ((")
+				.append(action.getCanonicalName())
+				.append(")$1).")
+				.append(method.getName())
+				.append("(")
+				.append(args)
+				.append(");\n");
+			code.append("\tlogger.trace(\"result is '{}'\", result);\n");
+			code.append("\treturn result;\n").append("}");
+		
+			logger.trace("compiling code:\n{}'", code);
+		
+			CtMethod proxyMethod = CtNewMethod.make(code.toString(), proxyClass);
+			proxyClass.addMethod(proxyMethod);
+			proxyClass.freeze();
+			
+		} catch (CannotCompileException e) {
+			logger.error("error compiling AOP code in method creation", e);
+			throw new StrutletsException("error compiling AOP code in method creation", e);
 		}
-		code
-			.append("\tjava.lang.String result = ((")
-			.append(action.getCanonicalName())
-			.append(")$1).")
-			.append(method.getName())
-			.append("(")
-			.append(args)
-			.append(");\n");
-		code.append("\treturn result;\n").append("}");
-	
-		logger.trace("compiling code:\n{}'", code);
-	
-		CtMethod proxyMethod = CtNewMethod.make(code.toString(), proxyClass);
-		proxyClass.addMethod(proxyMethod);
-		proxyClass.freeze();
 	}
 	
 	private String makeProxyClassName(Class<?> clazz) {
-		return clazz.getPackage().getName() + ".deploy.$$" + clazz.getSimpleName() + "Stub";
+		return clazz.getPackage().getName() + ".deploy." + clazz.getSimpleName() + "$Stub";
 	}
 	
 	private String makeProxyMethodName(Method method) {
