@@ -48,6 +48,8 @@ public class RendererRegistryLoader {
      */
     public void loadFromJavaPackage(RendererRegistry registry, String javaPackage) throws StrutletsException {
     	
+    	
+    	
     	if(Strings.isValid(javaPackage)) {
     		logger.trace("looking for renderer classes in package '{}'", javaPackage);
 

@@ -42,6 +42,8 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
+import org.dihedron.strutlets.appservers.ApplicationServer;
+import org.dihedron.strutlets.appservers.JBoss;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
@@ -133,6 +135,8 @@ public class ActionController extends GenericPortlet {
         	for(InitParameter parameter : InitParameter.values()) {
         		logger.info(" + parameter: {}", parameter.toString(this));
         	}
+        	
+        	initialiseRuntimeEnvironment();
 
         	initialiseTargetsRegistry();
 			
@@ -557,6 +561,15 @@ public class ActionController extends GenericPortlet {
 			url = getInitParameter(parameter);
 		}
     	return url;
+    }
+        
+    /**
+     * Initialises the current runtime environment, with application server 
+     * specific activities and tasks.
+     */
+    private void initialiseRuntimeEnvironment() {
+    	ApplicationServer runtime = ApplicationServer.getApplicationServer();
+    	runtime.initialise();
     }
     
     /**
