@@ -51,7 +51,7 @@ public abstract class ApplicationServer {
 		
 		// JBoss
 		try {
-			Class.forName("org.jboss.vfs.Vfs");
+			Class.forName("org.reflections.vfs.Vfs");
 			logger.info("Strutlets running on JBoss");
 			return new JBoss();			
 		} catch (ClassNotFoundException e) {
