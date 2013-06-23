@@ -19,6 +19,7 @@
 
 package org.dihedron.strutlets;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 
@@ -33,21 +34,30 @@ import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
+import org.dihedron.strutlets.targets.Target;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrea Funto'
  */
 public class ActionInvocation {
+	
+	/**
+	 * The logger.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(ActionInvocation.class);
 
 	/**
-	 * The action being invoked.
+	 * The action instance on which the business method is being invoked.
 	 */
 	private Action action;
 	
 	/**
-	 * The method being invoked on the action.
+	 * The information (metadata) pertaining to the business method being invoked 
+	 * on the action instance.
 	 */
-	private Method method;
+	private Target target;
 	
 	/**
 	 * The <code>ActionRequest</code>, <code>EventRequest</code> or
@@ -79,9 +89,9 @@ public class ActionInvocation {
 	 * Constructor.
 	 * 
 	 * @param action
-	 *   the action being invoked.
-	 * @param method
-	 *   the method being invoked.
+	 *   the action instance on which the business method is being invoked.
+	 * @param target
+	 *   the metadata (information) about the method being invoked.
 	 * @param interceptors
 	 *   the <code>InterceptorStack</code> representing the set of interceptors 
 	 * @param request
@@ -89,10 +99,10 @@ public class ActionInvocation {
 	 * @param response
 	 *   the <code>PortletResponse</code> object.
 	 */
-	public ActionInvocation(Action action, Method method, InterceptorStack interceptors, 
+	public ActionInvocation(Action action, Target target, InterceptorStack interceptors, 
 			PortletRequest request, PortletResponse response) {
 		this.action = action;
-		this.method = method;
+		this.target = target;
 		this.request = request;
 		this.response = response;
 		this.interceptors = interceptors;
@@ -110,13 +120,13 @@ public class ActionInvocation {
 	}
 	
 	/**
-	 * Returns the method being invoked.
+	 * Returns the information pertaining to the method being invoked.
 	 * 
 	 * @return
-	 *   the method being invoked.
+	 *   the information on the business method being invoked.
 	 */
-	public Method getMethod() {
-		return method;
+	public Target getTarget() {
+		return target;
 	}
 	
 	/**
@@ -195,6 +205,20 @@ public class ActionInvocation {
 		if(iterator.get().hasNext()) {
 			return iterator.get().next().intercept(this);
 		}
-		return action.invoke(getMethod());
+		//return action.invoke(getMethod());
+		try {
+			Method proxy = target.getProxyMethod();
+			logger.trace("invoking actual method on action instance through proxy '{}'", proxy.getName());
+			return (String)proxy.invoke(null, action);
+		} catch (IllegalArgumentException e) {
+			logger.error("illegal argument to proxy method invocation", e);
+			throw new StrutletsException("illegal argument to proxy method invocation", e);
+		} catch (IllegalAccessException e) {
+			logger.error("illegal access to proxy method during invocation", e);
+			throw new StrutletsException("illegal access to proxy method during invocation", e);
+		} catch (InvocationTargetException e) {
+			logger.error("invocation target error calling proxy method", e);
+			throw new StrutletsException("invocation target error calling proxy method", e);
+		}
 	}
 }

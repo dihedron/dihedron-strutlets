@@ -39,12 +39,12 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-public class TargetData {
+public class Target {
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(TargetData.class);
+	private static final Logger logger = LoggerFactory.getLogger(Target.class);
 		
 	/**
 	 * A reference to the unique identifier of the target whose additional data 
@@ -70,6 +70,14 @@ public class TargetData {
 	private Method method;
 	
 	/**
+	 * The static proxy method that collects parameters from the vaious scopes 
+	 * before invoking the actional action's business method; this method's 
+	 * implementation is provided as a stub by the framework, by inspecting the
+	 * action at bootstrap time and generating bytecode dynamically.
+	 */
+	private Method proxy;
+	
+	/**
 	 * The pattern used to create JSP URLs.
 	 */
 	private String jspUrlPattern = TargetRegistry.DEFAULT_HTML_PATH_PATTERN;
@@ -91,7 +99,7 @@ public class TargetData {
 	 *   a reference to the unique identifier of the target whose data are held
 	 *   by this instance.
 	 */
-	public TargetData(TargetId id) {
+	public Target(TargetId id) {
 		this.id = id;
 	}
 	
@@ -103,7 +111,7 @@ public class TargetData {
 	 *   the class object containing the executable code of this target's 
 	 *   business logic.
 	 */
-	public Class<? extends Action> getAction() {
+	public Class<? extends Action> getActionClass() {
 		return this.action;
 	}
 	
@@ -117,7 +125,7 @@ public class TargetData {
 	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public TargetData setAction(Class<? extends Action> action) {
+	public Target setActionClass(Class<? extends Action> action) {
 		this.action = action;
 		return this;
 	}
@@ -128,7 +136,7 @@ public class TargetData {
 	 * @return 
 	 *   the reference to the method implementing this target's business logic.
 	 */
-	public Method getMethod() {
+	public Method getActionMethod() {
 		return this.method;
 	}	
 	
@@ -140,8 +148,33 @@ public class TargetData {
 	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public TargetData setMethod(Method method) {
+	public Target setActionMethod(Method method) {
 		this.method = method;
+		return this;
+	}
+	
+	/**
+	 * Returns the static, framework-generated proxy method for the action's
+	 * business logic method.
+	 * 
+	 * @return
+	 *   the static proxy method.
+	 */
+	public Method getProxyMethod() {
+		return this.proxy;
+	}
+	
+	/**
+	 * Sets the reference to the static, framework-generated proxy method for 
+	 * the action's business logic method.
+	 * 
+	 * @param proxy
+	 *   the static proxy method.
+	 * @return
+	 *   the object itself, for metod chaining.
+	 */
+	public Target setProxyMethod(Method proxy) {
+		this.proxy = proxy;
 		return this;
 	}
 	
@@ -167,7 +200,7 @@ public class TargetData {
 	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public TargetData setIdempotent(boolean idempotent) {
+	public Target setIdempotent(boolean idempotent) {
 		this.idempotent = idempotent;
 		logger.trace("target '{}' {} idempotent", id, idempotent ? "is" : "is not");
 		return this;
@@ -192,7 +225,7 @@ public class TargetData {
 	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public TargetData setJspUrlPattern(String pattern) {
+	public Target setJspUrlPattern(String pattern) {
 		if(Strings.isValid(pattern)) {
 			this.jspUrlPattern = Strings.trim(pattern);
 		}
@@ -218,7 +251,7 @@ public class TargetData {
  	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public TargetData setInterceptorsStackId(String interceptors) {
+	public Target setInterceptorsStackId(String interceptors) {
 		if(Strings.isValid(interceptors)) {
 			this.interceptors = interceptors;
 		}
@@ -302,6 +335,7 @@ public class TargetData {
 		buffer.append("target('").append(id.toString()).append("') {\n");
 		buffer.append("  action      ('").append(id.getActionName()).append("')\n");
 		buffer.append("  method      ('").append(id.getMethodName()).append("')\n");
+		buffer.append("  proxy       ('").append(proxy.getName()).append("')\n");
 		buffer.append("  idempotent  ('").append(this.isIdempotent()).append("')\n");
 		buffer.append("  url pattern ('").append(this.getJspUrlPattern()).append("')\n");
 		buffer.append("  stack       ('").append(interceptors).append("')\n");

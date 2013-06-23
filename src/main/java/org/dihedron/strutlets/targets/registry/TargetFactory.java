@@ -20,13 +20,14 @@
 package org.dihedron.strutlets.targets.registry;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.Interceptors;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.aop.ActionInstrumentor;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
@@ -49,6 +50,12 @@ public class TargetFactory {
 	 * The logger.
 	 */
 	private static Logger logger = LoggerFactory.getLogger(TargetFactory.class);
+	
+	/**
+	 * The object that takes care of inspecting the action and creating class and 
+	 * method proxies for its <code>@Invocable</code> methods.
+	 */
+	private ActionInstrumentor instrumentor = new ActionInstrumentor();
 	
     /**
      * This method performs the automatic scanning of actions at startup time, 
@@ -73,9 +80,9 @@ public class TargetFactory {
     					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix(javaPackage)))
     					.setUrls(ClasspathHelper.forPackage(javaPackage))
     					.setScanners(new SubTypesScanner()));    		
-    		Set<Class<? extends Action>> actions = reflections.getSubTypesOf(Action.class);
-	        for(Class<? extends Action> action : actions) {
-	        	makeFromJavaClass(registry, action);
+    		Set<Class<? extends Action>> actionClasses = reflections.getSubTypesOf(Action.class);
+	        for(Class<? extends Action> actionClass : actionClasses) {
+	        	makeFromJavaClass(registry, actionClass);
 	        }
     	}
     }
@@ -86,37 +93,38 @@ public class TargetFactory {
      * 
      * @param registry
      *   the repository where new targets will be stored.
-     * @param action
-     *   the action to be scanned for annotated methods (targets).
+     * @param actionClass
+     *   the action class to be scanned for annotated methods (targets).
      * @throws StrutletsException 
      */
-    public void makeFromJavaClass(TargetRegistry registry, Class<? extends Action> action) throws StrutletsException {
-    	logger.trace("analysing action class: '{}'", action.getName());
+    public void makeFromJavaClass(TargetRegistry registry, Class<? extends Action> actionClass) throws StrutletsException {
+    	logger.trace("analysing action class: '{}'...", actionClass.getName());
     	
     	String interceptors = "default";
     	
-    	if(action.isAnnotationPresent(Interceptors.class)) {
-    		interceptors = action.getAnnotation(Interceptors.class).value();
+    	if(actionClass.isAnnotationPresent(Interceptors.class)) {
+    		interceptors = actionClass.getAnnotation(Interceptors.class).value();
     	}
     	
-    	Class<?> clazz = action;
-    	// walk up the class hierarchy and gather methods as we go
-    	Set<Method> methods = new HashSet<Method>();
-    	while(clazz != null && clazz != Object.class) { 
-    		Method[] set = clazz.getDeclaredMethods();
-    		methods.addAll(Arrays.asList(set));
-    		clazz = clazz.getSuperclass();
-    	}
-    	// now check for annotated methods and add them to the registry 
-    	for(Method method : methods) {	        		
-    		if(method.isAnnotationPresent(Invocable.class)) {
-        		logger.trace("adding annotated method '{}' in class '{}'", method.getName(), action.getSimpleName());
-        		Invocable invocable = method.getAnnotation(Invocable.class); 
-        		registry.addTarget(action, method, invocable, interceptors);
+    	// let the instrumentor inspect the action and generate proxy methods for
+    	// valid @Invocable-annotated action methods (possibly walking up the
+    	// class hierarchy and discarding duplicates, static and unannotated 
+    	// methods...) 
+    	Map<Method, Method> methods = new HashMap<Method, Method>();
+    	Class<?> proxyClass = instrumentor.instrument(actionClass, methods);
+    	
+    	// now loop through annotated methods and add them to the registry as targets 
+    	for(Method actionMethod : methods.keySet()) {	        		
+    		if(actionMethod.isAnnotationPresent(Invocable.class)) {
+    			Method proxyMethod = methods.get(actionMethod);
+        		logger.trace("... adding annotated method '{}' in class '{}' (proxy: '{}' in class '{}')", actionMethod.getName(), 
+        				actionClass.getSimpleName(), proxyMethod.getName(), proxyClass.getSimpleName());
+        		Invocable invocable = actionMethod.getAnnotation(Invocable.class); 
+        		registry.addTarget(actionClass, actionMethod, proxyMethod, invocable, interceptors);
     		} else {
-    			logger.trace("discarding unannotated method '{}' in class '{}'", method.getName(), action.getSimpleName());
+    			logger.trace("... discarding unannotated method '{}' in class '{}'", actionMethod.getName(), actionClass.getSimpleName());
     		}
     	}
-    	logger.trace("done analysing action class: '{}'", action.getName());
+    	logger.trace("... done analysing action class: '{}'!", actionClass.getName());
     }
 }

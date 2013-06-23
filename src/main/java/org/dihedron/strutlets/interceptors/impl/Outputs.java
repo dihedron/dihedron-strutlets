@@ -101,9 +101,9 @@ public class Outputs extends Interceptor {
 	 */
 	private void extractOutputs(ActionInvocation invocation) throws ReflectorException, StrutletsException {
 		
-		logger.trace("extracting outputs for method '{}' on action '{}'", invocation.getMethod(), invocation.getAction().getClass().getSimpleName());
+		logger.trace("extracting outputs for method '{}' on action '{}'", invocation.getTarget().getActionMethod(), invocation.getAction().getClass().getSimpleName());
 		String [] filter = {};
-		Method method = invocation.getMethod();
+		Method method = invocation.getTarget().getActionMethod();
 		if(method.isAnnotationPresent(Invocable.class)) {
 			Invocable annotation = method.getAnnotation(Invocable.class);
 			filter = annotation.outputs();

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Crypto. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.appservers;
+package org.dihedron.strutlets.runtimes;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,14 +32,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A class representing the JBoss runtime environment.
+ * 
  * @author Andrea Funto'
  */
-public class JBoss extends ApplicationServer {
+public class JBoss extends RuntimeEnvironment {
 	/**
 	 * The logger
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(JBoss.class);
 
+	/**
+	 * Performs JBoss-specific initialisation tasks, such as registering a URL 
+	 * type for classpath-related resources, needed by Strutlets to be able to
+	 * scan the classpath for packages and for resources contained therein. 
+	 * 
+	 * @see org.dihedron.strutlets.runtimes.RuntimeEnvironment#initialise()
+	 */
 	public void initialise() {
 		logger.debug("initialising JBoss runtime environment...");
 		Vfs.addDefaultURLTypes(new Vfs.UrlType() {

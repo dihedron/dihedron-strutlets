@@ -42,8 +42,6 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
-import org.dihedron.strutlets.appservers.ApplicationServer;
-import org.dihedron.strutlets.appservers.JBoss;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
@@ -52,7 +50,8 @@ import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
-import org.dihedron.strutlets.targets.TargetData;
+import org.dihedron.strutlets.runtimes.RuntimeEnvironment;
+import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
 import org.dihedron.strutlets.targets.registry.TargetRegistry;
@@ -109,7 +108,7 @@ public class ActionController extends GenericPortlet {
      * for providing the right action and method combination (the so-called 
      * "target") for the current request; for more details on targets see 
      * {@link org.dihedron.strutlets.targets.TargetId TargetId} and 
-     * {@link org.dihedron.strutlets.targets.TargetData TargetData}</li>
+     * {@link org.dihedron.strutlets.targets.Target Target}</li>
      * <li><b>loading the interceptors stacks</b>: the framework already provides 
      * a standard set of interceptors, but the user can provide her own by 
      * setting a value for the <code>???</code> parameter and placing a file with
@@ -208,7 +207,7 @@ public class ActionController extends GenericPortlet {
      * 
      * This method performs some action in order to understand whether the render
      * phase is immediately following the processing of an action or an event (in 
-     * which case we should not expect any further TargetData to be invoked), or it
+     * which case we should not expect any further Target to be invoked), or it
      * is in response to a render request.
      * In the former case, the method will simply identify the JSP page to invoke
      * by accessing the appropriate {@code Result} in the targets registry and 
@@ -357,7 +356,7 @@ public class ActionController extends GenericPortlet {
     		
     		logger.trace("target '{}' returned '{}'", targetId, res);
     		
-			TargetData data = registry.getTarget(target);
+			Target data = registry.getTarget(target);
 			Result result = data.getResult(res);
 			
 			logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
@@ -433,7 +432,7 @@ public class ActionController extends GenericPortlet {
     		if(targetId != null) {
     			
     			// check that the method is for presentation
-    			TargetData targetData = registry.getTarget(targetId);
+    			Target targetData = registry.getTarget(targetId);
     			if(!targetData.isIdempotent()) {
     				throw new PortletException("Trying to invoke non-idempotent method in render request");
     			}
@@ -473,24 +472,24 @@ public class ActionController extends GenericPortlet {
     		logger.info("invoking target '{}'", targetId);
     		
     		// check if there's configuration available for the given action
-			TargetData targetData = registry.getTarget(targetId);
+			Target target = registry.getTarget(targetId);
 			
-			logger.trace("target configuration:\n{}", targetData.toString());
+			logger.trace("target configuration:\n{}", target.toString());
     		
 			// instantiate the action
-			action = ActionFactory.makeAction(targetData);
+			action = ActionFactory.makeAction(target);
 			if(action != null) {
-				logger.info("action '{}' ready", targetData.getAction().getSimpleName());
+				logger.info("action instance '{}' ready", target.getActionClass().getSimpleName());
 			} else {    			 	
-				logger.error("no action found for target '{}'", targetId);
+				logger.error("could not create an action instance for target '{}'", targetId);
 				throw new StrutletsException("No action could be found for target '" + targetId + "'");
 			}
 			
 			// get the stack for the given action
-			InterceptorStack stack = interceptors.getStackOrDefault(targetData.getInterceptorStackId());
+			InterceptorStack stack = interceptors.getStackOrDefault(target.getInterceptorStackId());
 
 			// create the invocation object
-	    	ActionInvocation invocation = new ActionInvocation(action, targetData.getMethod(), stack, request, response);
+	    	ActionInvocation invocation = new ActionInvocation(action, target, stack, request, response);
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
@@ -522,7 +521,7 @@ public class ActionController extends GenericPortlet {
     	String url = null;
     	if(targetId != null && Strings.isValid(result)) {	    	
 	    	logger.trace("looking for renderer for target '{}' with result '{}'", targetId, result);	    	
-	    	TargetData targetData = registry.getTarget(targetId);
+	    	Target targetData = registry.getTarget(targetId);
 	    	Result renderer = targetData.getResult(result);
 	    	url = renderer.getData();
 	    	logger.debug("renderer URL for target '{}' with result '{}' is '{}' (mode '{}', state '{}')", 
@@ -568,7 +567,7 @@ public class ActionController extends GenericPortlet {
      * specific activities and tasks.
      */
     private void initialiseRuntimeEnvironment() {
-    	ApplicationServer runtime = ApplicationServer.getApplicationServer();
+    	RuntimeEnvironment runtime = RuntimeEnvironment.getRuntimeEnvironment();
     	runtime.initialise();
     }
     

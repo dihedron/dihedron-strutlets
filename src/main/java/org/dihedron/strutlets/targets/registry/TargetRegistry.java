@@ -29,9 +29,8 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Invocable;
-import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.strutlets.targets.TargetData;
+import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
@@ -65,7 +64,7 @@ public class TargetRegistry {
 	/**
 	 * The actual set of actions' targets. 
 	 */
-	private Map<TargetId, TargetData> store = new HashMap<TargetId, TargetData>(); 
+	private Map<TargetId, Target> store = new HashMap<TargetId, Target>(); 
 	
 	/**
 	 * The set of event-to-target mappings.
@@ -85,19 +84,12 @@ public class TargetRegistry {
 	 * {@link org.dihedron.strutlets.ActionController.InitParameter.RENDER_PATH_PATTERN InitParameter.RENDER_PATH_PATTERN}.
 	 */	
 	private volatile String pattern = DEFAULT_HTML_PATH_PATTERN;
-	
-	/**
-	 * The factory of target methods proxies; this object will create an AOP 
-	 * proxy for each method, in order to reduce reflection usage at untime. 
-	 */
-	private ActionProxyFactory factory;
-	
+		
 	/**
 	 * Constructor.
 	 */
 	public TargetRegistry() {
 		logger.info("creating target repository");
-		factory = new ActionProxyFactory();
 	}
 	
 	/**
@@ -137,12 +129,12 @@ public class TargetRegistry {
 	}
 	
 	/**
-	 * Registers a new target (as a {@code TargetId}, {@code TargetData} pair)
+	 * Registers a new target (as a {@code TargetId}, {@code Target} pair)
 	 * into the registry.
 	 * 
-	 * @param action
+	 * @param actionClass
 	 *   the class of the action implementing the target's business logic.
-	 * @param method
+	 * @param actionMethod
 	 *   the method implementing the target's business logic.
 	 * @param invocable
 	 *   the method annotation, from which some information might be extracted.
@@ -150,17 +142,16 @@ public class TargetRegistry {
 	 *   the name of the interceptor stack to be used for the given action.
 	 * @throws StrutletsException 
 	 */
-	public void addTarget(Class<? extends Action> action, Method method, Invocable invocable, String interceptors) throws StrutletsException {
-		logger.info("adding target '{}!{}'", action.getSimpleName(), method.getName());
-		TargetId id = new TargetId(action, method);
+	public void addTarget(Class<? extends Action> actionClass, Method actionMethod, Method proxyMethod, 
+			Invocable invocable, String interceptors) throws StrutletsException {
+		logger.info("adding target '{}!{}' (proxy: '{}')", actionClass.getSimpleName(), actionMethod.getName(), proxyMethod.getName());
+		TargetId id = new TargetId(actionClass, actionMethod);
 		
 		// instantiate the information object
-		TargetData data = new TargetData(id);
-		// TODO: instrument action here!
-		factory.addProxyMethod(action, method);
-		// TODO: grab proxy class and proxy method
-		data.setAction(action);
-		data.setMethod(method);
+		Target data = new Target(id);
+		data.setActionClass(actionClass);
+		data.setActionMethod(actionMethod);
+		data.setProxyMethod(proxyMethod);
 		data.setIdempotent(invocable.idempotent());
 		data.setInterceptorsStackId(interceptors);
 		data.setJspUrlPattern(pattern);
@@ -177,18 +168,18 @@ public class TargetRegistry {
 	}
 	
 	/**
-	 * Retrieves the {@code TargetData} object corresponding to the given target
+	 * Retrieves the {@code Target} object corresponding to the given target
 	 * identifier.
 	 * 
 	 * @param id
 	 *   the target identifier.
 	 * @return
-	 *   the {@code TargetData} object; if none found in the registry, an
+	 *   the {@code Target} object; if none found in the registry, an
 	 *   exception is thrown.
 	 * @throws StrutletsException
-	 *   if no @{code TargetData} object could be found for the given id.
+	 *   if no @{code Target} object could be found for the given id.
 	 */
-	public TargetData getTarget(TargetId id) throws StrutletsException {
+	public Target getTarget(TargetId id) throws StrutletsException {
 		if(!store.containsKey(id)) {
 			logger.debug("repository does not contain info for target '{}'", id);
 			throw new StrutletsException("Invalid target : '" + id.toString() + "'");
@@ -197,7 +188,7 @@ public class TargetRegistry {
 	}
 	
 	/**
-	 * Returns the @{code TargetData} corresponding to the action and method,
+	 * Returns the @{code Target} corresponding to the action and method,
 	 * as expressed in the given target string.
 	 *  
 	 * @param target
@@ -205,19 +196,19 @@ public class TargetRegistry {
 	 *   on it; thus it can be the action name (in which case the default method 
 	 *   "execute" is assumed) or the full target ("MyAction!myMethod").
 	 * @return
-	 *   the @{code TargetData} object corresponding to the given combination 
-	 *   of action name and method name, if found. If no @{code TargetData} can 
+	 *   the @{code Target} object corresponding to the given combination 
+	 *   of action name and method name, if found. If no @{code Target} can 
 	 *   be found an exception is thrown.
 	 * @throws StrutletsException 
 	 *   if the string is not a valid target or no target can be found corresponding 
 	 *   to it.
 	 */
-	public TargetData getTarget(String target) throws StrutletsException {		 
+	public Target getTarget(String target) throws StrutletsException {		 
 		return getTarget(new TargetId(target));
 	}
 
 	/**
-	 * Returns the @{code TargetData} corresponding to the action and method,
+	 * Returns the @{code Target} corresponding to the action and method,
 	 * as expressed in the given target string.
 	 *  
 	 * @param action
@@ -225,14 +216,14 @@ public class TargetRegistry {
 	 * @param method
 	 *   a string representing the method (e.g. "myMethod").
 	 * @return
-	 *   the @{code TargetData} object corresponding to the given combination 
-	 *   of action name and method name, if found. If no @{code TargetData} can 
+	 *   the @{code Target} object corresponding to the given combination 
+	 *   of action name and method name, if found. If no @{code Target} can 
 	 *   be found an exception is thrown.
 	 * @throws StrutletsException 
 	 *   if the string is not a valid target or no target can be found corresponding 
 	 *   to it.
 	 */
-	public TargetData getTarget(String action, String method) throws StrutletsException {			
+	public Target getTarget(String action, String method) throws StrutletsException {			
 		return getTarget(new TargetId(action, method));
 	}
 		
@@ -257,7 +248,7 @@ public class TargetRegistry {
 	 * is stored in a separate lookup map that helps identify the action that will 
 	 * handle a given event when it arrives. The lookup sequence is:<ol>
 	 * <li>lookup the name of the target for the given event <code>QName</code>;</li>
-	 * <li>lookup the <code>TargetData</code> for the given tagert name.</li>
+	 * <li>lookup the <code>Target</code> for the given tagert name.</li>
 	 * </ol>. Thus, event targets lookup takes one step more than simple action 
 	 * processing lookups, because events must not be linked one-to-one to event
 	 * names: the one-to-many relationship is guaranteed by each target storing 
@@ -282,7 +273,7 @@ public class TargetRegistry {
 	 * is stored in a separate lookup map that helps identify the action that will 
 	 * handle a given event when it arrives. The lookup sequence is:<ol>
 	 * <li>lookup the name of the target for the given event <code>QName</code>;</li>
-	 * <li>lookup the <code>TargetData</code> for the given tagert name.</li>
+	 * <li>lookup the <code>Target</code> for the given tagert name.</li>
 	 * </ol>. Thus, event targets lookup takes one step more than simple action 
 	 * processing lookups, because events must not be linked one-to-one to event
 	 * names: the one-to-many relationship is guaranteed by each target storing 
@@ -309,7 +300,7 @@ public class TargetRegistry {
 	 * is stored in a separate lookup map that helps identify the action that will 
 	 * handle a given event when it arrives. The lookup sequence is:<ol>
 	 * <li>lookup the name of the target for the given event <code>QName</code>;</li>
-	 * <li>lookup the <code>TargetData</code> for the given tagert name.</li>
+	 * <li>lookup the <code>Target</code> for the given tagert name.</li>
 	 * </ol>. Thus, event targets lookup takes one step more than simple action 
 	 * processing lookups, because events must not be linked one-to-one to event
 	 * names: the one-to-many relationship is guaranteed by each target storing 
@@ -332,32 +323,22 @@ public class TargetRegistry {
 		}		
 	}
 
+	/**
+	 * Provides a string representation of the registry.
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder("");
 		
 		if(!store.isEmpty()) {
-			for(Entry<TargetId, TargetData> entry : store.entrySet()) {
-				buffer.append("----------- ACTION -----------\n");
+			for(Entry<TargetId, Target> entry : store.entrySet()) {
+				buffer.append("----------- TARGET -----------\n");
 				buffer.append(entry.getValue().toString());
 			}
 			buffer.append("------------------------------\n");
 		}
 		return buffer.toString();
-	}	
-	
-	
-	private Class<? extends Action> instrumentTarget(Class<? extends Action> action, Method method) {
-		/*
-		try {
-			ClassPool pool = new ClassPool();
-			pool.insertClassPath(new ClassClassPath(action));
-			CtClass clazz = pool.get(action.getCanonicalName());
-			CtClass proxy = pool.makeClass(action.getCanonicalName() + "$Proxy");
-		} catch (NotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
-		return null;
-	}	
+	}
 }

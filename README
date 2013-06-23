@@ -1,4 +1,32 @@
 ================================================================================
+VERSION 0.20.0 (released on 2013-06-23)
+With this release the framework is approaching full maturity: it adds AOP and
+runtime initialisation, plus some restructuring of the Target* classes code.
+--------------------------------------------------------------------------------
+FEATURE:
+	Aspect Oriented Programming to support inline parameters for business methods:
+	action methods can now have a complex signature such as:
+		public String myMethod(@In(scope = Scope.FORM } String param) throws ...
+	thanks to a layer that dynamically generates a static stub method that will 
+	perform parameter retrieval (according to the annotation hints) and then
+	proceed to calling the actual method on the action instance. All of this is 
+	performed with no runtime overhead: all necessary code is dynamically compiled
+	and injected into the class loader at bootstrap, so there's no overhead at
+	invocation time, and no reflection except for the instantiation of the action
+	object (which couldn't be done otherwise) and the single stub method 
+	invocation. This provides easier access to parameters and a performance boost
+	with respect to the Inputs interceptor, while preserving full backward 
+	compatibility.
+PRIORITY:
+	HIGH
+--------------------------------------------------------------------------------
+FEATURE/BUG:
+	Runtime environment detection: the framework will detect the current runtime 
+	and execute some container-specific initialisation code. Needed to properly
+	initialise the Vfs URL handling on JBoss.
+PRIORITY:
+	HIGH
+================================================================================
 VERSION 0.11.2 (released on 2013-06-04)
 --------------------------------------------------------------------------------
 FEATURE:

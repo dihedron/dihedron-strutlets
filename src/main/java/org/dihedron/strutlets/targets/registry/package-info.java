@@ -19,7 +19,7 @@
 
 /**
  * Classes belonging to this package cooperate to the loading and efficient use
- * of the @{code TargetId} and @{code TargetData} which make up the core of the
+ * of the @{code TargetId} and @{code Target} which make up the core of the
  * framework.
  *  
  * @author Andrea Funto'
