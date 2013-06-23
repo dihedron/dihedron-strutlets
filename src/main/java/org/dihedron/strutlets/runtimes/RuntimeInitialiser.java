@@ -27,12 +27,12 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-public abstract class RuntimeEnvironment {
+public abstract class RuntimeInitialiser {
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(RuntimeEnvironment.class);
+	private static final Logger logger = LoggerFactory.getLogger(RuntimeInitialiser.class);
 
 	/**
 	 * Factory method returning the current runtime environment, depending on 
@@ -41,10 +41,10 @@ public abstract class RuntimeEnvironment {
 	 * etc.
 	 * 
 	 * @return
-	 *   an instance of RuntimeEnvironment, for the caller to perform application
+	 *   an instance of RuntimeInitialiser, for the caller to perform application
 	 *   server-specific initialisation.
 	 */
-	public static RuntimeEnvironment getRuntimeEnvironment() {
+	public static RuntimeInitialiser getRuntimeInitialiser() {
 		
 		// dump current environment
 		Map<String, String> environment = System.getenv();
@@ -55,42 +55,40 @@ public abstract class RuntimeEnvironment {
 		logger.trace(buffer.toString());
 		
 		if(isJBoss()) {
-			return new JBoss();			
+			return new JBossInitialiser();			
 		} else if(isTomcat()) {
-			return new Tomcat();
-		} else {
-			// TODO: implement other app servers here
+			return new TomcatInitialiser();
 		}
-		
-		// TODO: implement other app servers here!
+		// TODO: implement other app servers here
+		logger.warn("running on an undetected runtime, or one for which no initialiser exists so far");
 		return null;
 	}
 	
 	/**
-	 * Returns whether the current runtime environment is JBoss application server
+	 * Returns whether the current runtime environment is JBossInitialiser application server
 	 * version 7.X or later, based on the presence of class <code>Vfs</code> on 
 	 * the classpath.
 	 *  
 	 * @return
-	 *   whether the current runtime is JBoss application server.
+	 *   whether the current runtime is JBossInitialiser application server.
 	 */
 	public static boolean isJBoss() {
-		// JBoss
+		// JBossInitialiser
 		try {
 			Class.forName("org.reflections.vfs.Vfs");
-			logger.info("runtime environment is JBoss 7.x+");
+			logger.info("runtime environment is JBossInitialiser 7.x+");
 			return true;		
 		} catch (ClassNotFoundException e) {
-			logger.info("runtime environment is not JBoss 7.x+");
+			logger.info("runtime environment is not JBossInitialiser 7.x+");
 		}
 		return false;
 	}
 	
 	/**
-	 * Returns whether the current runtime environment is Tomcat web container.
+	 * Returns whether the current runtime environment is TomcatInitialiser web container.
 	 * 
 	 * @return
-	 *   whether the current runtime environment is Tomcat web container.
+	 *   whether the current runtime environment is TomcatInitialiser web container.
 	 */
 	public static boolean isTomcat() {
 		// TODO: implement

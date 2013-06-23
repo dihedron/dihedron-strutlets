@@ -174,14 +174,6 @@ public class Outputs extends Interceptor {
 				case REQUEST:
 					value = reflector.getFieldValue(field.getName());		
 					logger.trace("storing field '{}' as '{}' into scope '{}'", field.getName(), parameter, annotation.scope().name());
-//					String [] array = null;
-//					// TODO: handle String array too, and Object[] through loop and toString()
-//					if(value instanceof String) {
-//						array = new String [] { (String)value };
-//					} else if(value.getClass().isArray()) {
-//						array = (String [])value;
-//					}
-//					ActionContext.setRequestAttribute(parameter, array);
 					ActionContext.setRequestAttribute(parameter, value);
 					break;
 				case PORTLET:

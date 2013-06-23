@@ -94,7 +94,6 @@ public class Dumper extends Interceptor {
 			}
 			builder.append("]\n");
 		}
-		//builder.append(SECTION_FOOTER).append("\n");
 	}
 	
 	/**
@@ -121,7 +120,6 @@ public class Dumper extends Interceptor {
 				logger.error("if you see this message there is a bug in Strutlets");
 			}
 		}
-		//builder.append(SECTION_FOOTER).append("\n");
 	}	
 	
 	/**
@@ -139,7 +137,6 @@ public class Dumper extends Interceptor {
 			String value = entry.getValue() != null ? entry.getValue().toString() : null; 
 			builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
 		}
-		//builder.append(SECTION_FOOTER).append("\n");
 	}
 	
 }

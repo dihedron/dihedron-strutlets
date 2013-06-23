@@ -57,7 +57,6 @@ public class RenewingRendererRegistry implements RendererRegistry {
 	public RenewingRendererRegistry(GenericPortlet portlet) {
 		logger.info("instantiating renewing renderers registry...");
 		this.portlet = portlet;
-		//this.addRenderer("jsp", "org.dihedron.strutlets.renderers.impl.JspRenderer");
 	}
 	
 	public void addRenderer(String id, Class<? extends Renderer> clazz) {
@@ -78,10 +77,10 @@ public class RenewingRendererRegistry implements RendererRegistry {
 			}
 		} catch (InstantiationException e) {
 			logger.error("error instantiating object of class '{}'", classname);
-			throw new StrutletsException("Error instantiating renderer class '" + classname + "'");
+			throw new StrutletsException("Error instantiating renderer class '" + classname + "'", e);
 		} catch (IllegalAccessException e) {
 			logger.error("error accessing class '{}'", classname);
-			throw new StrutletsException("Error accessing renderer class '" + classname + "'");
+			throw new StrutletsException("Error accessing renderer class '" + classname + "'", e);
 		}
 		return renderer;
 	}

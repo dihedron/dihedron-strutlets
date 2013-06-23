@@ -69,10 +69,10 @@ public class CachingRendererRegistry implements RendererRegistry {
 				this.renderers.put(id, renderer);
 			} catch (InstantiationException e) {
 				logger.error("error instantiating object of class '{}'", clazz.getCanonicalName());
-				throw new StrutletsException("Error instantiating renderer class '" + clazz.getCanonicalName() + "'");
+				throw new StrutletsException("Error instantiating renderer class '" + clazz.getCanonicalName() + "'", e);
 			} catch (IllegalAccessException e) {
 				logger.error("error accessing class '{}'", clazz.getCanonicalName());
-				throw new StrutletsException("Error accessing renderer class '" + clazz.getCanonicalName() + "'");
+				throw new StrutletsException("Error accessing renderer class '" + clazz.getCanonicalName() + "'", e);
 			}				
 		}
 	}

@@ -22,22 +22,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class representing the Tomcat runtime environment.
+ * A class representing the TomcatInitialiser runtime environment.
  * 
  * @author Andrea Funto'
  */
-public class Tomcat extends RuntimeEnvironment {
+public class TomcatInitialiser extends RuntimeInitialiser {
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(Tomcat.class);
+	private static final Logger logger = LoggerFactory.getLogger(TomcatInitialiser.class);
 
 	/**
-	 * Performs Tomcat-specific initialisation tasks.
+	 * Performs TomcatInitialiser-specific initialisation tasks.
 	 * 
-	 * @see org.dihedron.strutlets.runtimes.RuntimeEnvironment#initialise()
+	 * @see org.dihedron.strutlets.runtimes.RuntimeInitialiser#initialise()
 	 */
 	public void initialise() {
-		logger.debug("initialising Tomcat runtime environment...");
+		logger.debug("initialising TomcatInitialiser runtime environment...");
 	}
 }

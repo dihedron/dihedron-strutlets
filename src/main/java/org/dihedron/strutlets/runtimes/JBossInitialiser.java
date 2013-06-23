@@ -32,25 +32,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class representing the JBoss runtime environment.
+ * A class representing the JBossInitialiser runtime environment.
  * 
  * @author Andrea Funto'
  */
-public class JBoss extends RuntimeEnvironment {
+public class JBossInitialiser extends RuntimeInitialiser {
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JBoss.class);
+	private static final Logger logger = LoggerFactory.getLogger(JBossInitialiser.class);
 
 	/**
-	 * Performs JBoss-specific initialisation tasks, such as registering a URL 
+	 * Performs JBossInitialiser-specific initialisation tasks, such as registering a URL 
 	 * type for classpath-related resources, needed by Strutlets to be able to
 	 * scan the classpath for packages and for resources contained therein. 
 	 * 
-	 * @see org.dihedron.strutlets.runtimes.RuntimeEnvironment#initialise()
+	 * @see org.dihedron.strutlets.runtimes.RuntimeInitialiser#initialise()
 	 */
 	public void initialise() {
-		logger.debug("initialising JBoss runtime environment...");
+		logger.debug("initialising JBossInitialiser runtime environment...");
 		Vfs.addDefaultURLTypes(new Vfs.UrlType() {
 			
 			public boolean matches(URL url) {
@@ -61,7 +61,8 @@ public class JBoss extends RuntimeEnvironment {
 				VirtualFile content;
 				try {
 					content = (VirtualFile) url.openConnection().getContent();
-				} catch (Throwable e) {
+				} catch (IOException e) {
+					logger.error("could not open url connection as VirtualFile [{}]", url);
 					throw new ReflectionsException("could not open url connection as VirtualFile [" + url + "]", e);
 				}
 
@@ -84,7 +85,7 @@ public class JBoss extends RuntimeEnvironment {
 					return file.exists() && file.canRead() ? file.isDirectory() ? new SystemDir(file) : new ZipDir(
 							new JarFile(file)) : null;
 				} catch (IOException e) {
-					e.printStackTrace();
+					logger.error("I/O exception caught", e);
 				}
 				return null;
 			}

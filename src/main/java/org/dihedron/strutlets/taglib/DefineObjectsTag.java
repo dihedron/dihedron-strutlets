@@ -45,25 +45,5 @@ public class DefineObjectsTag extends SimpleTagSupport {
 		String lifecycle = (String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
 		
 		logger.trace("current phase is '{}'", lifecycle);
-		
-		//pageContext.
 	}
-	// @Override
-	// public int doStartTag() throws JspException {
-	//
-	// // try {
-	// // get the writer object for output
-	// JspWriter out = pageContext.getOut();
-	//
-	// pageContext.setAttribute("pippo", new String("ciao"));
-	//
-	// // Perform substr operation on string.
-	// //out.println(input.substring(start, end));
-	//
-	// // } catch (IOException e) {
-	// // e.printStackTrace();
-	// // }
-	// return SKIP_BODY;
-	// }
-
 }

@@ -50,7 +50,7 @@ import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
-import org.dihedron.strutlets.runtimes.RuntimeEnvironment;
+import org.dihedron.strutlets.runtimes.RuntimeInitialiser;
 import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
@@ -567,7 +567,7 @@ public class ActionController extends GenericPortlet {
      * specific activities and tasks.
      */
     private void initialiseRuntimeEnvironment() {
-    	RuntimeEnvironment runtime = RuntimeEnvironment.getRuntimeEnvironment();
+    	RuntimeInitialiser runtime = RuntimeInitialiser.getRuntimeInitialiser();
     	runtime.initialise();
     }
     
