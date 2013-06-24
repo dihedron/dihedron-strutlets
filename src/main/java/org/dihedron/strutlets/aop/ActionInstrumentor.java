@@ -44,6 +44,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * The class that creates the proxy for a given action. The proxy creation must 
+ * be performed all at once because Javassist applies several mechanisms such as
+ * freezing and classloading that actually consolidate a class internal status 
+ * and load its bytecode into the classloader, eventually making it unmodifieable.
+ * By inspecting and creating proxy methods in one shot, this class performs all
+ * operations on the proxy class in one single shot, then converts the synthetic
+ * class into bytecode when no further modifications (such as method additions) 
+ * can be expected.
+ *    
  * @author Andrea Funto'
  */
 public class ActionInstrumentor {
@@ -102,10 +111,38 @@ public class ActionInstrumentor {
 		this.classpool = classpool;
 	}
 	
+	/**
+	 * Instruments an action, returning the proxy class containing one static method 
+	 * for each <code>@Invocable</code> method in the original class or in any
+	 * of its super-classes (provided they are not shadowed through inheritance).
+	 * 
+	 * @param action
+	 *   the action class to be instrumented. 
+	 * @return
+	 *   the proxy <code>Class</code>.
+	 * @throws StrutletsException
+	 */
 	public Class<?> instrument(Class<? extends Action> action) throws StrutletsException {
 		return instrument(action, null);
 	}
 	
+	/**
+	 * Instruments an action, returning the proxy class containing one static method 
+	 * for each <code>@Invocable</code> method in the original class or in any
+	 * of its super-classes (provided they are not shadowed through inheritance).
+	 * 
+	 * @param action
+	 *   the action class to be instrumented.
+	 * @param methods
+	 *   a map whose contents are replaced with a mapping between original methods
+	 *   in the action (or in its super-classes) and the static proxy methods in 
+	 *   the synthetic class; this can be used to retrieve the proxy method for
+	 *   each original method even when the class has overloaded methods. If no
+	 *   map is provided (null), the method ignores this task altogether.
+	 * @return
+	 *   the proxy <code>Class</code>.
+	 * @throws StrutletsException
+	 */
 	public Class<?> instrument(Class<? extends Action> action, Map<Method, Method> methods) throws StrutletsException {
 		try {
 			CtClass generator = getClassGenerator(action);
@@ -138,6 +175,16 @@ public class ActionInstrumentor {
 		}
 	}
 	
+	/**
+	 * Generates a <code>CtClass</code> in the Javassist <code>ClassPool</code>
+	 * to represent the new proxy.
+	 * 
+	 * @param action
+	 *   the action for which a proxy must be created.
+	 * @return
+	 *   the <code>CtClass</code> object.
+	 * @throws StrutletsException
+	 */
 	private CtClass getClassGenerator(Class<? extends Action> action) throws StrutletsException {
 		CtClass generator = null;
 		String proxyname = makeProxyClassName(action);
@@ -162,6 +209,17 @@ public class ActionInstrumentor {
 		return generator;
 	}
 	
+	/**
+	 * Walks the class hierarchy up to <code>Object</code>, discarding non
+	 * <code>@Invocable</code> methods, static methods and all methods from
+	 * super-classes that have been overridden in extending classes.
+	 * 
+	 * @param action
+	 *   the action whose methods are to be enumerated.
+	 * @return
+	 *   a collection of <code>@Invocable</code>, non-static and non-overridden
+	 *   methods.
+	 */
 	private Collection<Method> enumerateInvocableMethods(Class<? extends Action> action) {
 		Map<String, Method> methods = new HashMap<String, Method>();
 		
@@ -186,16 +244,34 @@ public class ActionInstrumentor {
     	return methods.values();
 	}
 	
-		
+	/**
+	 * Creates the Java code to proxy an action method. The code will also provide
+	 * parameter injection (for <code>@In</code> annotated parameters) and basic
+	 * profiling to measure how long it takes for the business method to execute.
+	 * Each proxy method is actually static, so there is no need to have an 
+	 * instance of the proxy class to invoke it and there's no possibility that
+	 * any state is kept between invocations.
+	 *  	
+	 * @param generator
+	 *   the Javassist <code>CtClass</code> used to generate newstatic methods.
+	 * @param action
+	 *   the action class to instrument.
+	 * @param method
+	 *   the specific action methpd to instrument.
+	 * @return
+	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
+	 * @throws StrutletsException
+	 */
 	private CtMethod instrumentMethod(CtClass generator, Class<? extends Action> action, Method method) throws StrutletsException {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
-		try {			
+		try {						
 			StringBuilder code = new StringBuilder("public static final java.lang.String ")
 				.append(methodName)
 				.append("( org.dihedron.strutlets.actions.Action action ) {\n");
-			StringBuilder traceFormat = new StringBuilder("\tlogger.trace(\"");
+			code.append("\tlong millis = java.lang.System.currentTimeMillis();\n");
+			StringBuilder traceFormat = new StringBuilder("\tlogger.debug(\"");
 			StringBuilder traceArgs = new StringBuilder("");
 					
 			Annotation[][] annotations = method.getParameterAnnotations();
@@ -295,7 +371,7 @@ public class ActionInstrumentor {
 				.append("(")
 				.append(args)
 				.append(");\n");
-			code.append("\tlogger.trace(\"result is '{}'\", result);\n");
+			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, (java.lang.System.currentTimeMillis() - millis));\n");
 			code.append("\treturn result;\n").append("}");
 		
 			logger.trace("compiling code:\n{}'", code);
