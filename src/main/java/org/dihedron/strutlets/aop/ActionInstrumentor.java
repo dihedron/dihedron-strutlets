@@ -270,9 +270,8 @@ public class ActionInstrumentor {
 			StringBuilder code = new StringBuilder("public static final java.lang.String ")
 				.append(methodName)
 				.append("( org.dihedron.strutlets.actions.Action action ) {\n");
-			code.append("\tlong millis = java.lang.System.currentTimeMillis();\n");
-			StringBuilder traceFormat = new StringBuilder("\tlogger.debug(\"");
-			StringBuilder traceArgs = new StringBuilder("");
+			code.append("\tlogger.trace(\"entering stub method...\");\n");			
+			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
 					
 			Annotation[][] annotations = method.getParameterAnnotations();
 			Class<?>[] types = method.getParameterTypes();
@@ -308,61 +307,55 @@ public class ActionInstrumentor {
 						first = false;
 					}
 					code.append(" });\n");
-//					code.append("\tlogger.trace(\"arg").append(i).append(" is '{}'\", arg").append(i).append(");\n");
-					traceFormat.append("arg").append(i).append(" => '{}', ");
-					traceArgs.append(traceArgs.length() > 0 ? ", " : "").append("arg").append(i);
+					code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => '\").append(arg").append(i).append(").append(\"', \");\n");
 					
 				} else {
 					logger.warn("{}-th parameter has no @In annotation!", i);
 					if(!types[i].isPrimitive()) {
 						logger.trace("{}-th parameter will be passed in as a null object", i);
 						code.append("\t").append(types[i].getCanonicalName()).append(" arg").append(i).append(" = null;\n");
-						traceFormat.append("arg").append(i).append(" => null, ");
+						code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => null, \");\n");
 					} else {
 						logger.trace("{}-th parameter is a primitive type", i);
 						if(types[i] == Boolean.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a boolean 'false'", i);
 							code.append("\tboolean arg").append(i).append(" = false;\n");
-							traceFormat.append("arg").append(i).append(" => false, ");
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => false, \");\n");
 						} else if(types[i] == Character.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a character ' '", i);
 							code.append("\tchar arg").append(i).append(" = ' ';\n");
-							traceFormat.append("arg").append(i).append(" => ' ', ");
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => ' ', \");\n");
 						} else if(types[i] == Byte.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a byte '0'", i);
 							code.append("\tbyte arg").append(i).append(" = 0;\n");
-							traceFormat.append("arg").append(i).append(" => 0, ");																				
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
 						} else if(types[i] == Short.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a short '0'", i);
 							code.append("\tshort arg").append(i).append(" = 0;\n");
-							traceFormat.append("arg").append(i).append(" => 0, ");							
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
 						} else if(types[i] == Integer.TYPE) {
 							logger.trace("{}-th parameter will be passed in as an integer '0'", i);
 							code.append("\tint arg").append(i).append(" = 0;\n");
-							traceFormat.append("arg").append(i).append(" => 0, ");
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
 						} else if(types[i] == Long.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a long '0'", i);
 							code.append("\tlong arg").append(i).append(" = 0;\n");
-							traceFormat.append("arg").append(i).append(" => 0, ");							
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
 						} else if(types[i] == Float.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
 							code.append("\tfloat arg").append(i).append(" = 0.0;\n");
-							traceFormat.append("arg").append(i).append(" => 0.0, ");							
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
 						} else if(types[i] == Double.TYPE) {
 							logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
 							code.append("\tdouble arg").append(i).append(" = 0.0;\n");
-							traceFormat.append("arg").append(i).append(" => 0.0, ");
+							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
 						}
 					}
 				}
 				args.append(args.length() > 0 ? ", arg" : "arg").append(i);				
 			}
-			logger.trace("traceFormat: '{}'", traceFormat);
-			logger.trace("traceArgs  : '{}'", traceArgs);
-			if(traceArgs.length() > 0) {
-				traceFormat.setLength(traceFormat.length() - 2);
-				code.append(traceFormat).append("\", ").append(traceArgs).append(");\n");
-			}
+			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n");
+			code.append("\tlong millis = java.lang.System.currentTimeMillis();\n");
 			code
 				.append("\tjava.lang.String result = ((")
 				.append(action.getCanonicalName())
@@ -371,7 +364,8 @@ public class ActionInstrumentor {
 				.append("(")
 				.append(args)
 				.append(");\n");
-			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, (java.lang.System.currentTimeMillis() - millis));\n");
+			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, new java.lang.Long((java.lang.System.currentTimeMillis() - millis)).toString());\n");
+			code.append("\tlogger.trace(\"... leaving stub method\");\n");
 			code.append("\treturn result;\n").append("}");
 		
 			logger.trace("compiling code:\n{}'", code);
