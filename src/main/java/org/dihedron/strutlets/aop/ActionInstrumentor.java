@@ -39,6 +39,7 @@ import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Scope;
+import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,7 +144,7 @@ public class ActionInstrumentor {
 	 *   the proxy <code>Class</code>.
 	 * @throws StrutletsException
 	 */
-	public Class<?> instrument(Class<? extends Action> action, Map<Method, Method> methods) throws StrutletsException {
+	public Class<?> instrument(Class<? extends Action> action, Map<Method, Method> methods) throws DeploymentException {
 		try {
 			CtClass generator = getClassGenerator(action);
 			for(Method method : enumerateInvocableMethods(action)) {
@@ -171,7 +172,7 @@ public class ActionInstrumentor {
 			return proxy;
 		} catch(CannotCompileException e) {
 			logger.error("error sealing the proxy class for '{}'", action.getSimpleName());
-			throw new StrutletsException("error sealing proxy class for action '" + action.getSimpleName() + "'", e);
+			throw new DeploymentException("error sealing proxy class for action '" + action.getSimpleName() + "'", e);
 		}
 	}
 	
@@ -185,7 +186,7 @@ public class ActionInstrumentor {
 	 *   the <code>CtClass</code> object.
 	 * @throws StrutletsException
 	 */
-	private CtClass getClassGenerator(Class<? extends Action> action) throws StrutletsException {
+	private CtClass getClassGenerator(Class<? extends Action> action) throws DeploymentException {
 		CtClass generator = null;
 		String proxyname = makeProxyClassName(action);
 		try {
@@ -203,7 +204,7 @@ public class ActionInstrumentor {
 				logger.trace("... generator added, with built-in SLF4J support");
 			} catch (CannotCompileException e2) {
 				logger.error("error compiling SLF4J logger expression", e2);
-				throw new StrutletsException("error compiling AOP code in class creation", e2);
+				throw new DeploymentException("error compiling AOP code in class creation", e2);
 			}			
 		}
 		return generator;
@@ -260,9 +261,9 @@ public class ActionInstrumentor {
 	 *   the specific action methpd to instrument.
 	 * @return
 	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
-	 * @throws StrutletsException
+	 * @throws DeploymentException
 	 */
-	private CtMethod instrumentMethod(CtClass generator, Class<? extends Action> action, Method method) throws StrutletsException {
+	private CtMethod instrumentMethod(CtClass generator, Class<? extends Action> action, Method method) throws DeploymentException {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
@@ -272,6 +273,7 @@ public class ActionInstrumentor {
 				.append("( org.dihedron.strutlets.actions.Action action ) {\n");
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
+			code.append("\tjava.lang.Object value = null;\n");
 					
 			Annotation[][] annotations = method.getParameterAnnotations();
 			Class<?>[] types = method.getParameterTypes();
@@ -279,6 +281,7 @@ public class ActionInstrumentor {
 			StringBuilder args = new StringBuilder();
 			
 			for(int i = 0; i < types.length; ++i) {
+				code.append("\t//\n\t// retrieving argument no. ").append(i).append(" (").append(types[i].getCanonicalName()).append(")\n\t//\n");
 				In in = null;
 				for(Annotation annotation : annotations[i]) {
 					if(annotation instanceof In) {
@@ -287,17 +290,13 @@ public class ActionInstrumentor {
 					}
 				}
 				if(in != null) {
+					if(types[i].isPrimitive()) {
+						logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, types[i].getCanonicalName());
+						throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + types[i].getCanonicalName() + "')");
+					}
 					String parameter = in.value();
-					logger.trace("{}-th parameter '{}' is annotated with @In", i, in.value());					
-					code
-						.append("\t")
-						.append(types[i].getCanonicalName())
-						.append(" arg")
-						.append(i).append(" = (")
-						.append(types[i].getCanonicalName()).append(") ")
-						.append("org.dihedron.strutlets.ActionContext.findValueInScopes(\"")
-						.append(parameter)
-						.append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+					logger.trace("{}-th parameter '{}' is annotated with @In", i, in.value());
+					code.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 					boolean first = true;
 					for(Scope scope : in.scopes()) {
 						code
@@ -307,12 +306,18 @@ public class ActionInstrumentor {
 						first = false;
 					}
 					code.append(" });\n");
+					
+					if(!types[i].isArray()) {
+						// if parameter is not an array, pick the first element))
+						code.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+					}					
+					code.append("\t").append(types[i].getCanonicalName()).append(" arg").append(i).append(" = (").append(types[i].getCanonicalName()).append(") value;\n");
 					code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => '\").append(arg").append(i).append(").append(\"', \");\n");
 					
 				} else {
 					logger.warn("{}-th parameter has no @In annotation!", i);
 					if(!types[i].isPrimitive()) {
-						logger.trace("{}-th parameter will be passed in as a null object", i);
+						logger.trace("{}-th parameter will be passed in as a null object", i);						
 						code.append("\t").append(types[i].getCanonicalName()).append(" arg").append(i).append(" = null;\n");
 						code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => null, \");\n");
 					} else {
@@ -352,9 +357,12 @@ public class ActionInstrumentor {
 						}
 					}
 				}
-				args.append(args.length() > 0 ? ", arg" : "arg").append(i);				
+				args.append(args.length() > 0 ? ", arg" : "arg").append(i);	
+				code.append("\n");
 			}
-			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n");
+			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n\n");
+			
+			code.append("\t//\n\t// invoking proxied method\n\t//\n");
 			code.append("\tlong millis = java.lang.System.currentTimeMillis();\n");
 			code
 				.append("\tjava.lang.String result = ((")
@@ -376,10 +384,10 @@ public class ActionInstrumentor {
 			
 		} catch (CannotCompileException e) {
 			logger.error("error compiling AOP code in method creation", e);
-			throw new StrutletsException("error compiling AOP code in method creation", e);
+			throw new DeploymentException("error compiling AOP code in method creation", e);
 		} catch (SecurityException e) {
 			logger.error("security violation getting declared method '" + methodName + "'", e);
-			throw new StrutletsException("security violation getting declared method '" + methodName + "'", e);
+			throw new DeploymentException("security violation getting declared method '" + methodName + "'", e);
 		}		
 	}
 }
