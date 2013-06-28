@@ -1,7 +1,6 @@
 package org.dihedron.strutlets.aop;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -42,11 +41,10 @@ public class MyExtendingAction extends MyBaseAction {
 	 * @throws StrutletsException 
 	 */
 	public static void main(String[] args) throws Exception {
-		ActionInstrumentor instrumentor = new ActionInstrumentor();
+		ActionProxyFactory instrumentor = new ActionProxyFactory();
 		
-		Map<Method, Method> methods = new HashMap<Method, Method>();
-		
-		@SuppressWarnings("unused")	Class<?> proxy = instrumentor.instrument(MyExtendingAction.class, methods);
+		ActionProxy proxy = instrumentor.makeActionProxy(MyExtendingAction.class);
+		Map<Method, Method> methods = proxy.getMethods();
 		for(Entry<Method, Method> entry : methods.entrySet()) {
 			Method actionMethod = entry.getKey();
 			Method proxyMethod = entry.getValue();

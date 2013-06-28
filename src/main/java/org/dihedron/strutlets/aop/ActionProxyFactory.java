@@ -56,12 +56,24 @@ import org.slf4j.LoggerFactory;
  *    
  * @author Andrea Funto'
  */
-public class ActionInstrumentor {
+public class ActionProxyFactory {
+	
+	/**
+	 * The name of the factory method on the stub class.
+	 */
+	private static final String FACTORY_METHOD_NAME = "_makeAction";
+	
+	private static final String PROXY_CLASS_NAME_PREFIX = "";
+	private static final String PROXY_CLASS_NAME_SUFFIX = "$Stub";
+
+	private static final String PROXY_METHOD_NAME_PREFIX = "_";
+	private static final String PROXY_METHOD_NAME_SUFFIX = "Proxy";
+	
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(ActionInstrumentor.class);
+	private static final Logger logger = LoggerFactory.getLogger(ActionProxyFactory.class);
 	
 	/**
 	 * Makes up and returns the name of the proxy class that will stub the action's 
@@ -73,7 +85,21 @@ public class ActionInstrumentor {
 	 *   the name of the proxy class.
 	 */
 	public static String makeProxyClassName(Class<? extends Action> action) {
-		return action.getName() + "$Proxy";
+		return PROXY_CLASS_NAME_PREFIX + action.getName() + PROXY_CLASS_NAME_SUFFIX;
+	}
+	
+	/**
+	 * Makes up and returns the name of the static factory method that each proxy
+	 * class will implement in order to enable instantiation of new classes without
+	 * having to invoke Class.forName("").newInstance().
+	 *  
+	 * @param action
+	 *   the action to create a factory method for.
+	 * @return
+	 *   the name of the factory method.
+	 */
+	public static String makeFactoryMethodName(Class<? extends Action> action) {
+		return FACTORY_METHOD_NAME;
 	}
 	
 	/**
@@ -86,7 +112,7 @@ public class ActionInstrumentor {
 	 *   the name of the static proxy method.
 	 */
 	public static String makeProxyMethodName(Method method) {
-		return "_" + method.getName() + "$Stub";
+		return PROXY_METHOD_NAME_PREFIX + method.getName() + PROXY_METHOD_NAME_SUFFIX;
 	}
 
 	/**
@@ -98,7 +124,7 @@ public class ActionInstrumentor {
 	 * Default constructor, initialises the internal Javassist class pool with
 	 * the default instance.
 	 */
-	public ActionInstrumentor() {
+	public ActionProxyFactory() {
 		this(new ClassPool());
 	}
 	
@@ -108,7 +134,7 @@ public class ActionInstrumentor {
 	 * @param classpool
 	 *   the Javassist class pool to generate AOP classes. 
 	 */
-	public ActionInstrumentor(ClassPool classpool) {
+	public ActionProxyFactory(ClassPool classpool) {
 		this.classpool = classpool;
 	}
 	
@@ -122,10 +148,11 @@ public class ActionInstrumentor {
 	 * @return
 	 *   the proxy <code>Class</code>.
 	 * @throws StrutletsException
-	 */
+	 *
 	public Class<?> instrument(Class<? extends Action> action) throws StrutletsException {
 		return instrument(action, null);
 	}
+	*/
 	
 	/**
 	 * Instruments an action, returning the proxy class containing one static method 
@@ -134,45 +161,57 @@ public class ActionInstrumentor {
 	 * 
 	 * @param action
 	 *   the action class to be instrumented.
-	 * @param methods
-	 *   a map whose contents are replaced with a mapping between original methods
-	 *   in the action (or in its super-classes) and the static proxy methods in 
-	 *   the synthetic class; this can be used to retrieve the proxy method for
-	 *   each original method even when the class has overloaded methods. If no
-	 *   map is provided (null), the method ignores this task altogether.
 	 * @return
-	 *   the proxy <code>Class</code>.
+	 *   the proxy object containing information about the <code>Action</code>
+	 *   factory method, its proxy class and the static methods proxying each of 
+	 *   the original <code>Action</code>'s invocable methods.
 	 * @throws StrutletsException
 	 */
-	public Class<?> instrument(Class<? extends Action> action, Map<Method, Method> methods) throws DeploymentException {
+	public ActionProxy makeActionProxy(Class<? extends Action> action/*, Map<Method, Method> methods*/) throws DeploymentException {		
 		try {
+			ActionProxy proxy = new ActionProxy();
+			Map<Method, Method> methods = new HashMap<Method, Method>();
+			
 			CtClass generator = getClassGenerator(action);
+			createFactoryMethod(generator, action);
 			for(Method method : enumerateInvocableMethods(action)) {
 				logger.trace("instrumenting method '{}'...", method.getName());
 				instrumentMethod(generator, action, method);
 			}
-			logger.trace("sealing and loading the proxy class");
-			Class<?> proxy = generator.toClass(action.getClassLoader(), null);
 			
-			// now fill the map with methods and their proxies 
-			if(methods != null) {
-				methods.clear();
-				
-				outerloop:
-				for(Method actionMethod : enumerateInvocableMethods(action)) {
-					String proxyMethodName = makeProxyMethodName(actionMethod);
-					for(Method proxyMethod : proxy.getDeclaredMethods()) {
-						if(proxyMethod.getName().equals(proxyMethodName)) {
-							methods.put(actionMethod, proxyMethod);
-							continue outerloop;
-						}						
-					}
+			
+			// fill the proxy class 
+			logger.trace("sealing and loading the proxy class");			
+			Class<?> proxyClass = generator.toClass(action.getClassLoader(), null);			
+			proxy.setProxyClass(proxyClass);
+			
+			// fill the map with methods and their proxies 
+			outerloop:
+			for(Method actionMethod : enumerateInvocableMethods(action)) {
+				String proxyMethodName = makeProxyMethodName(actionMethod);
+				for(Method proxyMethod : proxyClass.getDeclaredMethods()) {
+					if(proxyMethod.getName().equals(proxyMethodName)) {
+						methods.put(actionMethod, proxyMethod);
+						continue outerloop;
+					}						
 				}
 			}
+			proxy.setMethods(methods);
+			
+			// now add the factory (constructor) method
+			Method factory = proxyClass.getDeclaredMethod(makeFactoryMethodName(action));
+			proxy.setFactoryMethod(factory);
+			
 			return proxy;
 		} catch(CannotCompileException e) {
 			logger.error("error sealing the proxy class for '{}'", action.getSimpleName());
 			throw new DeploymentException("error sealing proxy class for action '" + action.getSimpleName() + "'", e);
+		} catch (SecurityException e) {
+			logger.error("error accessing the factory method for class '{}'", action.getSimpleName());
+			throw new DeploymentException("error accessing the factory method for class '" + action.getSimpleName() + "'", e);
+		} catch (NoSuchMethodException e) {
+			logger.error("factory method for class '{}' not found", action.getSimpleName());
+			throw new DeploymentException("factory method for class '" + action.getSimpleName() + "' not found", e);
 		}
 	}
 	
@@ -243,6 +282,32 @@ public class ActionInstrumentor {
     		clazz = clazz.getSuperclass();
     	}	
     	return methods.values();
+	}
+	
+	private CtMethod createFactoryMethod(CtClass generator, Class<? extends Action> action) throws DeploymentException {
+		String factoryName = makeFactoryMethodName(action);
+		logger.trace("action '{}' will be created via '{}'", action.getSimpleName(), factoryName);
+		
+		if(Modifier.isAbstract(action.getModifiers())) {
+			logger.error("cannot instantiate abstract class '{}'", action.getCanonicalName());
+			throw new DeploymentException("cannot instantiate abstract class '" + action.getCanonicalName() + "'");
+		}
+		
+		try {						
+			StringBuilder code = new StringBuilder("public static final ").append(action.getCanonicalName()).append(" ").append(factoryName).append("() {\n");
+			code.append("\tlogger.trace(\"entering factory method...\");\n");			
+			code.append("\t").append(action.getCanonicalName()).append(" action = new ").append(action.getCanonicalName()).append("();\n");
+			code.append("\tlogger.trace(\"... leaving factory method\");\n");
+			code.append("\treturn action;\n").append("}");		
+			logger.trace("compiling code:\n{}'", code);
+		
+			CtMethod factoryMethod = CtNewMethod.make(code.toString(), generator);
+			generator.addMethod(factoryMethod);
+			return factoryMethod;			
+		} catch (CannotCompileException e) {
+			logger.error("error compiling AOP code in factory method creation", e);
+			throw new DeploymentException("error compiling AOP code in factory method creation", e);
+		}				
 	}
 	
 	/**

@@ -134,6 +134,9 @@ public class TargetRegistry {
 	 * 
 	 * @param actionClass
 	 *   the class of the action implementing the target's business logic.
+	 * @param factoryMethod
+	 *   the factory method that will instantiate the action using synthetic code
+	 *   instead of reflection.
 	 * @param actionMethod
 	 *   the method implementing the target's business logic.
 	 * @param invocable
@@ -142,7 +145,7 @@ public class TargetRegistry {
 	 *   the name of the interceptor stack to be used for the given action.
 	 * @throws StrutletsException 
 	 */
-	public void addTarget(Class<? extends Action> actionClass, Method actionMethod, Method proxyMethod, 
+	public void addTarget(Class<? extends Action> actionClass, Method factoryMethod, Method actionMethod, Method proxyMethod, 
 			Invocable invocable, String interceptors) throws StrutletsException {
 		logger.info("adding target '{}!{}' (proxy: '{}')", actionClass.getSimpleName(), actionMethod.getName(), proxyMethod.getName());
 		TargetId id = new TargetId(actionClass, actionMethod);
@@ -150,6 +153,7 @@ public class TargetRegistry {
 		// instantiate the information object
 		Target data = new Target(id);
 		data.setActionClass(actionClass);
+		data.setFactoryMethod(factoryMethod);
 		data.setActionMethod(actionMethod);
 		data.setProxyMethod(proxyMethod);
 		data.setIdempotent(invocable.idempotent());

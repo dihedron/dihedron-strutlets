@@ -20,14 +20,14 @@
 package org.dihedron.strutlets.targets.registry;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.Interceptors;
 import org.dihedron.strutlets.annotations.Invocable;
-import org.dihedron.strutlets.aop.ActionInstrumentor;
+import org.dihedron.strutlets.aop.ActionProxyFactory;
+import org.dihedron.strutlets.aop.ActionProxy;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
@@ -52,10 +52,11 @@ public class TargetFactory {
 	private static Logger logger = LoggerFactory.getLogger(TargetFactory.class);
 	
 	/**
-	 * The object that takes care of inspecting the action and creating class and 
-	 * method proxies for its <code>@Invocable</code> methods.
+	 * The object that takes care of inspecting the action and creating proxy 
+	 * class, static factory method and method proxies for its <code>@Invocable
+	 * </code> methods.
 	 */
-	private ActionInstrumentor instrumentor = new ActionInstrumentor();
+	private ActionProxyFactory factory = new ActionProxyFactory();
 	
     /**
      * This method performs the automatic scanning of actions at startup time, 
@@ -106,21 +107,21 @@ public class TargetFactory {
     		interceptors = actionClass.getAnnotation(Interceptors.class).value();
     	}
     	
-    	// let the instrumentor inspect the action and generate proxy methods for
-    	// valid @Invocable-annotated action methods (possibly walking up the
-    	// class hierarchy and discarding duplicates, static and unannotated 
-    	// methods...) 
-    	Map<Method, Method> methods = new HashMap<Method, Method>();
-    	Class<?> proxyClass = instrumentor.instrument(actionClass, methods);
+    	// let the factory inspect the action and generate a factory method
+    	// ans a set of proxy methods for valid @Invocable-annotated action methods 
+    	// (possibly walking up the class hierarchy and discarding duplicates, 
+    	// static and unannotated methods...) 
+    	ActionProxy proxy = factory.makeActionProxy(actionClass);
     	
-    	// now loop through annotated methods and add them to the registry as targets 
+    	// now loop through annotated methods and add them to the registry as targets
+    	Map<Method, Method> methods = proxy.getMethods();
     	for(Method actionMethod : methods.keySet()) {	        		
     		if(actionMethod.isAnnotationPresent(Invocable.class)) {
     			Method proxyMethod = methods.get(actionMethod);
         		logger.trace("... adding annotated method '{}' in class '{}' (proxy: '{}' in class '{}')", actionMethod.getName(), 
-        				actionClass.getSimpleName(), proxyMethod.getName(), proxyClass.getSimpleName());
+        				actionClass.getSimpleName(), proxyMethod.getName(), proxy.getProxyClass().getSimpleName());
         		Invocable invocable = actionMethod.getAnnotation(Invocable.class); 
-        		registry.addTarget(actionClass, actionMethod, proxyMethod, invocable, interceptors);
+        		registry.addTarget(actionClass, proxy.getFactoryMethod(), actionMethod, proxyMethod, invocable, interceptors);
     		} else {
     			logger.trace("... discarding unannotated method '{}' in class '{}'", actionMethod.getName(), actionClass.getSimpleName());
     		}

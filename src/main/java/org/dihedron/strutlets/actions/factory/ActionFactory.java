@@ -47,7 +47,8 @@ public final class ActionFactory {
 		if(target != null) {
 			logger.trace("instantiating action of class '{}'...", target.getActionClass().getSimpleName());
 			try {
-				action = target.getActionClass().newInstance();
+				action = (Action)target.getFactoryMethod().invoke(null);
+//				action = target.getActionClass().newInstance();
 				logger.trace("... class '{}' instance ready!", target.getActionClass().getSimpleName());
 			} catch (Exception e) {
 				logger.error("error instantiating action for target '{}'", target);

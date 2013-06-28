@@ -65,6 +65,11 @@ public class Target {
 	private Class<? extends Action> action;
 	
 	/**
+	 * The method thatj implements the target's business logic.
+	 */
+	private Method factory;
+
+	/**
 	 * The method that implements the target's business logic.
 	 */
 	private Method method;
@@ -130,6 +135,31 @@ public class Target {
 		return this;
 	}
 	
+	/**
+	 * Returns the reference to the factory method capable of allocating and
+	 * instance of the Action class implementing this target.
+	 * 
+	 * @return 
+	 *   the reference to the containing action's factory method.
+	 */
+	public Method getFactoryMethod() {
+		return this.factory;
+	}	
+	
+	/**
+	 * Sets the reference to the factory method capable of allocating and
+	 * instance of the Action class implementing this target.
+	 * 
+	 * @param method
+	 *   the reference to the containing action's factory method.
+	 * @return 
+	 *   the object itself, for method chaining.
+	 */
+	public Target setFactoryMethod(Method method) {
+		this.factory = method;
+		return this;
+	}
+
 	/**
 	 * Returns the reference to method implementing this target's business logic.
 	 * 
