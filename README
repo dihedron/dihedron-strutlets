@@ -1,3 +1,20 @@
+VERSION 0.22.0 (release on 2013-08-27)
+This is a bugfix release, with a few adjustments to how request-scoped attributes
+are handled, to work around some funny behaviour on Liferay's part. 
+--------------------------------------------------------------------------------
+BUG:
+   When two or more Strutlets portlets are displayed on the same page, and each 
+   of them sets parameters at Scope.REQUEST into the session, Liferay may end up 
+   mixing them up. Strangely enough, the Dumper interceptor shows the Sessions 
+   are distinct and different, but getter methods end up grabbing random data.
+   The fix includes a "namespacing" for request-scoped attributes: now the key
+   is portlet-specific. In order to make it available to taglib classes too
+   (which run in JSP and are not aware of the portlet they belong to), a new
+   thread-local storage (Portlet.java) has been added, which provides a reference
+   to the ActionController.
+--------------------------------------------------------------------------------
+PRIORITY:
+   HIGH 
 ================================================================================
 VERSION 0.20.0 (released on 2013-06-23)
 With this release the framework is approaching full maturity: it adds AOP and

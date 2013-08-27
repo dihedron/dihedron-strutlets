@@ -197,10 +197,8 @@ public final class BusinessContext extends ActionContextImpl {
 	 * @return
 	 *   a map of render parameters names an values, or null if unsupported by 
 	 *   the current type of request/response.
-	 * @throws InvalidPhaseException 
-	 *   if invoked out of the "action" and "event" phases.
 	 */
-	public static Map<String, String[]> getRenderParameterMap() throws InvalidPhaseException {
+	public static Map<String, String[]> getRenderParameterMap() {
 		return ActionContextImpl.getRenderParameterMap();
 	}
 	

@@ -210,9 +210,9 @@ public class ActionContextImpl {
 	}
 	
 	/**
-	 * The key under which request-scoped attributes are stored in the prtoet session.
+	 * The key under which request-scoped attributes are stored in the portlet session.
 	 */
-	public static final String ACTION_SCOPED_ATTRIBUTES_KEY = "org.dihedron.strutlets.ActionScopedRequestAttributes";
+	public static final String REQUEST_SCOPED_ATTRIBUTES_KEY = "_STRUTLETS_REQUEST_SCOPED_ATTRIBUTES";
 	
 	/**
 	 * The per-thread instance.
@@ -292,12 +292,12 @@ public class ActionContextImpl {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = 
 			(Map<String, Object>)session.getAttribute(
-					ACTION_SCOPED_ATTRIBUTES_KEY, PortletSession.PORTLET_SCOPE);
+					getRequestScopedAttributesKey(), PortletSession.PORTLET_SCOPE);
 		if(map != null) {
 			map.clear();
 		} else {
 			session.setAttribute(
-					ACTION_SCOPED_ATTRIBUTES_KEY, 
+					getRequestScopedAttributesKey(), 
 					new HashMap<String, Object>(), 
 					PortletSession.PORTLET_SCOPE);
 		}
@@ -1179,7 +1179,7 @@ public class ActionContextImpl {
 	 */
 	public static Object getRequestAttribute(String key) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContextImpl.ACTION_SCOPED_ATTRIBUTES_KEY); 
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey()); 
 		Object value = map.get(key);
 		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 		return value;
@@ -1197,7 +1197,7 @@ public class ActionContextImpl {
 	 */
 	public static void setRequestAttribute(String key, Object value) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContextImpl.ACTION_SCOPED_ATTRIBUTES_KEY); 
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey()); 
 		map.put(key, value);
 		logger.trace("request attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 	}
@@ -1212,7 +1212,7 @@ public class ActionContextImpl {
 	 */	
 	public static Object removeRequestAttribute(String key) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(ActionContextImpl.ACTION_SCOPED_ATTRIBUTES_KEY);
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey());
 		Object value = map.get(key);
 		map.remove(key);
 		logger.trace("request attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
@@ -1223,9 +1223,10 @@ public class ActionContextImpl {
 	 * Removes all request-level attributes from the session.
 	 */
 	public static void clearRequestAttributes() {
+		logger.trace("clearing request attributes");
 		PortletSession session = getContext().request.getPortletSession();				
 		@SuppressWarnings("unchecked")
-		Map<String, Object> attributes = (Map<String, Object>)session.getAttribute(ACTION_SCOPED_ATTRIBUTES_KEY);
+		Map<String, Object> attributes = (Map<String, Object>)session.getAttribute(getRequestScopedAttributesKey());
 		attributes.clear();
 		logger.trace("all attributes at request scope cleared");
 	}	
@@ -1278,7 +1279,7 @@ public class ActionContextImpl {
 				break;
 			case REQUEST:
 				logger.trace("getting request attributes map");
-				map = (Map<String, Object>)getPortletAttribute(ACTION_SCOPED_ATTRIBUTES_KEY);
+				map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey());
 				break;
 			}			
 		}
@@ -1579,16 +1580,25 @@ public class ActionContextImpl {
 	 * 
 	 * @return
 	 *   a map of render parameters names an values, or null if unsupported by 
-	 *   the current type of request/response.
-	 * @throws InvalidPhaseException 
+	 *   the current type of request/response. 
 	 */
-	protected static Map<String, String[]> getRenderParameterMap() throws InvalidPhaseException {
+	protected static Map<String, String[]> getRenderParameterMap() {
+		Map<String, String[]> parameters = null;
 		if(getContext().response instanceof StateAwareResponse) {
-			return ((StateAwareResponse)getContext().response).getRenderParameterMap();
-		} else {
-			logger.error("trying to retrieve render parameter map out of event and action pahses");
-			throw new InvalidPhaseException("Render parameters cannot be retrieved out of the event and action phases");
+			parameters = ((StateAwareResponse)getContext().response).getRenderParameterMap();
+		} else if(getContext().request instanceof PortletRequest){
+			logger.trace("retrieving the render parameter map in the render phase...");
+			parameters = new HashMap<String, String[]>();
+			PortletRequest request = (PortletRequest)getContext().request;
+			Enumeration<String> names = request.getParameterNames();
+			while(names.hasMoreElements()) {				
+				String name = names.nextElement();
+				String [] values = request.getParameterValues(name);
+				logger.trace("... parameter '{}' has value '{}'", name, values);
+				parameters.put(name, values);
+			}
 		}
+		return parameters;
 	}
 	
 	/**
@@ -1694,6 +1704,16 @@ public class ActionContextImpl {
 			logger.error("trying to get event out of event phase");
 			throw new InvalidPhaseException("Events are not available out of event phase");
 		}
+	}
+	
+	/**
+	 * This method returns a portlet-specific key for request-scoped attributes.
+	 * 
+	 * @return
+	 *   a portlet-specific key for request-scoped attributes.
+	 */
+	public static String getRequestScopedAttributesKey() {
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + getPortletName().toUpperCase();
 	}
 	
 	/**

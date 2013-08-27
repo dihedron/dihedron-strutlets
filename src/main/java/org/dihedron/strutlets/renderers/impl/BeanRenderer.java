@@ -102,7 +102,7 @@ public abstract class BeanRenderer extends AbstractRenderer {
 	 */
 	protected Object getRequestAttribute(PortletRequest request, String key) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(request, ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY); 
+		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(request, ActionContext.getRequestScopedAttributesKey()); 
 		Object value = map.get(key);
 		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
 		return value;

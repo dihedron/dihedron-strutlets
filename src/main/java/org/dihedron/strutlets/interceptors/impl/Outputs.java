@@ -80,13 +80,13 @@ public class Outputs extends Interceptor {
 	 */
 	@Override
 	public String intercept(ActionInvocation invocation) throws StrutletsException {
-		logger.debug("injecting parameters into action");
+		logger.debug("extracting parameters from action");
 		try {
 			String result = invocation.invoke();
 			extractOutputs(invocation);			
 			return result;
 		} catch(ReflectorException e) {
-			throw new InterceptorException("error setting input fields", e);
+			throw new InterceptorException("error extracting output fields", e);
 		}		
 	}
 	
@@ -130,6 +130,8 @@ public class Outputs extends Interceptor {
 	private void extractField(Field field, ActionInvocation invocation) throws ReflectorException, StrutletsException {
 		logger.trace("looking up output storage for field '{}'", field.getName());
 		if(field.isAnnotationPresent(Out.class)) {
+			
+			logger.trace("annotation is present on field '{}'", field.getName());
 			
 			Out annotation = field.getAnnotation(Out.class);
 			
@@ -190,7 +192,11 @@ public class Outputs extends Interceptor {
 					logger.error("cannot store an output value into a '{}' scope: this is probably a bug!", annotation.scope().name());
 					throw new StrutletsException("Cannot store an output message into a " + annotation.scope().name() + " scope: this is probably a bug!");
 				}
+			} else {
+				logger.trace("value for field '{}' is null", field.getName());
 			}
-		}			
+		} else {
+			logger.trace("no annotation present on field '{}'", field.getName());
+		}
 	}
 }

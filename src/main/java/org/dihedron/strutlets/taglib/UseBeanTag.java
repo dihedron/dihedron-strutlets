@@ -29,6 +29,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.dihedron.strutlets.ActionContext;
+import org.dihedron.strutlets.Portlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,8 +304,7 @@ public class UseBeanTag extends TagSupport {
 		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
 		
 		switch(context) {
-		case RENDER:
-			
+		case RENDER:			
 			if(type.equals("java.lang.String")) {
 				logger.trace("retrieving render parameter");
 				value = request.getParameter(name);
@@ -314,11 +314,15 @@ public class UseBeanTag extends TagSupport {
 			}
 			break;
 		case REQUEST:
-			value = getAttribute(ActionContext.ACTION_SCOPED_ATTRIBUTES_KEY, PortletSession.PORTLET_SCOPE);
-			if(value != null) {
+			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
+			value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
+			if(value != null) {				
 				@SuppressWarnings("unchecked")
 				Map<String, Object> map = (Map<String, Object>)value;
 				value = map.get(name);
+				logger.trace("returning attribute '{}' with value '{}' from scope '{}' into variable '{}'", name, value, context, var);
+			} else {
+				logger.trace("value is null");
 			}
 			break;
 		case PORTLET:

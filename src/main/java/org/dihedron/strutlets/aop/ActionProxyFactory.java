@@ -64,10 +64,10 @@ public class ActionProxyFactory {
 	private static final String FACTORY_METHOD_NAME = "_makeAction";
 	
 	private static final String PROXY_CLASS_NAME_PREFIX = "";
-	private static final String PROXY_CLASS_NAME_SUFFIX = "$Stub";
+	private static final String PROXY_CLASS_NAME_SUFFIX = "$Proxy";
 
 	private static final String PROXY_METHOD_NAME_PREFIX = "_";
-	private static final String PROXY_METHOD_NAME_SUFFIX = "Proxy";
+	private static final String PROXY_METHOD_NAME_SUFFIX = "";
 	
 	
 	/**

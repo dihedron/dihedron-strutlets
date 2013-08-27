@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
  * descriptor- per virtual machine (VM)</em>.
  */
 public class ActionController extends GenericPortlet {
-	
+		
 	/**
 	 * The registry of interceptors' stacks.
 	 */
@@ -99,7 +99,7 @@ public class ActionController extends GenericPortlet {
 	 * The registry of supported renderers.
 	 */
 	private RendererRegistry renderers;
-
+	
     /**
      * Initialises the controller portlet. 
      * 
@@ -247,46 +247,33 @@ public class ActionController extends GenericPortlet {
     @Override
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
-    	TargetId targetId = null;
-    	String result = null;
-    	
-    	Renderer renderer = null;
-    	
-    	logger.trace("rendering output...");
-    	
-    	do {
-	    	// first attempt, check if this is a render request following an action/event request
-    		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
-    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
-    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
-    			// yes, this is right after a processAction or processEvent
-    			targetId = new TargetId(target);
-    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
-    			break;
-    		}
-    		
-    		logger.trace("no prior action/event phase to get renderer from");
-    		
-	    	// second attempt, check if there is a target to invoke before rendering
-	    	targetId = TargetId.makeFromRequest(request);
-	    	if(targetId != null) {
-	    		logger.trace("invoking target '{}' as per render request", targetId);
-		    	
-	    		// this is a valid target specification, dispatch to the appropriate 
-	    		// action and method, then retrieve the result's URL	    		
-	    		result = invokePresentationLogic(targetId, request, response);
-	    		
-	    		// task invoked, now exit
-	    		break;
-	    	}
+    	try {
+	    	TargetId targetId = null;
+	    	String result = null;
 	    	
-	    	// last attempt, if there is no valid URL (no target!) in the request, 
-	    	// then this is the initial page and we might have a target there too 
-	    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
-	    		target = getDefaultUrl(request.getPortletMode());
-	    		if(TargetId.isValidTarget(target)) { // (*)
+	    	Renderer renderer = null;
+	    	
+	    	logger.trace("rendering output...");
+	    	
+	    	Portlet.set(this);
+	    	
+	    	do {
+		    	// first attempt, check if this is a render request following an action/event request
+	    		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+	    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
+	    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
+	    			// yes, this is right after a processAction or processEvent
 	    			targetId = new TargetId(target);
-		    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
+	    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
+	    			break;
+	    		}
+	    		
+	    		logger.trace("no prior action/event phase to get renderer from");
+	    		
+		    	// second attempt, check if there is a target to invoke before rendering
+		    	targetId = TargetId.makeFromRequest(request);
+		    	if(targetId != null) {
+		    		logger.trace("invoking target '{}' as per render request", targetId);
 			    	
 		    		// this is a valid target specification, dispatch to the appropriate 
 		    		// action and method, then retrieve the result's URL	    		
@@ -294,48 +281,68 @@ public class ActionController extends GenericPortlet {
 		    		
 		    		// task invoked, now exit
 		    		break;
-	    		} else {
-	    			target = null;
+		    	}
+		    	
+		    	// last attempt, if there is no valid URL (no target!) in the request, 
+		    	// then this is the initial page and we might have a target there too 
+		    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
+		    		target = getDefaultUrl(request.getPortletMode());
+		    		if(TargetId.isValidTarget(target)) { // (*)
+		    			targetId = new TargetId(target);
+			    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
+				    	
+			    		// this is a valid target specification, dispatch to the appropriate 
+			    		// action and method, then retrieve the result's URL	    		
+			    		result = invokePresentationLogic(targetId, request, response);
+			    		
+			    		// task invoked, now exit
+			    		break;
+		    		} else {
+		    			target = null;
+		    		}
+		    	}
+	    		
+	    		logger.trace("no business logic to invoke in render phase");
+	    		
+	    	} while(false);   
+	
+	    	String url = null;
+	    	// now, if target and result are valid, get the renderer
+	    	if(targetId != null && Strings.isValid(result)) {
+	    		// get the URL corresponding to the given target and result
+	    		url = getUrl(targetId, result);
+	    	} else {
+				// no, this is a plain render request, let's check "jspPage" 
+				// first, to comply with Liferay's worst practices
+	    		url = request.getParameter(Strutlets.LIFERAY_TARGET);
+	    		if(Strings.isValid(url)) {
+	    			logger.trace("redirecting to jspPage '{}' as requested by client", url);
+	    		} else {		    			
+	    			// we have to resort to the default URL for the given mode,
+	    			// the ones specified in the portlet parameters; at this point
+	    			// we are sure it's not a target (otherwise it would have been 
+	    			// detected as such above, at (*)		    			
+		    		PortletMode mode = request.getPortletMode();
+		    		logger.trace("redirecting to default page for current mode '{}'", mode.toString());
+		    		url = getDefaultUrl(mode);
 	    		}
 	    	}
-    		
-    		logger.trace("no business logic to invoke in render phase");
-    		
-    	} while(false);   
-
-    	String url = null;
-    	// now, if target and result are valid, get the renderer
-    	if(targetId != null && Strings.isValid(result)) {
-    		// get the URL corresponding to the given target and result
-    		url = getUrl(targetId, result);
-    	} else {
-			// no, this is a plain render request, let's check "jspPage" 
-			// first, to comply with Liferay's worst practices
-    		url = request.getParameter(Strutlets.LIFERAY_TARGET);
-    		if(Strings.isValid(url)) {
-    			logger.trace("redirecting to jspPage '{}' as requested by client", url);
-    		} else {		    			
-    			// we have to resort to the default URL for the given mode,
-    			// the ones specified in the portlet parameters; at this point
-    			// we are sure it's not a target (otherwise it would have been 
-    			// detected as such above, at (*)		    			
-	    		PortletMode mode = request.getPortletMode();
-	    		logger.trace("redirecting to default page for current mode '{}'", mode.toString());
-	    		url = getDefaultUrl(mode);
-    		}
+	
+		    // we're almost done: proceed with the JSP rendering
+	    	if(Strings.isValid(url)) {
+	    		logger.info("rendering through URL: '{}'", url);
+	    		renderer = renderers.getRenderer(JspRenderer.ID);
+	    		renderer.setData(url);
+	    		renderer.render(request, response);    		
+	    	} else {
+	    		logger.error("invalid render URL");
+	    		throw new StrutletsException("No valid render URL available");
+	    	}    	
+	    	logger.trace("... output rendering done");
+    	} finally {
+    		logger.trace("removing portlet from thread-local storage");
+    		Portlet.remove();
     	}
-
-	    // we're almost done: proceed with the JSP rendering
-    	if(Strings.isValid(url)) {
-    		logger.info("rendering through URL: '{}'", url);
-    		renderer = renderers.getRenderer(JspRenderer.ID);
-    		renderer.setData(url);
-    		renderer.render(request, response);    		
-    	} else {
-    		logger.error("invalid render URL");
-    		throw new StrutletsException("No valid render URL available");
-    	}    	
-    	logger.trace("... output rendering done");
     }
     
     /**
