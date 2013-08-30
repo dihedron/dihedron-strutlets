@@ -242,12 +242,7 @@ public class ActionContextImpl {
 	 * The action invocation object.
 	 */
 	private ActionInvocation invocation;
-	
-	/**
-	 * The controller portlet reference.
-	 */
-	private ActionController portlet;
-	
+		
 	/**
 	 * Retrieves the per-thread instance.
 	 * 
@@ -266,19 +261,16 @@ public class ActionContextImpl {
 	 * parameters will be reset by the <code>ActionController</code>as soon as a 
 	 * new action processing request comes. 
 	 * 
-	 * @param request
-	 *   the portlet request.
 	 * @param response
 	 *   the portlet response.
 	 * @param invocation
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(ActionController portlet, PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
+	static void bindContext(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
-		getContext().portlet = portlet;
 		getContext().request = request;
 		getContext().response = response;
 				
@@ -315,7 +307,6 @@ public class ActionContextImpl {
 		context.get().invocation = null;
 		context.get().request = null;
 		context.get().response = null;
-		context.get().portlet = null;
 		context.remove();
 	}
 	
@@ -377,7 +368,7 @@ public class ActionContextImpl {
 	 *   the current portlet's name.
 	 */
 	public static String getPortletName() {
-		return getContext().portlet.getPortletName();
+		return Portlet.get().getPortletName();
 	}
 	
 	/**
@@ -389,7 +380,7 @@ public class ActionContextImpl {
 	 *   the value of the given portlet's initialisation parameter.
 	 */
 	public static String getPortletInitialisationParameter(String name) {
-		return getContext().portlet.getInitParameter(name);
+		return Portlet.get().getInitParameter(name);
 	}
 	
 	// TODO: get other stuff from portlet.xml and web.xml
@@ -981,7 +972,7 @@ public class ActionContextImpl {
 	 *   the portlet's configured resource bundle.
 	 */
 	public static ResourceBundle getResouceBundle(Locale locale) {
-		return getContext().portlet.getResourceBundle(locale);
+		return Portlet.get().getResourceBundle(locale);
 	}
 	
 	/**
