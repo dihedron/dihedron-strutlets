@@ -21,7 +21,10 @@ package org.dihedron.strutlets.interceptors.impl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.dihedron.reflection.Reflector;
 import org.dihedron.reflection.ReflectorException;
@@ -67,6 +70,25 @@ public class Inputs extends Interceptor {
 	public String intercept(ActionInvocation invocation) throws StrutletsException {
 		logger.debug("injecting parameters into action");
 		try {
+			
+//			HttpServletRequest request = ActionContext.getHttpServletRequest();
+//			if(request != null) {
+//				Map<String, String[]> parameters = request.getParameterMap();
+//				for(String key : parameters.keySet()) {
+//					StringBuilder builder = new StringBuilder("{ ");
+//					for(String value : parameters.get(key)) {
+//						if(builder.length() == 0) {
+//							builder.append("{ ");
+//						} else {
+//							builder.append(", ");
+//						}
+//						builder.append(value);
+//					}
+//					builder.append(" }");
+//					logger.trace("'{}' =  '{}'", key, builder);
+//				}
+//			}
+			
 			injectInputs(invocation);
 			return invocation.invoke();
 		} catch(ReflectorException e) {

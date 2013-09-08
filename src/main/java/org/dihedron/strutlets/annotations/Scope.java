@@ -34,13 +34,12 @@ public enum Scope {
 	FORM,
 	
 	/**
-	 * The parameter is to be stored among the render parameters; this scope is 
-	 * only allowed for outputs.
+	 * The parameter is to be stored among the render parameters.
 	 */
 	RENDER,
 	
 	/**
-	 * The parameter is to be looked up or stored  in the current request scope
+	 * The parameter is to be looked up or stored in the current request scope.
 	 * 
 	 * @see org.dihedron.strutlets.ActionContextImpl.Scope.REQUEST.
 	 */

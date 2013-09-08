@@ -4,11 +4,30 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets</artifactId>
-	<version>0.22.0</version>
+	<version>0.30.0</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime library</name>
 	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>
 	<url>http://www.dihedron.org/strutlets</url>
+	
+	<developers>
+		<developer>
+			<id>Dihedron</id>
+			<name>Andrea Funt&ograve;</name>
+			<email>dihedron.dev@gmail.com</email>
+			<roles>
+				<role>Lead Developer</role>
+			</roles>
+		</developer>
+	</developers>
+	
+	<licenses>
+		<license>
+			<comments>Copyright (C) Andrea Funt&ograve; 2012-2013 - All rights reserved</comments>
+			<name>GNU Lesse General Public License ver. 3 or later</name>
+			<url>http://www.gnu.org/licenses/lgpl.html</url>
+		</license>
+	</licenses>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

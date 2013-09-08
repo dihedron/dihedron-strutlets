@@ -102,7 +102,7 @@ public class Dumper extends Interceptor {
 	 *   the buffer used for output accumulation.
 	 */
 	private void dumpRenderParameters(StringBuilder builder) {
-		if(ActionContext.isRenderPhase()) {
+//		if(ActionContext.isRenderPhase()) {
 			Map<String, String[]> parameters = ActionContext.getRenderParameterMap();		
 			builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 			if(parameters != null) {
@@ -114,7 +114,7 @@ public class Dumper extends Interceptor {
 					builder.append("]\n");
 				}
 			}
-		}
+//		}
 	}	
 	
 	/**

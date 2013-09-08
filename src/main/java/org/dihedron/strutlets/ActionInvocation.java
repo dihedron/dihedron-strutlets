@@ -29,6 +29,10 @@ import javax.portlet.EventRequest;
 import javax.portlet.EventResponse;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
+import javax.portlet.RenderRequest;
+import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
 
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;
@@ -130,6 +134,26 @@ public class ActionInvocation {
 	}
 	
 	/**
+	 * Returns the current portlet request.
+	 * 
+	 * @return
+	 *   the current portlet request.
+	 */
+	public PortletRequest getPortletRequest() {
+		return request;
+	}
+	
+	/**
+	 * Returns the current portlet response.
+	 * 
+	 * @return
+	 *   the current portlet response.
+	 */
+	public PortletResponse getPortletResponse() {
+		return response;
+	}
+	
+	/**
 	 * Returns the <code>ActionRequest</code> object.
 	 * 
 	 * @return
@@ -186,7 +210,63 @@ public class ActionInvocation {
 		}
 		return null;
 	}
+	
+	/**
+	 * Returns the <code>RenderRequest</code> object.
+	 * 
+	 * @return
+	 *   the <code>RenderRequest</code> object if the caller is handling a 
+	 *   <code>render()</code>, null otherwise.
+	 */
+	public RenderRequest getRenderRequest() {
+		if(request instanceof RenderRequest) {
+			return (RenderRequest)request;
+		}
+		return null;
+	}
 
+	/**
+	 * Returns the <code>RenderResponse</code> object.
+	 * 
+	 * @return
+	 *   the <code>RenderResponse</code> object if the caller is handling a 
+	 *   <code>render()</code>, null otherwise.
+	 */
+	public RenderResponse getRenderResponse() {
+		if(response instanceof RenderResponse) {
+			return (RenderResponse)response;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the <code>ResourceRequest</code> object.
+	 * 
+	 * @return
+	 *   the <code>ResourceRequest</code> object if the caller is handling a 
+	 *   <code>serveResource()</code>, null otherwise.
+	 */
+	public ResourceRequest getResourceRequest() {
+		if(request instanceof ResourceRequest) {
+			return (ResourceRequest)request;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the <code>ResourceResponse</code> object.
+	 * 
+	 * @return
+	 *   the <code>ResourceResponse</code> object if the caller is handling a 
+	 *   <code>serveResource()</code>, null otherwise.
+	 */
+	public ResourceResponse getResourceResponse() {
+		if(response instanceof ResourceResponse) {
+			return (ResourceResponse)response;
+		}
+		return null;
+	}
+	
 	/**
 	 * Invokes the next interceptor in the stack, or the action if this
 	 * is the last interceptor.

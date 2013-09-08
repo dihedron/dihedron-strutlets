@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
  * @author Andrea Funto'
  */
 @Retention(RetentionPolicy.RUNTIME) 
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 public @interface Out {
 	
 	/**

@@ -314,7 +314,8 @@ public class UseBeanTag extends TagSupport {
 			}
 			break;
 		case REQUEST:
-			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
+//			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
+			String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
 			value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
 			if(value != null) {				
 				@SuppressWarnings("unchecked")

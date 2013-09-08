@@ -212,7 +212,7 @@ public class ActionContextImpl {
 	/**
 	 * The key under which request-scoped attributes are stored in the portlet session.
 	 */
-	public static final String REQUEST_SCOPED_ATTRIBUTES_KEY = "_STRUTLETS_REQUEST_SCOPED_ATTRIBUTES";
+	protected static final String REQUEST_SCOPED_ATTRIBUTES_KEY = "_STRUTLETS_REQUEST_SCOPED_ATTRIBUTES";
 	
 	/**
 	 * The per-thread instance.
@@ -1049,6 +1049,42 @@ public class ActionContextImpl {
 		}
 		return value;
 	}
+
+	
+	/**
+	 * Stores a value into the given scope.
+	 *  
+	 * @param key
+	 *   the name of the parameter to store for.
+	 * @param scope
+	 *   the scope into which the value must be stored.
+	 * @param value
+	 *   the value to be sored. 
+	 * @throws StrutletsException
+	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
+	 *   APPLICATION and CONFIGURATION. 
+	 */
+	public static void storeValueIntoScope(String key, org.dihedron.strutlets.annotations.Scope scope, Object value) throws StrutletsException {
+		logger.trace("storing parameter '{}' into scope '{}', value '{}'...", key, scope.name(), value);
+		switch(scope) {
+		case RENDER: 
+			String string = value != null ? value.toString() : null; 
+			setRenderParameter(key, string);
+			break;
+		case REQUEST:
+			setRequestAttribute(key, value);
+			break;
+		case PORTLET:
+			setPortletAttribute(key, value);
+			break;
+		case APPLICATION:
+			setApplicationAttribute(key, value);
+			break;
+		default:
+			logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
+			throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
+		}			
+	}
 	
 	/**
 	 * Returns the application-scoped attribute corresponding to the given key. 
@@ -1675,6 +1711,25 @@ public class ActionContextImpl {
 	public static PortletResponse getPortletResponse() {
 		return getContext().response;
 	}
+	
+//	/**
+//	 * Returns the underlying HTTP server request object, which is common to all
+//	 * portlets on the same page. Note that portlet-specific parameters in the 
+//	 * URL are encoded with a portlet-specific namespace.
+//	 * 
+//	 * @return
+//	 *   the underlying HTTP server request object.
+//	 */
+//	public static HttpServletRequest getHttpServletRequest() {
+//		Enumeration<String> names = getContext().request.getAttributeNames();
+//		while(names.hasMoreElements()) {
+//			String name = names.nextElement();
+//			Object value = getContext().request.getAttribute(name);
+//			logger.trace("request attribute '{}' = '{}'", name, value);
+//		}
+//		
+//		return (HttpServletRequest)getContext().request.getAttribute("javax.servlet.request");  
+//	}
 		
 	/**
 	 * Returns the underlying portlet session object.
@@ -1714,6 +1769,20 @@ public class ActionContextImpl {
 	 */
 	public static String getRequestScopedAttributesKey() {
 		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + getPortletName().toUpperCase();
+	}
+	
+	/**
+	 * This method returns the portlet-specific key for request-scoped attributes
+	 * for the given portlet name.
+	 * 
+	 * @param portletName
+	 *   the name of the portlet whose request-scoped attributes key is being
+	 *   asked for.
+	 * @return
+	 *   te portlet-specific key for request-scoped attributes.
+	 */
+	public static String getRequestScopedAttributesKeyByPortletName(String portletName) {
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + portletName.toUpperCase();
 	}
 	
 	/**

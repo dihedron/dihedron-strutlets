@@ -1,4 +1,20 @@
-VERSION 0.22.0 (release on 2013-08-27)
+VERSION 0.30.0 (released on 2013-09-08=
+This is an enhancement release.
+--------------------------------------------------------------------------------
+FEATURE:
+  The framework now provides automatic mapping of annotated OUTPUT parameters; 
+  you can now annotate a method as follows:
+    @Invocable
+    public String myMethod(
+                     @In ("param1") int arg1,
+                     @Out("param2", scope = Scope.PORTLET) $<String> arg2
+                )
+  Please note that input parameters can have any type, whereas output and input/
+  output parameters must be passed as references (instances of $<your type>).
+  The framework will automatically pick @In values from the appropriate scopes,
+  and store @Out values into the right scope once the method is done.
+================================================================================ 
+VERSION 0.22.0 (released on 2013-08-27)
 This is a bugfix release, with a few adjustments to how request-scoped attributes
 are handled, to work around some funny behaviour on Liferay's part. 
 --------------------------------------------------------------------------------

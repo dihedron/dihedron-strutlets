@@ -21,6 +21,8 @@ package org.dihedron.strutlets.aop;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +40,7 @@ import javassist.NotFoundException;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
@@ -332,99 +335,35 @@ public class ActionProxyFactory {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
-		try {						
+		try {
+			StringBuilder postCode = new StringBuilder("\t// post action execution: store @Out parameters into scopes\n\n");
+			
 			StringBuilder code = new StringBuilder("public static final java.lang.String ")
 				.append(methodName)
-				.append("( org.dihedron.strutlets.actions.Action action ) {\n");
+				.append("( org.dihedron.strutlets.actions.Action action ) {\n\n");
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
 			code.append("\tjava.lang.Object value = null;\n");
-					
+			code.append("\n");		
 			Annotation[][] annotations = method.getParameterAnnotations();
-			Class<?>[] types = method.getParameterTypes();
+			
+			Type[] types = method.getGenericParameterTypes();
 					
 			StringBuilder args = new StringBuilder();
 			
 			for(int i = 0; i < types.length; ++i) {
-				code.append("\t//\n\t// retrieving argument no. ").append(i).append(" (").append(types[i].getCanonicalName()).append(")\n\t//\n");
-				In in = null;
-				for(Annotation annotation : annotations[i]) {
-					if(annotation instanceof In) {
-						in = (In)annotation;
-						break;
-					}
-				}
-				if(in != null) {
-					if(types[i].isPrimitive()) {
-						logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, types[i].getCanonicalName());
-						throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + types[i].getCanonicalName() + "')");
-					}
-					String parameter = in.value();
-					logger.trace("{}-th parameter '{}' is annotated with @In", i, in.value());
-					code.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
-					boolean first = true;
-					for(Scope scope : in.scopes()) {
-						code
-							.append(first ? "" : ", ")
-							.append("org.dihedron.strutlets.annotations.Scope.")
-							.append(scope);
-						first = false;
-					}
-					code.append(" });\n");
-					
-					if(!types[i].isArray()) {
-						// if parameter is not an array, pick the first element))
-						code.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
-					}					
-					code.append("\t").append(types[i].getCanonicalName()).append(" arg").append(i).append(" = (").append(types[i].getCanonicalName()).append(") value;\n");
-					code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => '\").append(arg").append(i).append(").append(\"', \");\n");
-					
-				} else {
-					logger.warn("{}-th parameter has no @In annotation!", i);
-					if(!types[i].isPrimitive()) {
-						logger.trace("{}-th parameter will be passed in as a null object", i);						
-						code.append("\t").append(types[i].getCanonicalName()).append(" arg").append(i).append(" = null;\n");
-						code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => null, \");\n");
-					} else {
-						logger.trace("{}-th parameter is a primitive type", i);
-						if(types[i] == Boolean.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a boolean 'false'", i);
-							code.append("\tboolean arg").append(i).append(" = false;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => false, \");\n");
-						} else if(types[i] == Character.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a character ' '", i);
-							code.append("\tchar arg").append(i).append(" = ' ';\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => ' ', \");\n");
-						} else if(types[i] == Byte.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a byte '0'", i);
-							code.append("\tbyte arg").append(i).append(" = 0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
-						} else if(types[i] == Short.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a short '0'", i);
-							code.append("\tshort arg").append(i).append(" = 0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
-						} else if(types[i] == Integer.TYPE) {
-							logger.trace("{}-th parameter will be passed in as an integer '0'", i);
-							code.append("\tint arg").append(i).append(" = 0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
-						} else if(types[i] == Long.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a long '0'", i);
-							code.append("\tlong arg").append(i).append(" = 0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
-						} else if(types[i] == Float.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
-							code.append("\tfloat arg").append(i).append(" = 0.0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
-						} else if(types[i] == Double.TYPE) {
-							logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
-							code.append("\tdouble arg").append(i).append(" = 0.0;\n");
-							code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
-						}
-					}
-				}
-				args.append(args.length() > 0 ? ", arg" : "arg").append(i);	
-				code.append("\n");
+				if(types[i] instanceof ParameterizedType) {
+					ParameterizedType pt = (ParameterizedType)types[i];
+					Class<?> gt = (Class<?>) pt.getActualTypeArguments()[0];
+					logger.trace("type: {}<{}>", ((Class<?>)pt.getRawType()).getCanonicalName(), gt.getCanonicalName());
+				
+				} else if(types[i] instanceof Class<?>){
+					logger.trace("type: {}", ((Class<?>)types[i]).getCanonicalName());
+				}				
+				String arg = prepareArgument(i, types[i], annotations[i], code, postCode);
+				args.append(args.length() > 0 ? ", " : "").append(arg);
 			}
+			
 			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n\n");
 			
 			code.append("\t//\n\t// invoking proxied method\n\t//\n");
@@ -437,11 +376,16 @@ public class ActionProxyFactory {
 				.append("(")
 				.append(args)
 				.append(");\n");
+			
+			// code executed after the action has been fired, e.g. storing [in]out parameters into scopes
+			code.append("\n");
+			code.append(postCode);
+			code.append("\n");
 			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, new java.lang.Long((java.lang.System.currentTimeMillis() - millis)).toString());\n");
 			code.append("\tlogger.trace(\"... leaving stub method\");\n");
 			code.append("\treturn result;\n").append("}");
 		
-			logger.trace("compiling code:\n{}'", code);
+			logger.trace("compiling code:\n\n{}\n", code);
 		
 			CtMethod proxyMethod = CtNewMethod.make(code.toString(), generator);
 			generator.addMethod(proxyMethod);
@@ -454,5 +398,225 @@ public class ActionProxyFactory {
 			logger.error("security violation getting declared method '" + methodName + "'", e);
 			throw new DeploymentException("security violation getting declared method '" + methodName + "'", e);
 		}		
+	}
+	
+	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+				
+		In in = null;
+		Out out = null;
+		for(Annotation annotation : annotations) {
+			if(annotation instanceof In) {
+				in = (In)annotation;
+			} else if (annotation instanceof Out) {
+				out = (Out)annotation;
+			}
+		}
+		if(in != null && out == null) {
+			logger.trace("preparing input argument...");
+			return prepareInputArgument(i, (Class<?>)type, in, preCode); 
+		} else if(in == null && out != null) {
+			logger.trace("preparing output argument...");
+			return prepareOutputArgument(i, type, out, preCode, postCode);
+		} else if(in != null && out != null) {
+			logger.trace("preparing input/output argument...");
+			return prepareInputOutputArgument(i, type, in, out, preCode, postCode);
+		} else {
+			logger.trace("preparing non-annotated argument...");
+			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode);
+		}
+	}
+	
+	
+	private String prepareInputArgument(int i, Class<?> type, In in, StringBuilder preCode) throws DeploymentException {
+		
+		preCode.append("\t//\n\t// preparing input argument no. ").append(i).append(" (").append(type.getCanonicalName()).append(")\n\t//\n");
+
+		if(type.isPrimitive()) {
+			logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, type.getCanonicalName());
+			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + type.getCanonicalName() + "')");
+		}
+		
+		if(in.value().trim().length() == 0) {
+			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (check parameter {}: @In's value is '{}')", i, in.value());
+			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @In annotation's value: check parameter no. " + i + " (@In's value is '" + in.value() + "')");									
+		}
+		
+		String parameter = in.value();
+		logger.trace("{}-th parameter is annotated with @In('{}')", i, in.value());
+		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		boolean first = true;
+		for(Scope scope : in.scopes()) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope);
+			first = false;
+		}
+		preCode.append(" });\n");
+		
+		if(!type.isArray()) {
+			// if parameter is not an array, pick the first element
+			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+		}					
+		preCode.append("\t").append(type.getCanonicalName()).append(" in").append(i).append(" = (").append(type.getCanonicalName()).append(") value;\n");
+		preCode.append("\ttrace.append(\"in").append(i).append("\").append(\" => '\").append(in").append(i).append(").append(\"', \");\n");
+		preCode.append("\n");
+		return "in" + i;
+	}
+	
+	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+		
+		if(!(type instanceof ParameterizedType)) {
+			logger.error("output parameters must be of generic type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must be of generic type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+		} 
+		
+		ParameterizedType pt = (ParameterizedType)type;
+		Class<?> gt = (Class<?>) pt.getActualTypeArguments()[0];
+		logger.trace("output parameter no. {} is of type {}<{}>", i, ((Class<?>)pt.getRawType()).getName(), gt.getName());
+		
+		//
+		// code executed BEFORE the action fires, to prepare input parameters
+		//
+		preCode.append("\t//\n\t// preparing output argument no. ").append(i).append(" (").append(gt.getCanonicalName()).append(")\n\t//\n");
+		
+		if(((Class<?>)pt.getRawType()) != $.class) {
+			logger.error("output parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, gt.getCanonicalName());
+			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + gt.getCanonicalName() + "')");						
+		}
+		
+		if(out.value().trim().length() == 0) {
+			logger.error("output parameters' storage name must be explicitly specified through the @Out annotation's value (check parameter {}: @Out's value is '{}')", i, out.value());
+			throw new DeploymentException("Output parameters's storage name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out' valus is '" + out.value() + "')");									
+		}
+		
+		logger.trace("{}-th parameter is annotated with @Out('{}')", i, out.value());
+		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
+		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> out").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ out").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\n");
+		
+		//
+		// code executed AFTER the action has returned, to store values into scopes
+		//
+		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(gt.getCanonicalName()).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		postCode.append("\tvalue = out").append(i).append(".get();\n");
+		postCode.append("\tif(value != null) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
+		postCode.append("\t}\n");
+		postCode.append("\n");
+		
+		return "out" + i;
+	}
+	
+	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+		
+		if(!(type instanceof ParameterizedType)) {
+			logger.error("output parameters must be of generic type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must be of generic type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+		} 
+		
+		ParameterizedType pt = (ParameterizedType)type;
+		Class<?> gt = (Class<?>) pt.getActualTypeArguments()[0];
+		logger.trace("input/output parameter no. {} is of type {}<{}>", i, ((Class<?>)pt.getRawType()).getName(), gt.getName());
+		
+		//
+		// code executed BEFORE th action fires, to prepare input parameters
+		//		
+		preCode.append("\t//\n\t// preparing input/output argument no. ").append(i).append(" (").append(gt.getCanonicalName()).append(")\n\t//\n");
+
+		if(((Class<?>)pt.getRawType()) != $.class) {
+			logger.error("output parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, gt.getCanonicalName());
+			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + gt.getCanonicalName() + "')");						
+		}
+				
+		if(in.value().trim().length() == 0) {
+			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (check parameter {}: @In's value is '{}')", i, in.value());
+			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @In annotation's value: check parameter no. " + i + " (@In's value is '" + in.value() + "')");									
+		}
+		
+		if(out.value().trim().length() == 0) {
+			logger.error("output parameters' storage name must be explicitly specified through the @Out annotation's value (check parameter {}: @Out's value is '{}')", i, out.value());
+			throw new DeploymentException("Output parameters's storage name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out' valus is '" + out.value() + "')");									
+		}
+		
+		String parameter = in.value();
+		logger.trace("{}-th parameter is annotated with @In('{}') and @Out('{}')", i, in.value(), out.value());
+		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		boolean first = true;
+		for(Scope scope : in.scopes()) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope);
+			first = false;
+		}
+		preCode.append(" });\n");
+		
+		if(!gt.isArray()) {
+			// if parameter is not an array, pick the first element
+			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+		}					
+
+		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
+		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ inout").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\tinout").append(i).append(".set(value);\n");
+		preCode.append("\ttrace.append(\"inout").append(i).append("\").append(\" => '\").append(inout").append(i).append(".get()).append(\"', \");\n");
+		preCode.append("\n");
+		
+		//
+		// code executed AFTER the action has returned, to store values into scopes
+		//
+		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(gt.getCanonicalName()).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		postCode.append("\tvalue = inout").append(i).append(".get();\n");
+		postCode.append("\tif(value != null) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
+		postCode.append("\t}\n");
+		postCode.append("\n");
+		return "inout" + i;
+	}
+	
+	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code) throws DeploymentException {
+		
+		code.append("\t//\n\t// preparing non-annotated argument no. ").append(i).append(" (").append(type.getCanonicalName()).append(")\n\t//\n");
+		
+		logger.warn("{}-th parameter has no @In or @Out annotation!", i);
+		if(!type.isPrimitive()) {
+			logger.trace("{}-th parameter will be passed in as a null object", i);						
+			code.append("\t").append(type.getCanonicalName()).append(" arg").append(i).append(" = null;\n");
+			code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => null, \");\n");
+		} else {
+			logger.trace("{}-th parameter is a primitive type", i);
+			if(type == Boolean.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a boolean 'false'", i);
+				code.append("\tboolean arg").append(i).append(" = false;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => false, \");\n");
+			} else if(type == Character.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a character ' '", i);
+				code.append("\tchar arg").append(i).append(" = ' ';\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => ' ', \");\n");
+			} else if(type == Byte.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a byte '0'", i);
+				code.append("\tbyte arg").append(i).append(" = 0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+			} else if(type == Short.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a short '0'", i);
+				code.append("\tshort arg").append(i).append(" = 0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+			} else if(type == Integer.TYPE) {
+				logger.trace("{}-th parameter will be passed in as an integer '0'", i);
+				code.append("\tint arg").append(i).append(" = 0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+			} else if(type == Long.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a long '0'", i);
+				code.append("\tlong arg").append(i).append(" = 0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+			} else if(type == Float.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
+				code.append("\tfloat arg").append(i).append(" = 0.0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
+			} else if(type == Double.TYPE) {
+				logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
+				code.append("\tdouble arg").append(i).append(" = 0.0;\n");
+				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
+			}
+		}
+		code.append("\n");
+		return "arg" + i;
 	}
 }
