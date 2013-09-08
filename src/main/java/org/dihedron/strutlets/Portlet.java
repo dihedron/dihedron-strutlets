@@ -20,8 +20,11 @@ package org.dihedron.strutlets;
 
 
 /**
+ * The controller portlet reference, for use whenever a method (in interceptors,
+ * renderers or business methods) needs to access information pertaining to the 
+ * portlet; this avoids having to drag the reference around.
+ * 
  * @author Andrea Funto'
- *
  */
 public class Portlet {
 	

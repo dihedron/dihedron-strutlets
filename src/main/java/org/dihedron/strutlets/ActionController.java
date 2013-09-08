@@ -170,14 +170,20 @@ public class ActionController extends GenericPortlet {
      */
     @Override
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
-    	logger.trace("processing action...");
-    	
-    	// check if the target is contained in the request
-    	TargetId targetId = TargetId.makeFromRequest(request);
-    	    	
-    	String result = invokeBusinessLogic(targetId, request, response);
-    	
-    	logger.trace("... action processing done with result '{}'", result);
+    	try {
+	    	Portlet.set(this);
+
+	    	logger.trace("processing action...");
+	    		    	
+	    	// check if the target is contained in the request
+	    	TargetId targetId = TargetId.makeFromRequest(request);
+	    	    	
+	    	String result = invokeBusinessLogic(targetId, request, response);
+	    	
+	    	logger.trace("... action processing done with result '{}'", result);
+		} finally {
+			Portlet.remove();
+		}
     }
     
     /**
@@ -194,14 +200,21 @@ public class ActionController extends GenericPortlet {
      */
     @Override
     public void processEvent(EventRequest request, EventResponse response) throws PortletException, IOException {
-    	logger.trace("processing event...");
-    	// get the name of the event and re-map it onto the target through the registry
-    	QName qname = request.getEvent().getQName();
-    	TargetId targetId = registry.getEventTarget(qname);
+    	try {
+    		Portlet.set(this);
     	
-    	String result = invokeBusinessLogic(targetId, request, response);
-    	
-    	logger.trace("... event processing done with result '{}'", result);
+	    	logger.trace("processing event...");
+	    	
+	    	// get the name of the event and re-map it onto the target through the registry
+	    	QName qname = request.getEvent().getQName();
+	    	TargetId targetId = registry.getEventTarget(qname);
+	    	
+	    	String result = invokeBusinessLogic(targetId, request, response);
+	    	
+	    	logger.trace("... event processing done with result '{}'", result);
+    	} finally {
+    		Portlet.remove();
+    	}
     }        
     
     /**
@@ -251,14 +264,14 @@ public class ActionController extends GenericPortlet {
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
     	try {
+    		Portlet.set(this);
+    		
 	    	TargetId targetId = null;
 	    	String result = null;
 	    	
 	    	Renderer renderer = null;
 	    	
-	    	logger.trace("rendering output...");
-	    	
-	    	Portlet.set(this);
+	    	logger.trace("rendering output...");	    	
 	    	
 	    	do {
 		    	// first attempt, check if this is a render request following an action/event request
@@ -355,31 +368,37 @@ public class ActionController extends GenericPortlet {
      */
     public void serveResource(ResourceRequest request, ResourceResponse response) throws PortletException, IOException {
     	
-    	String target = request.getResourceID();
-    	logger.trace("serving resource '{}'...", target);
-    	if(TargetId.isValidTarget(target)) {
-    		logger.trace("... executing business logic to gather the resource");
-    		
-    		TargetId targetId = new TargetId(target);
-    		
-    		String res = invokeResourceLogic(targetId, request, response);
-    		
-    		logger.trace("target '{}' returned '{}'", targetId, res);
-    		
-			Target data = registry.getTarget(target);
-			Result result = data.getResult(res);
-			
-			logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
-    		
-    		Renderer renderer = renderers.getRenderer(result.getRenderer());
-    		renderer.setData(result.getData());
-        	renderer.render(request, response);
-        	
-        	logger.trace("... output rendering done");
-    		
-    	} else {
-    		logger.trace("... leaving the resource request to the portlet container");
-    		super.serveResource(request, response);
+    	try {
+    		Portlet.set(this);
+    	
+	    	String target = request.getResourceID();
+	    	logger.trace("serving resource '{}'...", target);
+	    	if(TargetId.isValidTarget(target)) {
+	    		logger.trace("... executing business logic to gather the resource");
+	    		
+	    		TargetId targetId = new TargetId(target);
+	    		
+	    		String res = invokeResourceLogic(targetId, request, response);
+	    		
+	    		logger.trace("target '{}' returned '{}'", targetId, res);
+	    		
+				Target data = registry.getTarget(target);
+				Result result = data.getResult(res);
+				
+				logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
+	    		
+	    		Renderer renderer = renderers.getRenderer(result.getRenderer());
+	    		renderer.setData(result.getData());
+	        	renderer.render(request, response);
+	        	
+	        	logger.trace("... output rendering done");
+	    		
+	    	} else {
+	    		logger.trace("... leaving the resource request to the portlet container");
+	    		super.serveResource(request, response);
+	    	}
+    	} finally {
+    		Portlet.remove();
     	}
     }    
 
@@ -503,7 +522,7 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
-	    	ActionContextImpl.bindContext(this, request, response, invocation);
+	    	ActionContextImpl.bindContext(request, response, invocation);
 	    	
 	    	// fire the action stack invocation
 	    	result = invocation.invoke();
