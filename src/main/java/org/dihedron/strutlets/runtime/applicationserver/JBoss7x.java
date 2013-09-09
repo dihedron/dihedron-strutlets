@@ -1,22 +1,22 @@
 /**
- * Copyright (c) 2013, Andrea Funto'. All rights reserved.
+ * Copyright (c) 2012, 2013, Andrea Funto'. All rights reserved.
  * 
- * This file is part of the Crypto library ("Crypto").
+ * This file is part of the Strutlets framework ("Strutlets").
  *
- * Crypto is free software: you can redistribute it and/or modify it under 
+ * Strutlets is free software: you can redistribute it and/or modify it under 
  * the terms of the GNU Lesser General Public License as published by the Free 
  * Software Foundation, either version 3 of the License, or (at your option) 
  * any later version.
  *
- * Crypto is distributed in the hope that it will be useful, but WITHOUT ANY 
+ * Strutlets is distributed in the hope that it will be useful, but WITHOUT ANY 
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR 
  * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU Lesser General Public License 
- * along with Crypto. If not, see <http://www.gnu.org/licenses/>.
+ * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtimes;
+package org.dihedron.strutlets.runtime.applicationserver;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,25 +32,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class representing the JBossInitialiser runtime environment.
+ * A class representing the JBoss 7.x runtime environment.
  * 
  * @author Andrea Funto'
  */
-public class JBossInitialiser extends RuntimeInitialiser {
+public abstract class JBoss7x implements ApplicationServer {
+	
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JBossInitialiser.class);
+	private static final Logger logger = LoggerFactory.getLogger(JBoss7x.class);
 
 	/**
-	 * Performs JBossInitialiser-specific initialisation tasks, such as registering a URL 
+	 * Returns whether the actual application server the portlet container is running on 
+	 * is JBoss 7.x, by trying to detect the existence of some classes.
+	 */
+	@Override
+	public boolean isAppropriate() {
+		try {
+			Class.forName("org.reflections.vfs.Vfs");
+			logger.info("runtime environment is JBoss 7.x+");
+			return true;		
+		} catch (ClassNotFoundException e) {
+			logger.info("runtime environment is not JBoss 7.x+");
+		}
+		return false;
+	}
+	
+	
+	/**
+	 * Performs JBoss 7.x-specific initialisation tasks, such as registering a URL 
 	 * type for classpath-related resources, needed by Strutlets to be able to
 	 * scan the classpath for packages and for resources contained therein. 
 	 * 
-	 * @see org.dihedron.strutlets.runtimes.RuntimeInitialiser#initialise()
+	 * @see org.dihedron.strutlets.runtime.applicationserver.ApplicationServer#initialise()
 	 */
-	public void initialise() {
-		logger.debug("initialising JBossInitialiser runtime environment...");
+	@Override
+	public boolean initialise() {
+		logger.info("initialising JBoss 7.x runtime environment...");
 		Vfs.addDefaultURLTypes(new Vfs.UrlType() {
 			
 			public boolean matches(URL url) {
@@ -82,13 +101,20 @@ public class JBossInitialiser extends RuntimeInitialiser {
 
 			Vfs.Dir createDir(File file) {
 				try {
-					return file.exists() && file.canRead() ? file.isDirectory() ? new SystemDir(file) : new ZipDir(
-							new JarFile(file)) : null;
+					return file.exists() && file.canRead() ? file.isDirectory() ? new SystemDir(file) : new ZipDir(new JarFile(file)) : null;
 				} catch (IOException e) {
 					logger.error("I/O exception caught", e);
 				}
 				return null;
 			}
 		});
+		return true;
+	}
+
+	/**
+	 * No actual JBoss 7.x specific cleanup tasks.
+	 */
+	@Override
+	public void cleanup() {
 	}
 }

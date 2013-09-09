@@ -102,7 +102,19 @@ public enum InitParameter {
 	 * in HELP mode. This page is the starting point of the HELP mode HTML 
 	 * navigation tree.
 	 */
-	RENDER_HELP_HOMEPAGE("render.help.homepage");
+	RENDER_HELP_HOMEPAGE("render.help.homepage"),
+	
+	/**
+	 * The parameter used to specify an optional per-application-server plugin,
+	 * which will be used by the framework to retrieve platform-specific data.
+	 */
+	APPLICATION_SERVER_PLUGIN("application.server.plugin"),
+	
+	/**
+	 * The parameter used to specify an optional per-portlet-container plugin,
+	 * which will be used by the framework to retrieve platform-specific data.
+	 */
+	PORTLET_CONTAINER_PLUGIN("portal.server.plugin");
 			
 	/**
 	 * Constructor.

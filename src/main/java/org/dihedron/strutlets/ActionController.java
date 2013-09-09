@@ -21,6 +21,7 @@ package org.dihedron.strutlets;
 
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -50,7 +51,10 @@ import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
-import org.dihedron.strutlets.runtimes.RuntimeInitialiser;
+import org.dihedron.strutlets.runtime.applicationserver.ApplicationServer;
+import org.dihedron.strutlets.runtime.applicationserver.ApplicationServerFactory;
+import org.dihedron.strutlets.runtime.portletcontainer.PortletContainer;
+import org.dihedron.strutlets.runtime.portletcontainer.PortletContainerFactory;
 import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
@@ -100,6 +104,16 @@ public class ActionController extends GenericPortlet {
 	 */
 	private RendererRegistry renderers;
 	
+	/**
+	 * The current application server.
+	 */
+	private ApplicationServer server;
+	
+	/**
+	 * The current portlet conatiner.
+	 */
+	private PortletContainer container;
+	
     /**
      * Initialises the controller portlet. 
      * 
@@ -120,6 +134,7 @@ public class ActionController extends GenericPortlet {
      * 
      * @see javax.portlet.GenericPortlet#init()
      */
+	@Override
     public void init() throws PortletException {
     	super.init();
        
@@ -152,6 +167,19 @@ public class ActionController extends GenericPortlet {
 			logger.error("error initialising controller portlet");
 			throw e;
 		}
+    }
+    
+    @Override
+    public void destroy() {
+    	logger.info("action controller {} shutting down...", this.getPortletName());
+    	if(container != null) {
+    		logger.trace("... cleaning up portlet container");
+    		container.cleanup();
+    	}
+    	if(server != null) {
+    		logger.trace("... cleaning up application server");
+    		server.cleanup();
+    	}
     }
 
     /**
@@ -596,8 +624,28 @@ public class ActionController extends GenericPortlet {
      * specific activities and tasks.
      */
     private void initialiseRuntimeEnvironment() {
-    	RuntimeInitialiser runtime = RuntimeInitialiser.getRuntimeInitialiser();
-    	runtime.initialise();
+    	
+		// dump current environment
+		Map<String, String> environment = System.getenv();
+		StringBuilder buffer = new StringBuilder("runtime environment:\n");
+		for(String key : environment.keySet()) {
+			buffer.append("\t- '").append(key).append("' = '").append(environment.get(key)).append("'\n");
+		}
+		logger.trace(buffer.toString());
+
+		logger.trace("initialising runtime environment...");
+		server = new ApplicationServerFactory().makeApplicationServer(this);
+		if(server != null) {
+			logger.trace("... initialising application server");
+			server.initialise();
+		}
+				
+		container = new PortletContainerFactory().makePortletContainer(this);
+		if(container != null) {
+			logger.trace("... initialising portlet container");
+			container.initialise();
+		}
+		logger.trace("... runtime initialisation done!");
     }
     
     /**
