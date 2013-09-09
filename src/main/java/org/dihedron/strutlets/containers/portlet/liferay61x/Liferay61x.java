@@ -16,52 +16,34 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtime.applicationserver;
+package org.dihedron.strutlets.containers.portlet.liferay61x;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.dihedron.strutlets.containers.portlet.PortletContainer;
 
 /**
- * A class representing the Tomcat runtime environment.
- * 
  * @author Andrea Funto'
  */
-public class Tomcat7x implements ApplicationServer {
-	/**
-	 * The logger
-	 */
-	private static final Logger logger = LoggerFactory.getLogger(Tomcat7x.class);
+public class Liferay61x implements PortletContainer {
+
+	@Override
+	public String getName() {		
+		return "Liferay Community Edition 6.1.x";
+	}
 
 	/**
-	 * Returns the label of the Apache Tomcat Application Server.
-	 * 
-	 * @return
-	 *   the label of the Apache Tomcat Application Server.
+	 * @see org.dihedron.strutlets.containers.portlet.PortletContainer#initialise()
 	 */
 	@Override
-	public String getName() {
-		return "Apache Tomcat ver. 7.0.x";
-	}
-	
-	@Override
-	public boolean isAppropriate() {
-		return true;
-	}
-	
-	/**
-	 * Performs Tomcat-specific initialisation tasks.
-	 * 
-	 * @see org.dihedron.strutlets.runtime.applicationserver.ApplicationServer#initialise()
-	 */
 	public boolean initialise() {
-		logger.debug("initialising Tomcat 7.x runtime environment...");
+		// TODO: implement
 		return true;
 	}
 
 	/**
-	 * No Tomcat-specific cleanup tasks.
+	 * @see org.dihedron.strutlets.containers.portlet.PortletContainer#cleanup()
 	 */
 	@Override
 	public void cleanup() {
+		// TODO: implement
 	}
 }

@@ -16,40 +16,13 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtime.applicationserver;
+package org.dihedron.strutlets.containers.web;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.dihedron.strutlets.containers.Container;
 
 /**
- * A class representing the JBoss 7.x runtime environment.
- * 
  * @author Andrea Funto'
  */
-public class JBossEE6x extends JBossCE7x {
+public interface WebContainer extends Container {
 	
-	/**
-	 * The logger
-	 */
-	private static final Logger logger = LoggerFactory.getLogger(JBossEE6x.class);
-
-	/**
-	 * Returns the name of the JBoss Community Edition server.
-	 */
-	public String getName() {
-		return "JBossAS Enterprise Edition ver. 6.x";
-	}
-	
-	/**
-	 * Returns whether the actual application server the portlet container is running on 
-	 * is JBoss 7.x, by trying to detect the existence of some classes.
-	 */
-	@Override
-	public boolean isAppropriate() {
-		if(super.isAppropriate()) {
-			logger.info("runtime environment is JBoss 6.x+");
-			return true;		
-		}
-		return false;
-	}
 }

@@ -22,4 +22,4 @@
  *  
  * @author Andrea Funto'
  */
-package org.dihedron.strutlets.runtime.applicationserver;
+package org.dihedron.strutlets.containers.web;

@@ -108,13 +108,13 @@ public enum InitParameter {
 	 * The parameter used to specify an optional per-application-server plugin,
 	 * which will be used by the framework to retrieve platform-specific data.
 	 */
-	APPLICATION_SERVER_PLUGIN("application.server.plugin"),
+	WEB_CONTAINER_PLUGIN("web.container.plugin"),
 	
 	/**
 	 * The parameter used to specify an optional per-portlet-container plugin,
 	 * which will be used by the framework to retrieve platform-specific data.
 	 */
-	PORTLET_CONTAINER_PLUGIN("portal.server.plugin");
+	PORTLET_CONTAINER_PLUGIN("portlet.container.plugin");
 			
 	/**
 	 * Constructor.

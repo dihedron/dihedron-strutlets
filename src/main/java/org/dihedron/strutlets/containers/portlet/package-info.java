@@ -16,41 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtime.portletcontainer;
 
 /**
+ * A package containing portlet-conatiner-specific plugins.
+ *  
  * @author Andrea Funto'
  */
-public class LiferayCE61x implements PortletContainer {
-
-	@Override
-	public String getName() {		
-		return "Liferay Community Edition 6.1.x";
-	}
-	
-	/**
-	 * @see org.dihedron.strutlets.runtime.portletcontainer.PortletContainer#isAppropriate()
-	 */
-	@Override
-	public boolean isAppropriate() {
-		// TODO: implement!
-		return true;
-	}
-
-	/**
-	 * @see org.dihedron.strutlets.runtime.portletcontainer.PortletContainer#initialise()
-	 */
-	@Override
-	public boolean initialise() {
-		// TODO: implement
-		return true;
-	}
-
-	/**
-	 * @see org.dihedron.strutlets.runtime.portletcontainer.PortletContainer#cleanup()
-	 */
-	@Override
-	public void cleanup() {
-		// TODO: implement
-	}
-}
+package org.dihedron.strutlets.containers.portlet;

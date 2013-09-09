@@ -43,6 +43,9 @@ import javax.xml.namespace.QName;
 import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
+import org.dihedron.strutlets.containers.ContainerPluginManager;
+import org.dihedron.strutlets.containers.portlet.PortletContainer;
+import org.dihedron.strutlets.containers.web.WebContainer;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
@@ -51,10 +54,6 @@ import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
-import org.dihedron.strutlets.runtime.applicationserver.ApplicationServer;
-import org.dihedron.strutlets.runtime.applicationserver.ApplicationServerFactory;
-import org.dihedron.strutlets.runtime.portletcontainer.PortletContainer;
-import org.dihedron.strutlets.runtime.portletcontainer.PortletContainerFactory;
 import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
@@ -107,7 +106,7 @@ public class ActionController extends GenericPortlet {
 	/**
 	 * The current application server.
 	 */
-	private ApplicationServer server;
+	private WebContainer server;
 	
 	/**
 	 * The current portlet conatiner.
@@ -634,18 +633,21 @@ public class ActionController extends GenericPortlet {
 		logger.trace(buffer.toString());
 
 		logger.trace("initialising runtime environment...");
-		server = new ApplicationServerFactory().makeApplicationServer(this);
+		ContainerPluginManager cpm = new ContainerPluginManager();
+		server = cpm.makeWebContainer(this);
 		if(server != null) {
-			logger.trace("... initialising application server");
+			logger.trace("initialising application server {} runtime", server.getName());
 			server.initialise();
+			logger.trace("application server {} runtime initialised", server.getName());
 		}
 				
-		container = new PortletContainerFactory().makePortletContainer(this);
+		container = cpm.makePortletContainer(this);
 		if(container != null) {
-			logger.trace("... initialising portlet container");
+			logger.trace("initialising portlet container {} runtime", container.getName());
 			container.initialise();
+			logger.trace("portlet container {} runtime initialised", container.getName());
 		}
-		logger.trace("... runtime initialisation done!");
+		logger.trace("runtime initialisation done!");
     }
     
     /**

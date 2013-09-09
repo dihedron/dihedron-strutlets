@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtime.applicationserver;
+package org.dihedron.strutlets.containers.web.jbossas7x;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.jar.JarFile;
 
+import org.dihedron.strutlets.containers.web.WebContainer;
 import org.jboss.vfs.VirtualFile;
 import org.reflections.ReflectionsException;
 import org.reflections.vfs.SystemDir;
@@ -36,36 +37,33 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public abstract class JBoss7x implements ApplicationServer {
+public class JBossAS7x implements WebContainer {
 	
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JBoss7x.class);
-
+	private static final Logger logger = LoggerFactory.getLogger(JBossAS7x.class);
+	
 	/**
-	 * Returns whether the actual application server the portlet container is running on 
-	 * is JBoss 7.x, by trying to detect the existence of some classes.
+	 * Constructor has package visibility to prevent construction by anyonw except 
+	 * its plugin.
 	 */
-	@Override
-	public boolean isAppropriate() {
-		try {
-			Class.forName("org.reflections.vfs.Vfs");
-			logger.info("runtime environment is JBoss 7.x+");
-			return true;		
-		} catch (ClassNotFoundException e) {
-			logger.info("runtime environment is not JBoss 7.x+");
-		}
-		return false;
+	JBossAS7x() {		
 	}
 	
+	/**
+	 * Returns the name of the JBossAS server.
+	 */
+	public String getName() {
+		return "JBossAS ver. 7.x";
+	}
 	
 	/**
 	 * Performs JBoss 7.x-specific initialisation tasks, such as registering a URL 
 	 * type for classpath-related resources, needed by Strutlets to be able to
 	 * scan the classpath for packages and for resources contained therein. 
 	 * 
-	 * @see org.dihedron.strutlets.runtime.applicationserver.ApplicationServer#initialise()
+	 * @see org.dihedron.strutlets.containers.web.WebContainer#initialise()
 	 */
 	@Override
 	public boolean initialise() {

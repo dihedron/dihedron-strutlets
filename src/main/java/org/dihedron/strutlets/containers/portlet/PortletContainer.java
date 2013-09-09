@@ -16,10 +16,13 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
+package org.dihedron.strutlets.containers.portlet;
+
+import org.dihedron.strutlets.containers.Container;
 
 /**
- * A package containing portlet-conatiner-specific plugins.
- *  
  * @author Andrea Funto'
  */
-package org.dihedron.strutlets.runtime.portletcontainer;
+public interface PortletContainer extends Container {
+	
+}

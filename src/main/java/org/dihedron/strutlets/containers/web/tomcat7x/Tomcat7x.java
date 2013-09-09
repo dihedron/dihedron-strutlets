@@ -16,40 +16,55 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.runtime.applicationserver;
+package org.dihedron.strutlets.containers.web.tomcat7x;
 
+import org.dihedron.strutlets.containers.web.WebContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class representing the JBoss 7.x runtime environment.
+ * A class representing the Tomcat runtime environment.
  * 
  * @author Andrea Funto'
  */
-public class JBossCE7x extends JBoss7x {
-	
+public class Tomcat7x implements WebContainer {
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JBossCE7x.class);
+	private static final Logger logger = LoggerFactory.getLogger(Tomcat7x.class);
+	
+	/**
+	 * Constructor has package visibility to prevent construction by anyonw except 
+	 * its plugin.
+	 */
+	Tomcat7x() {		
+	}
 
 	/**
-	 * Returns the name of the JBoss Community Edition server.
+	 * Returns the label of the Apache Tomcat Application Server.
+	 * 
+	 * @return
+	 *   the label of the Apache Tomcat Application Server.
 	 */
+	@Override
 	public String getName() {
-		return "JBossAS Community Edition ver. 7.x";
+		return "Apache Tomcat ver. 7.0.x";
 	}
 	
 	/**
-	 * Returns whether the actual application server the portlet container is running on 
-	 * is JBoss 7.x, by trying to detect the existence of some classes.
+	 * Performs Tomcat-specific initialisation tasks.
+	 * 
+	 * @see org.dihedron.strutlets.containers.web.WebContainer#initialise()
+	 */
+	public boolean initialise() {
+		logger.debug("initialising Tomcat 7.x runtime environment...");
+		return true;
+	}
+
+	/**
+	 * No Tomcat-specific cleanup tasks.
 	 */
 	@Override
-	public boolean isAppropriate() {
-		if(super.isAppropriate()) {
-			logger.info("runtime environment is JBoss 7.x+");
-			return true;
-		}
-		return false;
+	public void cleanup() {
 	}
 }
