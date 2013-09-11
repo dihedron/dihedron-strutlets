@@ -49,23 +49,20 @@ public class Types {
 	public static String getAsString(Type type) {
 		String result = null;
 		if(isSimple(type)) {
-			result = ((Class<?>)type).getCanonicalName();
-			logger.trace("simple type: '{}'", result);						
+			result = ((Class<?>)type).getCanonicalName();						
 		} else if(isGeneric(type)) {
-			
 			StringBuilder buffer = new StringBuilder();
 			
 			// grab the name of the container class (e.g. List, Map...)
 			ParameterizedType container = (ParameterizedType)type ;
 			String containerType = ((Class<?>)container.getRawType()).getCanonicalName();
-			logger.trace("generic container type: '{}'", containerType);
 			buffer.append(containerType).append("<");
+
 			// now grab the names of all generic types (those within <...>)
 			Type[] generics = container.getActualTypeArguments();
 			boolean first = true;
 			for(Type generic : generics) {
 				String genericType = getAsString(generic);
-				logger.trace("generic parameter type: '{}'", genericType);
 				buffer.append(first ? "" : ", ").append(genericType);
 				first = false;
 			}
@@ -75,10 +72,56 @@ public class Types {
 		return result;		
 	}
 	
-	public Type[] getParameterTypes(Type generic) {
-		if(isGeneric(generic)) {
+	public static String getAsParametricType(Type type) {
+		String result = null;
+		if(isSimple(type)) {
+			result = ((Class<?>)type).getCanonicalName();
+		} else if(isGeneric(type)) {
+			StringBuilder buffer = new StringBuilder();
+			ParameterizedType container = (ParameterizedType)type ;
+			String containerType = ((Class<?>)container.getRawType()).getCanonicalName();
+			buffer.append(containerType).append("<");
+			// now grab the names of all generic types (those within <...>)
 			Type[] generics = container.getActualTypeArguments();
+			boolean first = true;
+			for(Type generic : generics) {
+				buffer.append(first ? "" : ", ").append("?");
+				first = false;
+			}
+			buffer.append(">");
+			result = buffer.toString();			
 		}
+		return result;
+	}
+	
+	public static String getAsRawType(Type type) {
+		String result = null;
+		if(isSimple(type)) {
+			result = ((Class<?>)type).getCanonicalName();
+		} else if(isGeneric(type)) {
+			ParameterizedType container = (ParameterizedType)type ;
+			result = ((Class<?>)container.getRawType()).getCanonicalName();
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Returns the parameter types for a generic container, e.g. it would return 
+	 * <code>{String, int}</code> for a <code>Map&lt;String, int&gt;</code>.
+	 * 
+	 * @param generic
+	 *   the generic class.
+	 * @return
+	 *   the parameter types of a generic container, null otherwise.
+	 *   
+	 */
+	public static Type[] getParameterTypes(Type generic) {
+		Type[] types = null;
+		if(isGeneric(generic)) {
+			types = ((ParameterizedType)generic).getActualTypeArguments();
+		}
+		return types;
 	}
 	
 	/**

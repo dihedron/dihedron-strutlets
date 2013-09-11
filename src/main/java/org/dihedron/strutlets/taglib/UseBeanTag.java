@@ -33,7 +33,6 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContextImpl;
 import org.dihedron.strutlets.Portlet;
-import org.dihedron.utils.StringTokeniser;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,9 +314,7 @@ public class UseBeanTag extends TagSupport {
 	public int doStartTag() throws JspException {
 		Object value = null;
 		
-//		Strings.join()
-		
-		logger.trace("publishing value '{}' from scopes '{}' as variable '{}'", name, Strings.join(scopes), var);
+		logger.trace("publishing value '{}' from scopes [{}] as variable '{}'", name, Strings.join((Object[])scopes), var);
 		
 		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
 		
@@ -333,14 +330,12 @@ public class UseBeanTag extends TagSupport {
 				}
 				break;
 			case REQUEST:
-	//			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
 				String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
 				value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
 				if(value != null) {				
 					@SuppressWarnings("unchecked")
 					Map<String, Object> map = (Map<String, Object>)value;
-					value = map.get(name);
-					logger.trace("returning attribute '{}' with value '{}' from scope '{}' into variable '{}'", name, value, scope, var);
+					value = map.get(name);					
 				} else {
 					logger.trace("value is null");
 				}
@@ -352,10 +347,13 @@ public class UseBeanTag extends TagSupport {
 				value = getAttribute(name, PortletSession.APPLICATION_SCOPE);
 				break;
 			}
-					
-			pageContext.setAttribute(var, value);
-		}
-		
+			
+			if(value != null) {
+				logger.trace("returning attribute '{}' with value '{}' from scope '{}' as variable '{}'", name, value, scope, var);
+				pageContext.setAttribute(var, value);
+				break;
+			}
+		}		
 		return EVAL_BODY_INCLUDE;
 	}
 	
