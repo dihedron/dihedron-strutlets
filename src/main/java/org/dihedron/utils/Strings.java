@@ -27,6 +27,18 @@ package org.dihedron.utils;
  * @author Andrea Funto'
  */
 public final class Strings {
+	
+	/**
+	 * Whether the {@link #split(String, String)} operation should trim tokens 
+	 * before returning them, by default.
+	 */
+	public static final boolean DEFAULT_TRIM = true;
+	
+	/**
+	 * The default character sequence to use for telling tokens apart in the
+	 * {@link #split(String)} method, and to join them in {@link #join(String[])}.
+	 */
+	public static final String DEFAULT_SEPARATOR = ",";
 
 	/**
 	 * Checks whether the given string is neither null nor blank.
@@ -95,6 +107,50 @@ public final class Strings {
 			return builder.toString();
 		}
 		return null;
+	}
+	
+	public static String[] split(String strings) {
+		return split(strings, DEFAULT_SEPARATOR);
+	}
+	
+	public static String[] split(String strings, String separator) {
+		return split(strings, separator, DEFAULT_TRIM);
+	}
+	
+	public static String[] split(String strings, String separator, boolean trim) {
+		StringTokeniser tokeniser = new StringTokeniser(separator);
+		String [] tokens = tokeniser.tokenise(strings);
+		if(trim) {
+			for(int i = 0; i < tokens.length; ++i) {
+				tokens[i] = tokens[i] != null ? tokens[i].trim() : tokens[i];
+			}
+		}
+		return tokens;
+	}
+	
+	public static String join(Object... objects) {
+		return join(DEFAULT_SEPARATOR, DEFAULT_TRIM, objects);
+	}
+
+	public static String join(String separator, Object... objects) {
+		return join(separator, DEFAULT_TRIM, objects);
+	}
+	
+	public static String join(boolean trim, Object... objects) {
+		return join(DEFAULT_SEPARATOR, trim, objects);
+	}	
+	
+	public static String join(String separator, boolean trim, Object... objects) {
+		StringBuffer buffer = new StringBuffer();
+		for(Object object : objects) {			
+			if(object != null) {
+				if(buffer.length() != 0) {
+					buffer.append(separator);
+				}
+				buffer.append(trim ? object.toString().trim() : object);
+			}
+		}		
+		return buffer.toString();
 	}
 	
 	/**

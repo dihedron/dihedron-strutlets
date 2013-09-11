@@ -19,7 +19,9 @@
 package org.dihedron.strutlets.taglib;
 
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.PortletSession;
 import javax.portlet.PortletSessionUtil;
@@ -29,7 +31,10 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.dihedron.strutlets.ActionContext;
+import org.dihedron.strutlets.ActionContextImpl;
 import org.dihedron.strutlets.Portlet;
+import org.dihedron.utils.StringTokeniser;
+import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,9 +190,10 @@ public class UseBeanTag extends TagSupport {
 	
 	/**
 	 * The default context where the parameter is supposed to be available and
-	 * will be looked up.
+	 * will be looked up; by default it will be looked up the different scopes,
+	 * from narrowest to broadest.
 	 */
-	private static final Scope DEFAULT_SCOPE = Scope.RENDER;
+	private static final Scope[] DEFAULT_SCOPES = { Scope.RENDER , Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION };
 	
 	/**
 	 * The name of the attribute to be made available to the page and EL. 
@@ -206,7 +212,7 @@ public class UseBeanTag extends TagSupport {
 	 * (for details see {@link ActionContextImpl.Scope#SESSION}.</li>
 	 * </ol>
 	 */
-	private Scope context = DEFAULT_SCOPE;
+	private Scope[] scopes = DEFAULT_SCOPES;
 		
 	/**
 	 * The name of the destination variable.
@@ -244,15 +250,25 @@ public class UseBeanTag extends TagSupport {
 	 * and will be looked up.
 	 * 
 	 * @param context
-	 *   the name of the scope; supported values include:<ul>
+	 *   the names of the scopes, as a comma-separated list of strings; supported 
+	 *   values for the contexts include:<ul>
 	 *   <li>render</li>: one of the render parameters;
 	 *   <li>request</li>: the bean is among the request attributes;
 	 *   <li>portlet</li>: the bean is among the portlet attributes;
 	 *   <li>application</li>: the bean is among the application attributes;
 	 * <ul>
 	 */
-	public void setScope(String context) {
-		this.context = Scope.fromString(context);
+	public void setScopes(String context) {
+		if(Strings.isValid(context)) {
+			Set<Scope> scopes = new LinkedHashSet<Scope>();
+			String [] tokens = Strings.split(context, ",");
+			for(String token : tokens) {
+				scopes.add(Scope.fromString(token));
+			}
+			this.scopes = (Scope[])scopes.toArray(new Scope[scopes.size()]);
+		} else {
+			this.scopes = DEFAULT_SCOPES;
+		}		
 	}
 	
 	/**
@@ -299,42 +315,46 @@ public class UseBeanTag extends TagSupport {
 	public int doStartTag() throws JspException {
 		Object value = null;
 		
-		logger.trace("publishing value '{}' from scope '{}' as variable '{}'", name, context, var);
+//		Strings.join()
+		
+		logger.trace("publishing value '{}' from scopes '{}' as variable '{}'", name, Strings.join(scopes), var);
 		
 		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
 		
-		switch(context) {
-		case RENDER:			
-			if(type.equals("java.lang.String")) {
-				logger.trace("retrieving render parameter");
-				value = request.getParameter(name);
-			} else if(type.equals("java.lang.String[]")) {
-				logger.trace("retrieving render parameters list");
-				value = request.getParameterValues(name);
+		for(Scope scope : scopes) {
+			switch(scope) {
+			case RENDER:			
+				if(type.equals("java.lang.String")) {
+					logger.trace("retrieving render parameter");
+					value = request.getParameter(name);
+				} else if(type.equals("java.lang.String[]")) {
+					logger.trace("retrieving render parameters list");
+					value = request.getParameterValues(name);
+				}
+				break;
+			case REQUEST:
+	//			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
+				String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
+				value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
+				if(value != null) {				
+					@SuppressWarnings("unchecked")
+					Map<String, Object> map = (Map<String, Object>)value;
+					value = map.get(name);
+					logger.trace("returning attribute '{}' with value '{}' from scope '{}' into variable '{}'", name, value, scope, var);
+				} else {
+					logger.trace("value is null");
+				}
+				break;
+			case PORTLET:
+				value = getAttribute(name, PortletSession.PORTLET_SCOPE);
+				break;
+			case APPLICATION:
+				value = getAttribute(name, PortletSession.APPLICATION_SCOPE);
+				break;
 			}
-			break;
-		case REQUEST:
-//			String keyName = ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + Portlet.get().getPortletName().toUpperCase();
-			String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
-			value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
-			if(value != null) {				
-				@SuppressWarnings("unchecked")
-				Map<String, Object> map = (Map<String, Object>)value;
-				value = map.get(name);
-				logger.trace("returning attribute '{}' with value '{}' from scope '{}' into variable '{}'", name, value, context, var);
-			} else {
-				logger.trace("value is null");
-			}
-			break;
-		case PORTLET:
-			value = getAttribute(name, PortletSession.PORTLET_SCOPE);
-			break;
-		case APPLICATION:
-			value = getAttribute(name, PortletSession.APPLICATION_SCOPE);
-			break;
+					
+			pageContext.setAttribute(var, value);
 		}
-				
-		pageContext.setAttribute(var, value);
 		
 		return EVAL_BODY_INCLUDE;
 	}

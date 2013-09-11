@@ -41,15 +41,15 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>		
 		<attribute>
-			<name>scope</name>
-			<required>true</required>
+			<name>scopes</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>	
 		<attribute>
 			<name>var</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
-		</attribute>		
+		</attribute> 		
 		<attribute>
 			<name>type</name>
 			<required>true</required>

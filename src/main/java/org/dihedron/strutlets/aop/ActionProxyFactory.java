@@ -44,6 +44,7 @@ import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.dihedron.utils.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -352,14 +353,24 @@ public class ActionProxyFactory {
 			StringBuilder args = new StringBuilder();
 			
 			for(int i = 0; i < types.length; ++i) {
-				if(types[i] instanceof ParameterizedType) {
-					ParameterizedType pt = (ParameterizedType)types[i];
-					Class<?> gt = (Class<?>) pt.getActualTypeArguments()[0];
-					logger.trace("type: {}<{}>", ((Class<?>)pt.getRawType()).getCanonicalName(), gt.getCanonicalName());
-				
-				} else if(types[i] instanceof Class<?>){
-					logger.trace("type: {}", ((Class<?>)types[i]).getCanonicalName());
-				}				
+//				if(types[i] instanceof ParameterizedType) {
+//					ParameterizedType pt = (ParameterizedType)types[i];
+//					Object object = pt.getActualTypeArguments()[0];
+//					logger.trace("class of parameterised type is '{}'", object == null ? "null" : object.getClass().getCanonicalName());
+//					if(object != null) {
+//						if(object instanceof Class<?>) {
+//							Class<?> gt = (Class<?>) object;
+//							logger.trace("type: {}<{}>", ((Class<?>)pt.getRawType()).getCanonicalName(), gt.getCanonicalName());
+//						} else {
+//							logger.trace("cannot treat parameterised type, skipping...");//type: {}<{}>", ((Class<?>)pt.getRawType()).getCanonicalName(), gt.getCanonicalName());
+//							continue;
+//						}
+//					} else {
+//						logger.trace("cannot retrieve generics parameterised type, value is null");
+//					}				
+//				} else if(types[i] instanceof Class<?>){
+//					logger.trace("type: {}", ((Class<?>)types[i]).getCanonicalName());
+//				}				
 				String arg = prepareArgument(i, types[i], annotations[i], code, postCode);
 				args.append(args.length() > 0 ? ", " : "").append(arg);
 			}
@@ -429,11 +440,11 @@ public class ActionProxyFactory {
 	
 	private String prepareInputArgument(int i, Class<?> type, In in, StringBuilder preCode) throws DeploymentException {
 		
-		preCode.append("\t//\n\t// preparing input argument no. ").append(i).append(" (").append(type.getCanonicalName()).append(")\n\t//\n");
+		preCode.append("\t//\n\t// preparing input argument no. ").append(i).append(" (").append(Types.getAsString(type)).append(")\n\t//\n");
 
 		if(type.isPrimitive()) {
-			logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, type.getCanonicalName());
-			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + type.getCanonicalName() + "')");
+			logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, Types.getAsString(type));
+			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + Types.getAsString(type) + "')");
 		}
 		
 		if(in.value().trim().length() == 0) {
@@ -455,7 +466,7 @@ public class ActionProxyFactory {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}					
-		preCode.append("\t").append(type.getCanonicalName()).append(" in").append(i).append(" = (").append(type.getCanonicalName()).append(") value;\n");
+		preCode.append("\t").append(Types.getAsString(type)).append(" in").append(i).append(" = (").append(Types.getAsString(type)).append(") value;\n");
 		preCode.append("\ttrace.append(\"in").append(i).append("\").append(\" => '\").append(in").append(i).append(").append(\"', \");\n");
 		preCode.append("\n");
 		return "in" + i;
@@ -463,10 +474,15 @@ public class ActionProxyFactory {
 	
 	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
 		
-		if(!(type instanceof ParameterizedType)) {
+		if(!Types.isGeneric(type)) {
+			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+		}
+		
+		if(!Types.isOfClass(type, $.class))	{		
 			logger.error("output parameters must be of generic type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
 			throw new DeploymentException("Output parameters must be of generic type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
-		} 
+		}
 		
 		ParameterizedType pt = (ParameterizedType)type;
 		Class<?> gt = (Class<?>) pt.getActualTypeArguments()[0];
@@ -619,4 +635,5 @@ public class ActionProxyFactory {
 		code.append("\n");
 		return "arg" + i;
 	}
+	
 }

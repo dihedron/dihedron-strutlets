@@ -19,15 +19,19 @@
 
 package org.dihedron.strutlets.aop;
 
-import static org.junit.Assert.assertTrue;
-
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
 import javassist.CannotCompileException;
 
-import org.dihedron.strutlets.actions.Action;
-import org.junit.Ignore;
+import org.dihedron.strutlets.annotations.Out;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,41 +45,91 @@ public class ProxyFactoryTest {
 	 */
 	static final Logger logger = LoggerFactory.getLogger(ProxyFactoryTest.class);
 
+	
+	public String myMethod(@Out("parameter") $<Set<List<Map<String, Vector<String>>>>> parameter, String pippo, int plutot) {
+		return null;		
+	}
+	
 	/**
 	 * Test method for {@link org.dihedron.strutlets.aop.ActionProxyFactory#addProxyMethod(java.lang.Class, java.lang.reflect.Method)}.
-	 * @throws CannotCompileException 
+	 * @throws CannotCompileException
 	 * @throws InvocationTargetException 
 	 * @throws IllegalAccessException 
 	 * @throws IllegalArgumentException 
 	 * @throws InstantiationException 
 	 */
 	@Test
-	@Ignore
+//	@Ignore
 	public void testMakeProxyMethod() throws CannotCompileException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, InstantiationException {
-		/*
-		try {
-			ActionProxyFactory factory = new ActionProxyFactory();
-			Class <? extends Action> action = MyAction.class;
-			Method [] methods = action.getDeclaredMethods();
-			for(Method method: methods) {
-				logger.trace("method: '{}'", method.getName());
-				factory.addProxyMethod(action, method);
+
+		
+		Method[] methods = ProxyFactoryTest.class.getDeclaredMethods();
+		
+		for(Method method : methods) {
+			
+			if(!method.getName().equals("myMethod")) {
+				continue;
 			}
+		
+			Annotation[][] annotations = method.getParameterAnnotations();
 			
-			MyAction testAction = new MyAction();
-			
-			Object proxy = factory.getProxyFor(MyAction.class);
-			
-			logger.trace("proxy object is of class '{}'", proxy.getClass().getCanonicalName());
-			
-			for(Method method : proxy.getClass().getDeclaredMethods()) {
-				logger.trace("method: '{}!{}'", proxy.getClass().getCanonicalName(), method.getName());
-				method.invoke(proxy, testAction);
+			Type[] types = method.getGenericParameterTypes();
+								
+			for(int i = 0; i < types.length; ++i) {
+				String description = getTypeAsString(types[i]);
+				logger.trace("parameter type [{}]: '{}'", i, description);
+				
+				
+//				if(types[i] instanceof ParameterizedType) {
+//					ParameterizedType pt = (ParameterizedType)types[i];
+//					Object object = pt.getActualTypeArguments()[0];
+//					logger.trace("class of parameterised type is '{}'", object == null ? "null" : object.getClass().getCanonicalName());
+//					if(object != null) {
+//						if(object instanceof Class<?>) {
+//							Class<?> gt = (Class<?>) object;
+//							logger.trace("type: {}<{}>", ((Class<?>)pt.getRawType()).getCanonicalName(), gt.getCanonicalName());
+//						} else if (object instanceof ParameterizedType) {
+//							
+//						} else {							
+//							logger.trace("cannot treat parameterised type, skipping...");
+//							continue;
+//						}
+//					} else {
+//						logger.trace("cannot retrieve generics parameterised type, value is null");
+//					}				
+//				} else if(types[i] instanceof Class<?>){
+//					logger.trace("type: {}", ((Class<?>)types[i]).getCanonicalName());
+//				}				
 			}
-		} catch(Exception e) {
+		}	
+	}		
+		
+	private String getTypeAsString(Type type) {		
+		String result = null;
+		if(type instanceof Class<?>) {
+			result = ((Class<?>)type).getCanonicalName();			
+		} else if(type instanceof ParameterizedType) {
+			
+			StringBuilder buffer = new StringBuilder();
+			
+			// grab the name of the container class (e.g. List, Map...)
+			ParameterizedType container = (ParameterizedType)type ;
+			String containerType = ((Class<?>)container.getRawType()).getCanonicalName();
+			logger.trace("container type: '{}'", containerType);
+			buffer.append(containerType).append("<");
+			// now grab the names of all generic types (those within <...>)
+			Type[] generics = container.getActualTypeArguments();
+			boolean first = true;
+			for(Type generic : generics) {
+				String genericType = getTypeAsString(generic);
+				logger.trace("generic type: '{}'", genericType);
+				buffer.append(first ? "" : ", ").append(genericType);
+				first = false;
+			}
+			buffer.append(">");
+			result = buffer.toString();
 		}
-		*/
-		assertTrue(true);
+		return result;
 	}
 	
 	
