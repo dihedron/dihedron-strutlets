@@ -19,8 +19,7 @@
 
 package org.dihedron.strutlets.test;
 
-import org.dihedron.strutlets.actions.Action;
-import org.dihedron.strutlets.annotations.Interceptors;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Result;
 import org.dihedron.strutlets.exceptions.ActionException;
@@ -31,8 +30,8 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-@Interceptors("default_02")
-public class MyAction extends Action {
+@Action(interceptors = "default_02")
+public class MyAction {
 	
 	/**
 	 * The logger.
@@ -53,7 +52,7 @@ public class MyAction extends Action {
 		events = {				
 		}
 	)	
-	@Override public String execute() throws ActionException {
+	public String execute() throws ActionException {
 		logger.info("action!execute");
 		return Action.SUCCESS;
 	}

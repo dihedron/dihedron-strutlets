@@ -1,4 +1,22 @@
-VERSION 0.30.0 (released on 2013-09-08=
+VERSION 0.40.0 (released on 2013-09-15)
+This is an enhancements release; it is not backward compatible, so be careful 
+when upgrading. The change was necessary to allow for inheritance of Actions.
+With "inheritance-based" scanning (actions must extend the Action abstract class)
+the scanning mechanism was not able to identify classes that inherited from
+the base abstract class through a chain of intermediate classes.
+--------------------------------------------------------------------------------
+FEATURE:
+  The framework now scans for types annotated with @Action, instead of looking
+  for classes inheriting from Action. 
+================================================================================
+VERSION 0.33.0 (released on 2013-09-11)
+This is a bugfix release.
+--------------------------------------------------------------------------------
+BUG:
+  The @Out annotated parameters did not work if the wrapped type was itself a 
+  generic container such as List<T>.
+================================================================================  
+VERSION 0.30.0 (released on 2013-09-08)
 This is an enhancement release.
 --------------------------------------------------------------------------------
 FEATURE:

@@ -25,38 +25,24 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.ActionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for all <code>Action</code>s.
+ * Base class for all <code>AbstractAction</code>s.
  * 
  * @author Andrea Funto'
  */
-public abstract class Action {
+public abstract class AbstractAction {
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(Action.class);
-	
-	/**
-	 * The default return code for a successful execution.
-	 */
-	public static final String SUCCESS = "success";
-	
-	/**
-	 * The default return code to request more input data.
-	 */
-	public static final String INPUT = "input";
-	
-	/**
-	 * The default return code for a failed execution.
-	 */
-	public static final String ERROR = "error";
-	
+	private static final Logger logger = LoggerFactory.getLogger(AbstractAction.class);
+		
 	/**
 	 * The map of configuration parameters.
 	 */
@@ -126,6 +112,6 @@ public abstract class Action {
 	@Invocable
 	public String execute() throws ActionException {
 		// do nothing implementation
-		return SUCCESS;
+		return Action.SUCCESS;
 	}
 }

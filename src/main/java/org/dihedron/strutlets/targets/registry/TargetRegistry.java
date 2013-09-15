@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 
 import javax.xml.namespace.QName;
 
-import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.StrutletsException;
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * A class containing the set of information available for the pool of supported 
  * actions; the information is stored in here by loading it from the configuration
  * file or by detecting an action's properties at runtime. This information can 
- * be used to instantiate new <code>Action</code>s and to get the output renderers 
+ * be used to instantiate new <code>AbstractAction</code>s and to get the output renderers 
  * for their results. 
  * 
  * @author Andrea Funto'
@@ -72,7 +72,7 @@ public class TargetRegistry {
 	private Map<String, TargetId> events = new HashMap<String, TargetId>();
 			
 	/**
-	 * The root directory to be used for <code>Action</code>s auto-configured 
+	 * The root directory to be used for <code>AbstractAction</code>s auto-configured 
 	 * result URLs.
 	 */
 	private volatile String rootdir = DEFAULT_HTML_ROOT_DIR;
@@ -97,7 +97,7 @@ public class TargetRegistry {
 	 * is no explicit URL associated with a JSP-rendered result. This information
 	 * is made up of two components:<ol>
 	 * <li> the HTML package (directory) to be used as the base directory
-	 * for self-configuring <code>Action</code>s lacking result URLs,</li>
+	 * for self-configuring <code>AbstractAction</code>s lacking result URLs,</li>
 	 * <li>the pattern used to create JSP URLs.; if not specified, URLs will be 
 	 * conjured up according to the the following pattern: 
 	 * &lt;root directory&gt;/&lt;action name&gt;/&lt;method name&gt;/&lt;result&gt;.jsp
@@ -145,9 +145,10 @@ public class TargetRegistry {
 	 *   the name of the interceptor stack to be used for the given action.
 	 * @throws StrutletsException 
 	 */
-	public void addTarget(Class<? extends Action> actionClass, Method factoryMethod, Method actionMethod, Method proxyMethod, 
+	public void addTarget(Class<?> actionClass, Method factoryMethod, Method actionMethod, Method proxyMethod, 
 			Invocable invocable, String interceptors) throws StrutletsException {
-		logger.info("adding target '{}!{}' (proxy: '{}')", actionClass.getSimpleName(), actionMethod.getName(), proxyMethod.getName());
+		String actionName = Strings.isValid(actionClass.getAnnotation(Action.class).alias()) ? actionClass.getAnnotation(Action.class).alias() : actionClass.getSimpleName(); 
+		logger.info("adding target '{}!{}' (proxy: '{}')", actionName, actionMethod.getName(), proxyMethod.getName());
 		TargetId id = new TargetId(actionClass, actionMethod);
 		
 		// instantiate the information object

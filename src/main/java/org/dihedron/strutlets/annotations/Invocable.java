@@ -68,7 +68,7 @@ public @interface Invocable {
 	 * all fields annotated with {@code @In} will be automatically injected.
 	 * 
 	 * @return
-	 *   the list of field names (<em>note: the {@code Action}'s field names, not 
+	 *   the list of field names (<em>note: the {@code AbstractAction}'s field names, not 
 	 *   the final parameter names declared in the {@code @In} annotation's
 	 *   @{code value} fields!</em>).
 	 */
@@ -81,7 +81,7 @@ public @interface Invocable {
 	 * all fields annotated with {@code @Out} will be automatically extracted.
 	 * 
 	 * @return
-	 *   the list of field names (<em>note: the {@code Action}'s field names,
+	 *   the list of field names (<em>note: the {@code AbstractAction}'s field names,
 	 *   not the final parameter names declared in the {@code @Out} annotation's
 	 *   @{code value} fields!</em>). 
 	 */

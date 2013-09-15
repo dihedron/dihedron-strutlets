@@ -67,7 +67,7 @@ public class Outputs extends Interceptor {
 	}
 	
 	/**
-	 * Scans the {@code Action}'s invocable method's fields for @Out annotations,
+	 * Scans the {@code AbstractAction}'s invocable method's fields for @Out annotations,
 	 * and then invokes the output extraction method for each of them. 
 	 * 
 	 * @param invocation

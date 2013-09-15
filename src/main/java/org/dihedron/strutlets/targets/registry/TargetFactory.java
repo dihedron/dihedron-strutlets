@@ -23,15 +23,14 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
-import org.dihedron.strutlets.actions.Action;
-import org.dihedron.strutlets.annotations.Interceptors;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
-import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.aop.ActionProxy;
+import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -80,10 +79,12 @@ public class TargetFactory {
     				new Reflections(new ConfigurationBuilder()
     					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix(javaPackage)))
     					.setUrls(ClasspathHelper.forPackage(javaPackage))
-    					.setScanners(new SubTypesScanner()));    		
-    		Set<Class<? extends Action>> actionClasses = reflections.getSubTypesOf(Action.class);
-	        for(Class<? extends Action> actionClass : actionClasses) {
-	        	makeFromJavaClass(registry, actionClass);
+    					//.setScanners(new SubTypesScanner()));
+    					.setScanners(new TypeAnnotationsScanner()));
+//    		Set<Class<? extends AbstractAction>> actionClasses = reflections.getSubTypesOf(AbstractAction.class);
+    		Set<Class<?>> actions = reflections.getTypesAnnotatedWith(Action.class);
+	        for(Class<?> action : actions) {
+	        	makeFromJavaClass(registry, action);
 	        }
     	}
     }
@@ -98,14 +99,10 @@ public class TargetFactory {
      *   the action class to be scanned for annotated methods (targets).
      * @throws StrutletsException 
      */
-    public void makeFromJavaClass(TargetRegistry registry, Class<? extends Action> actionClass) throws StrutletsException {
+    public void makeFromJavaClass(TargetRegistry registry, Class<?> actionClass) throws StrutletsException {
     	logger.trace("analysing action class: '{}'...", actionClass.getName());
     	
-    	String interceptors = "default";
-    	
-    	if(actionClass.isAnnotationPresent(Interceptors.class)) {
-    		interceptors = actionClass.getAnnotation(Interceptors.class).value();
-    	}
+    	String interceptors = actionClass.getAnnotation(Action.class).interceptors(); 
     	
     	// let the factory inspect the action and generate a factory method
     	// ans a set of proxy methods for valid @Invocable-annotated action methods 

@@ -72,22 +72,22 @@ public class ActionProxy {
 	}
 
 	/**
-	 * Returns the factory method that will instantiate a new <code>Action</code>
+	 * Returns the factory method that will instantiate a new <code>AbstractAction</code>
 	 * instance without resorting to reflection.
 	 * 
 	 * @return
-	 *   the Action's factory method.
+	 *   the AbstractAction's factory method.
 	 */
 	public Method getFactoryMethod() {
 		return factory;
 	}
 
 	/**
-	 * Sets the factory method that will instantiate a new <code>Action</code>
+	 * Sets the factory method that will instantiate a new <code>AbstractAction</code>
 	 * instance without resorting to reflection.
 	 * 
 	 * @param factory
-	 *   the Action's factory method.
+	 *   the AbstractAction's factory method.
 	 */
 	void setFactoryMethod(Method factory) {
 		this.factory = factory;

@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.WindowState;
@@ -62,7 +61,7 @@ public class Target {
 	 * The class object of the Action class containing the executable code (the
 	 * method) implementing the target's business logic.
 	 */
-	private Class<? extends Action> action;
+	private Class<?> action;
 	
 	/**
 	 * The method thatj implements the target's business logic.
@@ -116,7 +115,7 @@ public class Target {
 	 *   the class object containing the executable code of this target's 
 	 *   business logic.
 	 */
-	public Class<? extends Action> getActionClass() {
+	public Class<?> getActionClass() {
 		return this.action;
 	}
 	
@@ -130,14 +129,14 @@ public class Target {
 	 * @return 
 	 *   the object itself, for method chaining.
 	 */
-	public Target setActionClass(Class<? extends Action> action) {
+	public Target setActionClass(Class<?> action) {
 		this.action = action;
 		return this;
 	}
 	
 	/**
 	 * Returns the reference to the factory method capable of allocating and
-	 * instance of the Action class implementing this target.
+	 * instance of the AbstractAction class implementing this target.
 	 * 
 	 * @return 
 	 *   the reference to the containing action's factory method.
@@ -148,7 +147,7 @@ public class Target {
 	
 	/**
 	 * Sets the reference to the factory method capable of allocating and
-	 * instance of the Action class implementing this target.
+	 * instance of the AbstractAction class implementing this target.
 	 * 
 	 * @param method
 	 *   the reference to the containing action's factory method.

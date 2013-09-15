@@ -30,7 +30,7 @@ import org.dihedron.reflection.Reflector;
 import org.dihedron.reflection.ReflectorException;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionInvocation;
-import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.actions.AbstractAction;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.InterceptorException;
@@ -149,7 +149,7 @@ public class Inputs extends Interceptor {
 			Object value = ActionContext.findValueInScopes(parameter, annotation.scopes());
 			
 			if(value != null) {
-				Action action = invocation.getAction();
+				Object action = invocation.getAction();
 				if(field.getType() == value.getClass()) { 
 					// if both are strings, or whatever, but equal, assign directly
 					new Reflector(action).setFieldValue(field.getName(), value);

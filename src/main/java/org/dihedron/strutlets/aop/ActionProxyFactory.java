@@ -36,7 +36,6 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Out;
@@ -87,7 +86,7 @@ public class ActionProxyFactory {
 	 * @return
 	 *   the name of the proxy class.
 	 */
-	public static String makeProxyClassName(Class<? extends Action> action) {
+	public static String makeProxyClassName(Class<?> action) {
 		return PROXY_CLASS_NAME_PREFIX + action.getName() + PROXY_CLASS_NAME_SUFFIX;
 	}
 	
@@ -101,7 +100,7 @@ public class ActionProxyFactory {
 	 * @return
 	 *   the name of the factory method.
 	 */
-	public static String makeFactoryMethodName(Class<? extends Action> action) {
+	public static String makeFactoryMethodName(Class<?> action) {
 		return FACTORY_METHOD_NAME;
 	}
 	
@@ -152,7 +151,7 @@ public class ActionProxyFactory {
 	 *   the proxy <code>Class</code>.
 	 * @throws StrutletsException
 	 *
-	public Class<?> instrument(Class<? extends Action> action) throws StrutletsException {
+	public Class<?> instrument(Class<? extends AbstractAction> action) throws StrutletsException {
 		return instrument(action, null);
 	}
 	*/
@@ -165,12 +164,12 @@ public class ActionProxyFactory {
 	 * @param action
 	 *   the action class to be instrumented.
 	 * @return
-	 *   the proxy object containing information about the <code>Action</code>
+	 *   the proxy object containing information about the <code>AbstractAction</code>
 	 *   factory method, its proxy class and the static methods proxying each of 
-	 *   the original <code>Action</code>'s invocable methods.
+	 *   the original <code>AbstractAction</code>'s invocable methods.
 	 * @throws StrutletsException
 	 */
-	public ActionProxy makeActionProxy(Class<? extends Action> action/*, Map<Method, Method> methods*/) throws DeploymentException {		
+	public ActionProxy makeActionProxy(Class<?> action) throws DeploymentException {		
 		try {
 			ActionProxy proxy = new ActionProxy();
 			Map<Method, Method> methods = new HashMap<Method, Method>();
@@ -180,8 +179,7 @@ public class ActionProxyFactory {
 			for(Method method : enumerateInvocableMethods(action)) {
 				logger.trace("instrumenting method '{}'...", method.getName());
 				instrumentMethod(generator, action, method);
-			}
-			
+			}			
 			
 			// fill the proxy class 
 			logger.trace("sealing and loading the proxy class");			
@@ -228,7 +226,7 @@ public class ActionProxyFactory {
 	 *   the <code>CtClass</code> object.
 	 * @throws StrutletsException
 	 */
-	private CtClass getClassGenerator(Class<? extends Action> action) throws DeploymentException {
+	private CtClass getClassGenerator(Class<?> action) throws DeploymentException {
 		CtClass generator = null;
 		String proxyname = makeProxyClassName(action);
 		try {
@@ -263,7 +261,7 @@ public class ActionProxyFactory {
 	 *   a collection of <code>@Invocable</code>, non-static and non-overridden
 	 *   methods.
 	 */
-	private Collection<Method> enumerateInvocableMethods(Class<? extends Action> action) {
+	private Collection<Method> enumerateInvocableMethods(Class<?> action) {
 		Map<String, Method> methods = new HashMap<String, Method>();
 		
 		// walk up the class hierarchy and gather methods as we go
@@ -287,7 +285,7 @@ public class ActionProxyFactory {
     	return methods.values();
 	}
 	
-	private CtMethod createFactoryMethod(CtClass generator, Class<? extends Action> action) throws DeploymentException {
+	private CtMethod createFactoryMethod(CtClass generator, Class<?> action) throws DeploymentException {
 		String factoryName = makeFactoryMethodName(action);
 		logger.trace("action '{}' will be created via '{}'", action.getSimpleName(), factoryName);
 		
@@ -331,7 +329,7 @@ public class ActionProxyFactory {
 	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
 	 * @throws DeploymentException
 	 */
-	private CtMethod instrumentMethod(CtClass generator, Class<? extends Action> action, Method method) throws DeploymentException {
+	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method) throws DeploymentException {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
@@ -340,7 +338,7 @@ public class ActionProxyFactory {
 			
 			StringBuilder code = new StringBuilder("public static final java.lang.String ")
 				.append(methodName)
-				.append("( org.dihedron.strutlets.actions.Action action ) {\n\n");
+				.append("( java.lang.Object action ) {\n\n");
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
 			code.append("\tjava.lang.Object value = null;\n");
@@ -447,7 +445,6 @@ public class ActionProxyFactory {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}					
-//		preCode.append("\t").append(Types.getAsString(type)).append(" in").append(i).append(" = (").append(Types.getAsString(type)).append(") value;\n");
 		preCode.append("\t").append(Types.getAsRawType(type)).append(" in").append(i).append(" = (").append(Types.getAsRawType(type)).append(") value;\n");
 		preCode.append("\ttrace.append(\"in").append(i).append("\").append(\" => '\").append(in").append(i).append(").append(\"', \");\n");
 		preCode.append("\n");

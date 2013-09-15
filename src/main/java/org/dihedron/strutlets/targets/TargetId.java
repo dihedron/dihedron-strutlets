@@ -25,7 +25,7 @@ import javax.portlet.PortletRequest;
 
 import org.dihedron.regex.Regex;
 import org.dihedron.strutlets.Strutlets;
-import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
@@ -169,8 +169,28 @@ public class TargetId {
 		this.methodName = Strings.isValid(methodName) ? methodName.trim() : DEFAULT_METHOD_NAME;
 	}
 	
-	public TargetId(Class<? extends Action> action, Method method) {
-		this.actionName = action.getSimpleName();
+	/**
+	 * Constructor; the target identifier has two components:<ol>
+	 * <li>The action name, which can be takes from the alias specified in the
+	 * <code>@Action</code> annotation, if valid, or the simple name of the class
+	 * implementing the target</li>
+	 * <li>the name of the method, always takes as such</li>
+	 * </ol>.
+	 *
+	 * @param action
+	 *   the action class.
+	 * @param method
+	 *   the action method.
+	 */
+	public TargetId(Class<?> action, Method method) {
+		Action annotation = action.getAnnotation(Action.class);
+		if(Strings.isValid(annotation.alias())) {
+			logger.trace("getting target 'class' component for '{}' from alias in annotation: '{}'", action.getSimpleName(), annotation.alias());
+			this.actionName = annotation.alias();
+		} else {
+			logger.trace("getting target 'class' component from class name: '{}'", action.getSimpleName());
+			this.actionName = action.getSimpleName();
+		}
 		this.methodName = method.getName();
 	}
 	

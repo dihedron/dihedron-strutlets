@@ -1,12 +1,13 @@
 package org.dihedron.strutlets.aop;
 
-import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MyBaseAction extends Action {
+@Action
+public class MyBaseAction {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MyBaseAction.class); 
 	

@@ -1028,11 +1028,13 @@ public class ActionContextImpl {
 					break;
 				}
 			} else if(scope == org.dihedron.strutlets.annotations.Scope.CONFIGURATION) {
-				value = ActionContext.getActionInvocation().getAction().getParameter(key);
-				if(value != null) {
-					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
-					break;
-				}
+				// TODO: find a good way of providing configuration data for an action
+				throw new StrutletsException("Not implemented yet");
+//				value = ActionContext.getActionInvocation().getAction().getParameter(key);
+//				if(value != null) {
+//					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
+//					break;
+//				}
 			} else {
 				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
 				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					

@@ -40,7 +40,6 @@ import javax.portlet.StateAwareResponse;
 import javax.portlet.WindowState;
 import javax.xml.namespace.QName;
 
-import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.ContainerPluginManager;
@@ -522,7 +521,7 @@ public class ActionController extends GenericPortlet {
     
     
     protected String invokeTarget(TargetId targetId, PortletRequest request, PortletResponse response) throws StrutletsException {
-    	Action action = null;
+    	Object action = null;
     	String result = null;
     	try {
     		logger.info("invoking target '{}'", targetId);

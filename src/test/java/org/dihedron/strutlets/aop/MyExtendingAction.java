@@ -6,13 +6,14 @@ import java.util.Map.Entry;
 
 import javassist.Modifier;
 
-import org.dihedron.strutlets.actions.Action;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Action
 public class MyExtendingAction extends MyBaseAction {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MyExtendingAction.class); 
@@ -54,7 +55,7 @@ public class MyExtendingAction extends MyBaseAction {
 					Modifier.isStatic(proxyMethod.getModifiers()) ? "static" : "non-static",
 					Modifier.isFinal(proxyMethod.getModifiers()) ? "final" : "non-final");
 			if(actionMethod.getName().equals("execute")) {
-				Action actionInstance = MyExtendingAction.class.newInstance();
+				MyBaseAction actionInstance = MyExtendingAction.class.newInstance();
 				String result = (String)proxyMethod.invoke(null, actionInstance);
 				logger.trace("result is '{}'", result);
 			}

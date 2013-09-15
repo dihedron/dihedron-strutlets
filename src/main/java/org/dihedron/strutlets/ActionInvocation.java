@@ -34,7 +34,6 @@ import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
-import org.dihedron.strutlets.actions.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
@@ -55,7 +54,7 @@ public class ActionInvocation {
 	/**
 	 * The action instance on which the business method is being invoked.
 	 */
-	private Action action;
+	private Object action;
 	
 	/**
 	 * The information (metadata) pertaining to the business method being invoked 
@@ -103,7 +102,7 @@ public class ActionInvocation {
 	 * @param response
 	 *   the <code>PortletResponse</code> object.
 	 */
-	public ActionInvocation(Action action, Target target, InterceptorStack interceptors, 
+	public ActionInvocation(Object action, Target target, InterceptorStack interceptors, 
 			PortletRequest request, PortletResponse response) {
 		this.action = action;
 		this.target = target;
@@ -119,7 +118,7 @@ public class ActionInvocation {
 	 * @return
 	 *   the action being invoked.
 	 */
-	public Action getAction() {
+	public Object getAction() {
 		return action;
 	}
 	
