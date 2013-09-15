@@ -31,18 +31,17 @@ import java.lang.annotation.Target;
  * @author Andrea Funto'
  */
 @Retention(RetentionPolicy.RUNTIME) 
-@Target( {ElementType.FIELD, ElementType.PARAMETER})
+@Target( ElementType.PARAMETER )
 public @interface In {
 	
 	/**
-	 * The name of the input parameter; if not specified, the name of the parameter 
-	 * must match that of the field.
+	 * The name of the input parameter; it must be specified.
 	 * 
 	 * @return
 	 *   the name of the parameter, or the empty string if the name matches that 
 	 *   of the field.
 	 */
-	String value() default "";
+	String value();
 	
 	/**
 	 * The scope in which the parameter should be looked up; by default, it is

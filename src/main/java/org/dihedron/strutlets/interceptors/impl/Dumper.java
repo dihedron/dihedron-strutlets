@@ -102,19 +102,17 @@ public class Dumper extends Interceptor {
 	 *   the buffer used for output accumulation.
 	 */
 	private void dumpRenderParameters(StringBuilder builder) {
-//		if(ActionContext.isRenderPhase()) {
-			Map<String, String[]> parameters = ActionContext.getRenderParameterMap();		
-			builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
-			if(parameters != null) {
-				for(Entry<String, String[]> entry : parameters.entrySet()) {
-					builder.append("'").append(entry.getKey()).append("' = [ ");
-					for(String value : entry.getValue()) {
-						builder.append("'").append(value).append("', ");
-					}
-					builder.append("]\n");
+		Map<String, String[]> parameters = ActionContext.getRenderParameterMap();		
+		builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
+		if(parameters != null) {
+			for(Entry<String, String[]> entry : parameters.entrySet()) {
+				builder.append("'").append(entry.getKey()).append("' = [ ");
+				for(String value : entry.getValue()) {
+					builder.append("'").append(value).append("', ");
 				}
+				builder.append("]\n");
 			}
-//		}
+		}
 	}	
 	
 	/**

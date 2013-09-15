@@ -22,9 +22,11 @@ package org.dihedron.strutlets;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -369,6 +371,17 @@ public class ActionContextImpl {
 	 */
 	public static String getPortletName() {
 		return Portlet.get().getPortletName();
+	}
+	
+	/**
+	 * Returns the portlet namespace; this value can be prefixed to DOM elements 
+	 * and Javascript functions.
+	 * 
+	 * @return
+	 *   the portlet namespace.
+	 */
+	public static String getPortletNamespace() {
+		return getContext().response.getNamespace();
 	}
 	
 	/**
@@ -1656,6 +1669,37 @@ public class ActionContextImpl {
 		}
 	}
 	
+	/**
+	 * Returns the names of all request attributes; these are the attributes normally 
+	 * available through the request, they cannot be set by portlets and are provided
+	 * by the portal instead.
+	 * 
+	 * @return
+	 *   a list of attribute names.
+	 */
+	public static List<String> getAttributeNames() {
+		Enumeration<String> enumeration = getContext().request.getAttributeNames();
+		List<String> names = new ArrayList<String>();
+		while(enumeration.hasMoreElements()) {
+			names.add(enumeration.nextElement());
+		}
+		return names;
+	}
+	
+	/**
+	 * Returns the value of the request attribute corresponding to the given name.
+	 * This attribute is not to be confused with those set in the varius scopes,
+	 * ad is a value provided by the portal server.
+	 * 
+	 * @param key
+	 *   the name of the request attribute.
+	 * @return
+	 *   the request attribute value.
+	 */
+	public static Object getAttribute(String key) {
+		return getContext().request.getAttribute(key);
+	}
+	
 	
 	/**
 	 * Returns an array containing all of the Cookie properties. This method 
@@ -1722,7 +1766,7 @@ public class ActionContextImpl {
 //		}
 //		
 //		return (HttpServletRequest)getContext().request.getAttribute("javax.servlet.request");  
-//	}
+//	}	
 		
 	/**
 	 * Returns the underlying portlet session object.
@@ -1745,7 +1789,6 @@ public class ActionContextImpl {
 	 */
 	@Deprecated
 	protected static Event getEvent() throws InvalidPhaseException {
-//		if(getContext().request instanceof EventRequest) {
 		if(isEventPhase()) {
 			return ((EventRequest)getContext().request).getEvent();
 		} else {

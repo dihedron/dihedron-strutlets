@@ -32,18 +32,17 @@ import java.lang.annotation.Target;
  * @author Andrea Funto'
  */
 @Retention(RetentionPolicy.RUNTIME) 
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Target(ElementType.PARAMETER)
 public @interface Out {
 	
 	/**
 	 * The name of the output parameter which will receive the annotated field's
-	 * value; if not specified, a parameter with the same name as the fields will
-	 * be set.
+	 * value; it must be specified.
 	 * 
 	 * @return
 	 *   the name of the output parameter.
 	 */
-	String value() default "";
+	String value();
 	
 	/**
 	 * The scope into which the parameter should be stored; by default, it is

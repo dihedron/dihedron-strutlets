@@ -3,78 +3,12 @@
 	<stack id="default">
 		<interceptor id="profiler" class="org.dihedron.strutlets.interceptors.impl.Profiler"/>
 		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper"/>
-		<interceptor id="inputs" class="org.dihedron.strutlets.interceptors.impl.Inputs"/>
-		<interceptor id="outputs" class="org.dihedron.strutlets.interceptors.impl.Outputs"/>
  		<!-- 
 		<interceptor id="interceptor_02" class="org.dihedron.strutlets.test.MyInterceptor">
 			<parameter>
 				<key>id</key>
 				<value>number#02</value>
-			</parameter>
-			<parameter>
-				<key>key_02_1</key>
-				<value>value_02_1</value>
-			</parameter>
-			<parameter>
-				<key>key_02_2</key>
-				<value>value_02_2</value>
-			</parameter>
-			<parameter>
-				<key>key_02_3</key>
-				<value>value_02_3</value>
-			</parameter>
-		</interceptor>
- 
-		<interceptor id="interceptor_03" class="org.dihedron.strutlets.test.MyInterceptor">
-			<parameter>
-				<key>id</key>
-				<value>number#03</value>
-			</parameter>
-			<parameter>
-				<key>key_03_1</key>
-				<value>value_03_1</value>
-			</parameter>
-			<parameter>
-				<key>key_03_2</key>
-				<value>value_03_2</value>
-			</parameter>
-			<parameter>
-				<key>key_03_3</key>
-				<value>value_03_3</value>
-			</parameter>
 		</interceptor>
 		-->
 	</stack>
-	<!-- 
-	<stack id="stack_01">
-		<interceptor id="interceptor_03" class="org.dihedron.strutlets.test.MyInterceptor">
-			<parameter>
-				<key>key_03_1</key>
-				<value>value_03_1</value>
-			</parameter>
-			<parameter>
-				<key>key_03_2</key>
-				<value>value_03_2</value>
-			</parameter>
-			<parameter>
-				<key>key_03_3</key>
-				<value>value_03_3</value>
-			</parameter>
-		</interceptor>
-		<interceptor id="interceptor_04" class="org.dihedron.strutlets.test.MyInterceptor">
-			<parameter>
-				<key>key_04_1</key>
-				<value>value_04_1</value>
-			</parameter>
-			<parameter>
-				<key>key_04_2</key>
-				<value>value_04_2</value>
-			</parameter>
-			<parameter>
-				<key>key_04_3</key>
-				<value>value_04_3</value>
-			</parameter>
-		</interceptor>
-	</stack>
-	-->
 </configuration>

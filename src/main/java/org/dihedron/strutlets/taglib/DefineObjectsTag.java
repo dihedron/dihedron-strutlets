@@ -26,6 +26,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 
+import org.dihedron.strutlets.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +41,11 @@ public class DefineObjectsTag extends SimpleTagSupport {
 	private static final Logger logger = LoggerFactory.getLogger(DefineObjectsTag.class);
 	
 	public void doTag() throws JspException, IOException {
-		PageContext context = (PageContext)getJspContext();
-		HttpServletRequest request = (HttpServletRequest)context.getRequest();
+		PageContext pageContext = (PageContext)getJspContext();
+		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
 		String lifecycle = (String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE);
+		
+//		pageContext.setAttribute("context", ActionContext.getContext());
 		
 		logger.trace("current phase is '{}'", lifecycle);
 	}
