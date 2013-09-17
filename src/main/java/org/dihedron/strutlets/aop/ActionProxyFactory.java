@@ -20,6 +20,7 @@
 package org.dihedron.strutlets.aop;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -146,22 +147,6 @@ public class ActionProxyFactory {
 	 * of its super-classes (provided they are not shadowed through inheritance).
 	 * 
 	 * @param action
-	 *   the action class to be instrumented. 
-	 * @return
-	 *   the proxy <code>Class</code>.
-	 * @throws StrutletsException
-	 *
-	public Class<?> instrument(Class<? extends AbstractAction> action) throws StrutletsException {
-		return instrument(action, null);
-	}
-	*/
-	
-	/**
-	 * Instruments an action, returning the proxy class containing one static method 
-	 * for each <code>@Invocable</code> method in the original class or in any
-	 * of its super-classes (provided they are not shadowed through inheritance).
-	 * 
-	 * @param action
 	 *   the action class to be instrumented.
 	 * @return
 	 *   the proxy object containing information about the <code>AbstractAction</code>
@@ -175,6 +160,8 @@ public class ActionProxyFactory {
 			Map<Method, Method> methods = new HashMap<Method, Method>();
 			
 			CtClass generator = getClassGenerator(action);
+			
+			// adds the static method that creates or retrieves the 
 			createFactoryMethod(generator, action);
 			for(Method method : enumerateInvocableMethods(action)) {
 				logger.trace("instrumenting method '{}'...", method.getName());
@@ -219,6 +206,18 @@ public class ActionProxyFactory {
 	/**
 	 * Generates a <code>CtClass</code> in the Javassist <code>ClassPool</code>
 	 * to represent the new proxy.
+	 * The proxy class will have a static factory method, used to retrieve the 
+	 * actual inner action intance used at runtime without resorting to reflection.
+	 * Depeding on the structure of the <code>Action</code> object it will or
+	 * won't be cached: as a matter of fact, it will be scanned for the presence 
+	 * of non-static firlds, and if found the action will be non-cacheable (since 
+	 * there will be fields on which there would be concurrent access if the same 
+	 * action were used to service multiple requests at once). Thus, when creating 
+	 * the code for the factory method, some reflection is employed to check if 
+	 * there are no instance fields and only in that case the <code>singleton</code>
+	 * field will be pre-initialised with a reference to a singleton instance of
+	 * the action. If any non-static field is found, then each invocation will
+	 * cause a new action instance to be created.
 	 * 
 	 * @param action
 	 *   the action for which a proxy must be created.
@@ -239,9 +238,20 @@ public class ActionProxyFactory {
 			classpool.insertClassPath(new ClassClassPath(action));
 			generator = classpool.makeClass(proxyname);			
 			try {
+				// add the SLF4J logger
 				CtField log = CtField.make("private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(" + proxyname + ".class);", generator);
 				generator.addField(log);
-				logger.trace("... generator added, with built-in SLF4J support");
+				
+				if(hasInstanceFields(action)) {
+					logger.trace("factory method will renew action instances at each invocation");
+				} else {
+					logger.trace("factory method will reuse a single, cached action instance");
+					// add the singleton instance; it will be used to store the single instance for actions that					
+					// can be cached (see method comments to see when an action can be cached and reused)
+					CtField singleton = CtField.make("private final static " + action.getCanonicalName() + " singleton = new " + action.getCanonicalName() + "();", generator);
+					generator.addField(singleton);					
+				}
+				logger.trace("... generator added");
 			} catch (CannotCompileException e2) {
 				logger.error("error compiling SLF4J logger expression", e2);
 				throw new DeploymentException("error compiling AOP code in class creation", e2);
@@ -261,7 +271,7 @@ public class ActionProxyFactory {
 	 *   a collection of <code>@Invocable</code>, non-static and non-overridden
 	 *   methods.
 	 */
-	private Collection<Method> enumerateInvocableMethods(Class<?> action) {
+	private static Collection<Method> enumerateInvocableMethods(Class<?> action) {
 		Map<String, Method> methods = new HashMap<String, Method>();
 		
 		// walk up the class hierarchy and gather methods as we go
@@ -285,22 +295,81 @@ public class ActionProxyFactory {
     	return methods.values();
 	}
 	
+	/**
+	 * Checks if a class (and its hierarchy) has any non-static fields.
+	 * 
+	 * @param action
+	 *   the class to be scanned for the presence of instance fields.
+	 * @return
+	 *   whether the class and its super-classes declare any non-static field.
+	 */
+	private static boolean hasInstanceFields(Class<?> action) {
+		boolean found = false;
+		// walk up the class hierarchy and gather instance fields as we og
+		Class<?> clazz = action;
+    	while(clazz != null && clazz != Object.class) { 
+    		Field[] declared = clazz.getDeclaredFields();
+    		for(Field field : declared) {
+    			if(!Modifier.isStatic(field.getModifiers())) {
+    				found = true;
+    				break;
+    			}
+    		}
+    		clazz = clazz.getSuperclass();
+    	}	
+		return found;
+	}
+	
+	/**
+	 * Creates the static factory method that retrieves the instance of action to
+	 * be used in the actual invocation. The way of retrieving the action instance
+	 * varies depending on whether the action class has, or has not, instance 
+	 * fields: in the former case the action cannot be recycled or used concurrently 
+	 * since this would probably result in data corruption, in the latter case a 
+	 * single instance of the action can be reused across multiple requests, even
+	 * concurrently, thus resulting in reduced memory usage, heap fragmentation
+	 * and object instantiation overhead at runtime. 
+	 * 
+	 * @param generator
+	 *   the Javassist class generator.
+	 * @param action
+	 *   the class of the action object.
+	 * @return
+	 *   the Javassist object representing the factory method.
+	 * @throws DeploymentException
+	 */
 	private CtMethod createFactoryMethod(CtClass generator, Class<?> action) throws DeploymentException {
 		String factoryName = makeFactoryMethodName(action);
 		logger.trace("action '{}' will be created via '{}'", action.getSimpleName(), factoryName);
 		
-		if(Modifier.isAbstract(action.getModifiers())) {
-			logger.error("cannot instantiate abstract class '{}'", action.getCanonicalName());
-			throw new DeploymentException("cannot instantiate abstract class '" + action.getCanonicalName() + "'");
+		// check if there is a no-args contructor
+		try {
+			action.getConstructor();
+		} catch (SecurityException e) {
+			logger.error("error trying to access constructor for class '" + action.getSimpleName() + "'", e);
+			throw new DeploymentException("Error trying to access constructor for class '" + action.getSimpleName() + "'", e);
+		} catch (NoSuchMethodException e) {
+			logger.error("class '" + action.getSimpleName() + "' does not have a no-args constructor, please ensure it has one or it cannot be deployed", e);
+			throw new DeploymentException("Class '" + action.getSimpleName() + "' does not have a no-args constructor, please ensure it has one or it cannot be deployed", e);
 		}
 		
 		try {						
 			StringBuilder code = new StringBuilder("public static final ").append(action.getCanonicalName()).append(" ").append(factoryName).append("() {\n");
-			code.append("\tlogger.trace(\"entering factory method...\");\n");			
-			code.append("\t").append(action.getCanonicalName()).append(" action = new ").append(action.getCanonicalName()).append("();\n");
+			code.append("\tlogger.trace(\"entering factory method...\");\n");
+			// now analyse the action class and all its parent classes, checking 
+			// if it has any non-static field, and then decide whether we can reuse
+			// the single cached instance or we need to create a brand new instance 
+			// at each invocation
+			if(hasInstanceFields(action)) {
+				code.append("\tlogger.trace(\"instantiating brand new non-cacheable object\");\n");
+				code.append("\t").append(action.getCanonicalName()).append(" action = new ").append(action.getCanonicalName()).append("();\n");
+			} else {
+				code.append("\tlogger.trace(\"reusing single, cached instance\");\n");
+				code.append("\t").append(action.getCanonicalName()).append(" action = singleton;\n");
+			}
 			code.append("\tlogger.trace(\"... leaving factory method\");\n");
 			code.append("\treturn action;\n").append("}");		
-			logger.trace("compiling code:\n{}'", code);
+			logger.trace("compiling code:\n\n{}\n", code);
 		
 			CtMethod factoryMethod = CtNewMethod.make(code.toString(), generator);
 			generator.addMethod(factoryMethod);

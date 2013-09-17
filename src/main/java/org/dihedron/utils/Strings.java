@@ -39,6 +39,11 @@ public final class Strings {
 	 * {@link #split(String)} method, and to join them in {@link #join(String[])}.
 	 */
 	public static final String DEFAULT_SEPARATOR = ",";
+	
+	/**
+	 * A textual representation of the null string.
+	 */
+	public static final String NULL = "<null>";
 
 	/**
 	 * Checks whether the given string is neither null nor blank.

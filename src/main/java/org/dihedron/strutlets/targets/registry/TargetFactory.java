@@ -20,6 +20,7 @@
 package org.dihedron.strutlets.targets.registry;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
@@ -101,27 +102,34 @@ public class TargetFactory {
      */
     public void makeFromJavaClass(TargetRegistry registry, Class<?> actionClass) throws StrutletsException {
     	logger.trace("analysing action class: '{}'...", actionClass.getName());
-    	
-    	String interceptors = actionClass.getAnnotation(Action.class).interceptors(); 
-    	
-    	// let the factory inspect the action and generate a factory method
-    	// ans a set of proxy methods for valid @Invocable-annotated action methods 
-    	// (possibly walking up the class hierarchy and discarding duplicates, 
-    	// static and unannotated methods...) 
-    	ActionProxy proxy = factory.makeActionProxy(actionClass);
-    	
-    	// now loop through annotated methods and add them to the registry as targets
-    	Map<Method, Method> methods = proxy.getMethods();
-    	for(Method actionMethod : methods.keySet()) {	        		
-    		if(actionMethod.isAnnotationPresent(Invocable.class)) {
-    			Method proxyMethod = methods.get(actionMethod);
-        		logger.trace("... adding annotated method '{}' in class '{}' (proxy: '{}' in class '{}')", actionMethod.getName(), 
-        				actionClass.getSimpleName(), proxyMethod.getName(), proxy.getProxyClass().getSimpleName());
-        		Invocable invocable = actionMethod.getAnnotation(Invocable.class); 
-        		registry.addTarget(actionClass, proxy.getFactoryMethod(), actionMethod, proxyMethod, invocable, interceptors);
-    		} else {
-    			logger.trace("... discarding unannotated method '{}' in class '{}'", actionMethod.getName(), actionClass.getSimpleName());
-    		}
+
+    	// only add classes that are not abstract to the target registry
+    	if(!Modifier.isAbstract(actionClass.getModifiers())) {
+    		logger.trace("class '{}' is not abstract", actionClass.getSimpleName());
+   
+	    	String interceptors = actionClass.getAnnotation(Action.class).interceptors(); 
+	    	
+	    	// let the factory inspect the action and generate a factory method
+	    	// ans a set of proxy methods for valid @Invocable-annotated action methods 
+	    	// (possibly walking up the class hierarchy and discarding duplicates, 
+	    	// static and unannotated methods...) 
+	    	ActionProxy proxy = factory.makeActionProxy(actionClass);
+	    	
+	    	// now loop through annotated methods and add them to the registry as targets
+	    	Map<Method, Method> methods = proxy.getMethods();
+	    	for(Method actionMethod : methods.keySet()) {	        		
+	    		if(actionMethod.isAnnotationPresent(Invocable.class)) {
+	    			Method proxyMethod = methods.get(actionMethod);
+	        		logger.trace("... adding annotated method '{}' in class '{}' (proxy: '{}' in class '{}')", actionMethod.getName(), 
+	        				actionClass.getSimpleName(), proxyMethod.getName(), proxy.getProxyClass().getSimpleName());
+	        		Invocable invocable = actionMethod.getAnnotation(Invocable.class); 
+	        		registry.addTarget(actionClass, proxy.getFactoryMethod(), actionMethod, proxyMethod, invocable, interceptors);
+	    		} else {
+	    			logger.trace("... discarding unannotated method '{}' in class '{}'", actionMethod.getName(), actionClass.getSimpleName());
+	    		}
+	    	}
+    	} else {
+    		logger.trace("class '{}' is abstract, skipping", actionClass.getSimpleName());
     	}
     	logger.trace("... done analysing action class: '{}'!", actionClass.getName());
     }

@@ -19,6 +19,9 @@
 
 package org.dihedron.strutlets;
 
+import javax.portlet.PortletURL;
+import javax.portlet.ResourceURL;
+
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 
 /**
@@ -40,6 +43,45 @@ public class PresentationContext extends ActionContextImpl {
 	public static void setPortletTitle(String title) throws InvalidPhaseException {
 		ActionContextImpl.setPortletTitle(title);
 	}
+	
+	/**
+	 * Factory method: creates a new Action URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Action URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static PortletURL createActionURL() {
+		return ActionContextImpl.createActionURL();
+	}
+	
+	/**
+	 * Factory method: creates a new Render URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Render URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static PortletURL createRenderURL() {
+		return ActionContextImpl.createRenderURL();
+	}
+	
+	/**
+	 * Factory method: creates a new Resource URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Resource URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static ResourceURL createResourceURL() {
+		return ActionContextImpl.createResourceURL();
+	}	
 	
 	/**
 	 * Private constructor, to prevent instantiation.

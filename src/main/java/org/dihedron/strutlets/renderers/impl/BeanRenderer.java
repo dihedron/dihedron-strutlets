@@ -25,6 +25,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletSession;
 
 import org.dihedron.strutlets.ActionContext;
+import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,7 @@ public abstract class BeanRenderer extends AbstractRenderer {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(request, ActionContext.getRequestScopedAttributesKey()); 
 		Object value = map.get(key);
-		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 	
@@ -121,7 +122,7 @@ public abstract class BeanRenderer extends AbstractRenderer {
 	protected Object getPortletAttribute(PortletRequest request, String key) {
 		PortletSession session = request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
-		logger.trace("portlet attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("portlet attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 	
@@ -138,7 +139,7 @@ public abstract class BeanRenderer extends AbstractRenderer {
 	protected Object getApplicationAttribute(PortletRequest request, String key) {
 		PortletSession session = request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
-		logger.trace("application attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("application attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}	
 }

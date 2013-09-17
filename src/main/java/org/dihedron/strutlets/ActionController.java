@@ -159,7 +159,7 @@ public class ActionController extends GenericPortlet {
         	
         	initialiseRenderersRegistry();
 			
-			logger.info("portlet '{}''s action controller open for business", getPortletName());
+			logger.info("action controller for portlet '{}' open for business", getPortletName());
 			
 		} catch (StrutletsException e) {
 			logger.error("error initialising controller portlet");

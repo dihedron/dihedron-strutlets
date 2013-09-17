@@ -42,8 +42,12 @@ import javax.portlet.PortletPreferences;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletSession;
+import javax.portlet.PortletURL;
+import javax.portlet.ReadOnlyException;
 import javax.portlet.RenderResponse;
+import javax.portlet.ResourceURL;
 import javax.portlet.StateAwareResponse;
+import javax.portlet.ValidatorException;
 import javax.portlet.WindowStateException;
 import javax.servlet.http.Cookie;
 import javax.xml.namespace.QName;
@@ -395,6 +399,55 @@ public class ActionContextImpl {
 	public static String getPortletInitialisationParameter(String name) {
 		return Portlet.get().getInitParameter(name);
 	}
+	
+	/**
+	 * Factory method: creates a new Action URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Action URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static PortletURL createActionURL() {
+		if(getContext().response instanceof RenderResponse) {
+			return ((RenderResponse)getContext().response).createActionURL();
+		}
+		return null;
+	}
+	
+	/**
+	 * Factory method: creates a new Render URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Render URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static PortletURL createRenderURL() {
+		if(getContext().response instanceof RenderResponse) {
+			return ((RenderResponse)getContext().response).createRenderURL();
+		}
+		return null;
+	}
+	
+	/**
+	 * Factory method: creates a new Resource URL. NOTE: this method returns a 
+	 * valid result only when called in the render phase, otherwise it returns 
+	 * null.
+	 *  
+	 * @return
+	 *   returns a new Resource URL if invoked in the render phase, returns null 
+	 *   otherwise.
+	 */
+	public static ResourceURL createResourceURL() {
+		if(getContext().response instanceof RenderResponse) {
+			return ((RenderResponse)getContext().response).createResourceURL();
+		}
+		return null;
+	}
+	
 	
 	// TODO: get other stuff from portlet.xml and web.xml
 	// PortletContext and PorteltConfig (see Ashish Sarin pages 119-120)
@@ -999,6 +1052,190 @@ public class ActionContextImpl {
 	}
 	
 	/**
+	 * Returns the names of all portlet preference values stored for the current
+	 * portlet.
+	 * 
+	 * @return
+	 *   the names of all portlet preference values stored for the current 
+	 *   portlet.
+	 */
+	public static List<String> getPortletPreferenceNames() {
+		List<String> names = new ArrayList<String>();
+		Enumeration<String> enumeration = getContext().request.getPreferences().getNames();
+		while(enumeration.hasMoreElements()) {
+			names.add(enumeration.nextElement());
+		}
+		return names;
+	}
+	
+	/**
+	 * Returns the map of all portlet preference keys and values (as a string 
+	 * array) for the current portlet.
+	 * 
+	 * @return
+	 *   the map of all portlet preference keys and values (as a string array) 
+	 *   for the current portlet.
+	 */
+	public static Map<String, String[]> getPortletPreferenceMap() {
+		return getContext().request.getPreferences().getMap();
+	}
+
+	/**
+	 * Returns the per-user portlet preference value corresponding to the given 
+	 * key, or null if no preference exists under the given key.
+	 * 
+	 * @param key
+	 *   the key of the portlet preference value.
+	 * @return
+	 *   the value of the preference, or the default value if no valid value was 
+	 *   found.
+	 */
+	public static String getPortletPreferenceValue(String key) {
+		return getPortletPreferenceValue(key, null);
+	}
+	
+	/**
+	 * Returns the per-user portlet preference value corresponding to the given 
+	 * key, or the given default value if no preference exists under the given key.
+	 * 
+	 * @param key
+	 *   the key of the portlet preference value.
+	 * @param defaultValue
+	 *   the default value, if no valid prefrence value could be found under the
+	 *   given key.
+	 * @return
+	 *   the value of the preference, or the default value if no valid value was 
+	 *   found.
+	 */
+	public static String getPortletPreferenceValue(String key, String defaultValue) {
+		PortletPreferences preferences = getPortletPreferences();
+		return preferences.getValue(key, defaultValue);
+	}
+
+	/**
+	 * Returns the per-user portlet preference values corresponding to the given 
+	 * key, or null if no preference exists under the given key.
+	 * 
+	 * @param key
+	 *   the key of the portlet preference value set (as an array of strings).
+	 * @return
+	 *   the values of the preference, or null if no valid values were found.
+	 */
+	public static String[] getPortletPreferenceValues(String key) {
+		return getPortletPreferenceValues(key, null);
+	}
+	
+	/**
+	 * Returns the per-user portlet preference value corresponding to the given 
+	 * key, or the given default value if no preference exists under the given key.
+	 * 
+	 * @param key
+	 *   the key of the portlet preference value set (as a string array).
+	 * @param defaultValues
+	 *   the default values, if no valid preference values could be found under 
+	 *   the given key.
+	 * @return
+	 *   the values of the preference, or the default values if no valid values 
+	 *   were found.
+	 */
+	public static String[] getPortletPreferenceValues(String key, String[] defaultValues) {
+		PortletPreferences preferences = getPortletPreferences();
+		return preferences.getValues(key, defaultValues);
+	}
+	
+	/**
+	 * Sets a new value for a portlet preference.
+	 * 
+	 * @param key
+	 *   the name under which the preference is stored.
+	 * @param value
+	 *   the value of the preference.
+	 * @throws StrutletsException
+	 *   if the preference is read-only, it canot be validated or an I/O error
+	 *   occurs writing it down to persistent store.
+	 */
+	public static void setPortletPreferenceValue(String key, String value) throws StrutletsException {
+		if(Strings.isValid(key)) {
+			PortletPreferences preferences = getPortletPreferences();
+			try {
+				preferences.setValue(key, value);
+				preferences.store();
+			} catch (ReadOnlyException e) {
+				logger.error("invalid attempt to store read-only preference '" + key + "'", e);
+				throw new StrutletsException("Invalid attempt to store read-only preference '" + key + "'", e);
+			} catch (ValidatorException e) {
+				logger.error("error validating preference '" + key + "', value '" + value + "'", e);
+				throw new StrutletsException("Error validating preference '" + key + "', value '" + value + "'", e);
+			} catch (IOException e) {
+				logger.error("error storing preference '" + key + "', value '" + value + "'", e);
+				throw new StrutletsException("Error storing preference '" + key + "', value '" + value + "'", e);
+			}			
+		}
+	}
+	
+	/**
+	 * Sets a new sets of values for a portlet preference.
+	 * 
+	 * @param key
+	 *   the name under which the preference is stored.
+	 * @param values
+	 *   the values of the preference.
+	 * @throws StrutletsException
+	 *   if the preference is read-only, it canot be validated or an I/O error
+	 *   occurs writing it down to persistent store.
+	 */
+	public static void setPortletPreferenceValues(String key, String[] values) throws StrutletsException {
+		if(Strings.isValid(key)) {
+			PortletPreferences preferences = getPortletPreferences();
+			try {
+				preferences.setValues(key, values);
+				preferences.store();
+			} catch (ReadOnlyException e) {
+				logger.error("invalid attempt to store read-only preference '" + key + "'", e);
+				throw new StrutletsException("Invalid attempt to store read-only preference '" + key + "'", e);
+			} catch (ValidatorException e) {
+				logger.error("error validating preference '" + key + "'", e);
+				throw new StrutletsException("Error validating preference '" + key + "'", e);
+			} catch (IOException e) {
+				logger.error("error storing preference '" + key + "'", e);
+				throw new StrutletsException("Error storing preference '" + key + "'", e);
+			}			
+		}
+	}
+	
+	/**
+	 * Resets the value(s) of the given prefefence.
+	 * 
+	 * @param key
+	 *   the name of the preference.
+	 * @throws StrutletsException
+	 *   if the preference is read-only.
+	 */
+	public static void resetPortletPreference(String key) throws StrutletsException {
+		if(Strings.isValid(key)) {
+			PortletPreferences preferences = getPortletPreferences();
+			try {
+				preferences.reset(key);
+			} catch (ReadOnlyException e) {
+				logger.error("invalid attempt to reset read-only preference '" + key + "'", e);
+				throw new StrutletsException("Invalid attempt to reset read-only preference '" + key + "'", e);
+			}
+		}
+	}
+	
+	/**
+	 * Returns whether the given portlet preference is a read-only value.
+	 * 
+	 * @param key
+	 *   the name of the portlet preference.
+	 * @return
+	 *   whether the given portlet preference is a read-only value.
+	 */
+	public static boolean isreadOnlyPortletPreference(String key) {
+		return getPortletPreferences().isReadOnly(key);
+	}
+	
+	/**
 	 * Looks for a parameter in any of the provided scopes, in the given order.
 	 *  
 	 * @param key
@@ -1014,44 +1251,81 @@ public class ActionContextImpl {
 	public static Object findValueInScopes(String key, org.dihedron.strutlets.annotations.Scope ... scopes) throws StrutletsException {
 		// now, depending on the scope, try to locate the parameter in the appropriate context 
 		Object value = null;
+		
+		loop:
 		for(org.dihedron.strutlets.annotations.Scope scope : scopes) {
 			logger.trace("scanning input scope '{}' for parameter '{}'...", scope.name(), key);
-			if(scope == org.dihedron.strutlets.annotations.Scope.FORM) {
+			switch(scope) {
+			case FORM:
 				value = ActionContext.getParameterValues(key);
 				if(value != null) {
 					logger.trace("... value for '{}' found in FORM parameters: '{}'", key, value);
-					break;
+					break loop;
 				}
-			} else if(scope == org.dihedron.strutlets.annotations.Scope.REQUEST) {
+				break;
+			case REQUEST:	
 				value = ActionContext.getRequestAttribute(key);
 				if(value != null) {
 					logger.trace("... value for '{}' found in REQUEST attributes: '{}'", key, value);
-					break;
+					break loop;
 				}
-			} else if(scope == org.dihedron.strutlets.annotations.Scope.PORTLET) {
+				break;
+			case PORTLET:
 				value = ActionContext.getPortletAttribute(key);
 				if(value != null) {
 					logger.trace("... value for '{}' found in PORTLET attributes: '{}'", key, value);
-					break;
+					break loop;
 				}
-			} else if(scope == org.dihedron.strutlets.annotations.Scope.APPLICATION) {
+				break;
+			case APPLICATION:
 				value = ActionContext.getApplicationAttribute(key);
 				if(value != null) {
 					logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", key, value);
-					break;
+					break loop;
 				}
-			} else if(scope == org.dihedron.strutlets.annotations.Scope.CONFIGURATION) {
+			case CONFIGURATION:
 				// TODO: find a good way of providing configuration data for an action
 				throw new StrutletsException("Not implemented yet");
-//				value = ActionContext.getActionInvocation().getAction().getParameter(key);
-//				if(value != null) {
-//					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
-//					break;
-//				}
-			} else {
+			default:				
 				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
 				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
 			}
+//			if(scope == org.dihedron.strutlets.annotations.Scope.FORM) {
+//				value = ActionContext.getParameterValues(key);
+//				if(value != null) {
+//					logger.trace("... value for '{}' found in FORM parameters: '{}'", key, value);
+//					break;
+//				}
+//			} else if(scope == org.dihedron.strutlets.annotations.Scope.REQUEST) {
+//				value = ActionContext.getRequestAttribute(key);
+//				if(value != null) {
+//					logger.trace("... value for '{}' found in REQUEST attributes: '{}'", key, value);
+//					break;
+//				}
+//			} else if(scope == org.dihedron.strutlets.annotations.Scope.PORTLET) {
+//				value = ActionContext.getPortletAttribute(key);
+//				if(value != null) {
+//					logger.trace("... value for '{}' found in PORTLET attributes: '{}'", key, value);
+//					break;
+//				}
+//			} else if(scope == org.dihedron.strutlets.annotations.Scope.APPLICATION) {
+//				value = ActionContext.getApplicationAttribute(key);
+//				if(value != null) {
+//					logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", key, value);
+//					break;
+//				}
+//			} else if(scope == org.dihedron.strutlets.annotations.Scope.CONFIGURATION) {
+//				// TODO: find a good way of providing configuration data for an action
+//				throw new StrutletsException("Not implemented yet");
+////				value = ActionContext.getActionInvocation().getAction().getParameter(key);
+////				if(value != null) {
+////					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
+////					break;
+////				}
+//			} else {
+//				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
+//				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
+//			}
 		}
 		return value;
 	}
@@ -1103,7 +1377,7 @@ public class ActionContextImpl {
 	public static Object getApplicationAttribute(String key) {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
-		logger.trace("application attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("application attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 	
@@ -1120,7 +1394,7 @@ public class ActionContextImpl {
 	public static void setApplicationAttribute(String key, Object value) {
 		PortletSession session = getContext().request.getPortletSession();
 		session.setAttribute(key, value, PortletSession.APPLICATION_SCOPE);
-		logger.trace("application attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");		
+		logger.trace("application attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);		
 	}
 	
 	/**
@@ -1135,7 +1409,7 @@ public class ActionContextImpl {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.APPLICATION_SCOPE);
 		session.removeAttribute(key, PortletSession.APPLICATION_SCOPE);
-		logger.trace("application attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");		
+		logger.trace("application attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);		
 		return value;
 	}
 
@@ -1162,7 +1436,7 @@ public class ActionContextImpl {
 	public static Object getPortletAttribute(String key) {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
-		logger.trace("portlet attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("portlet attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 	
@@ -1180,7 +1454,7 @@ public class ActionContextImpl {
 	public static void setPortletAttribute(String key, Object value) {
 		PortletSession session = getContext().request.getPortletSession();
 		session.setAttribute(key, value, PortletSession.PORTLET_SCOPE);	
-		logger.trace("portlet attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("portlet attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 	}	
 	
 	/**
@@ -1195,7 +1469,7 @@ public class ActionContextImpl {
 		PortletSession session = getContext().request.getPortletSession();
 		Object value = session.getAttribute(key, PortletSession.PORTLET_SCOPE);
 		session.removeAttribute(key, PortletSession.PORTLET_SCOPE);
-		logger.trace("portlet attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("portlet attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;		
 	}	
 	
@@ -1223,7 +1497,7 @@ public class ActionContextImpl {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey()); 
 		Object value = map.get(key);
-		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("request attribute '{}' has value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 
@@ -1241,7 +1515,7 @@ public class ActionContextImpl {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey()); 
 		map.put(key, value);
-		logger.trace("request attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("request attribute '{}' set to value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 	}
 	
 	/**
@@ -1257,7 +1531,7 @@ public class ActionContextImpl {
 		Map<String, Object> map = (Map<String, Object>)getPortletAttribute(getRequestScopedAttributesKey());
 		Object value = map.get(key);
 		map.remove(key);
-		logger.trace("request attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : "<null>");
+		logger.trace("request attribute '{}' removed, previous value '{}' (class '{}')", key, value, value != null ? value.getClass().getSimpleName() : Strings.NULL);
 		return value;
 	}
 	

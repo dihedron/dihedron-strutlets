@@ -50,5 +50,5 @@ public @interface In {
 	 * @return
 	 *   the scope of the parameter.
 	 */
-	Scope[] scopes() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, Scope.CONFIGURATION };
+	Scope[] scopes() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION/*, Scope.CONFIGURATION */};
 }

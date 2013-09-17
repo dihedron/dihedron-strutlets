@@ -1,3 +1,37 @@
+VERSION 0.42.0 (released on 2013-09-17)
+This is an enhancement, stability and performance release. As a matter of fact, 
+with this release there begins to be very little in common with Struts2 apart 
+from the interceptors mechanism.
+--------------------------------------------------------------------------------
+PERFORMANCE:
+  The ActionProxyFactory generated different code depending on whether the action
+  does nor does not have instance fields: in the former case it outputs code that
+  instantiates a new object for each invocation; in the latter it allocates a 
+  single static instance at deployment time and then returns a reference to the 
+  same singleton instance. This should reduce object creation, reduce heap 
+  fragmentation under heavy load and increase performance for stateless actions.
+FEATURE:
+  Added methods to create action, render and resource URLs to ActionContext.
+FEATURE: 
+  Added methods to retrieve, enumerate, check and store portlet preferences 
+  through ActionContext.
+FEATURE:
+  Remove possibility to decorate class fields in with @OIn and @Out annotations.
+  Inputs and outputs are now only conveyed through annotated method arguments. 
+  This enables the use of stateless actions, with the aforementioned performance
+  benefits.
+DEBUGGING:
+  Added check on existence of no-arg constructor on action classes, for the sake
+  of easier debugging: the portlet will not be instantiated, so errors will occur
+  at deployment time, not at runtime.
+STABILITY:
+  Added a check that only concrete classes are added to the target registry; if
+  an abstract class in annotated with @Action its methods will not go into the
+  registry, but they may if the abstract class is extended a concrete @Action.
+  If the abstract class is a superclass of many @Action's, then the same methods
+  may appear multiple times in the registry, under the different concrete classes'
+  account. 
+================================================================================
 VERSION 0.40.0 (released on 2013-09-15)
 This is an enhancements release; it is not backward compatible, so be careful 
 when upgrading. The change was necessary to allow for inheritance of Actions.
@@ -7,7 +41,18 @@ the base abstract class through a chain of intermediate classes.
 --------------------------------------------------------------------------------
 FEATURE:
   The framework now scans for types annotated with @Action, instead of looking
-  for classes inheriting from Action. 
+  for classes inheriting from Action; the @Interceptors annotation has been 
+  removed.
+FEATURE:
+  Actions can now declare an alias in their annotation, in order to allow internal
+  classes names to be mapped externally as aliases, e.g.
+    @Action(
+      alias = "MyAlias",
+      interceptors = "my-custom-stack"
+    )
+    public class MyInnerClass { ... }
+  Action targets can now be expressed as "MyAlias!myMethod", avoid exposure of 
+  the internal class name.
 ================================================================================
 VERSION 0.33.0 (released on 2013-09-11)
 This is a bugfix release.
