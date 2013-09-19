@@ -1,3 +1,12 @@
+VERSION 0.42.1 (released on 2013-09-19)
+This is a bugfix release.
+--------------------------------------------------------------------------------
+BUG:
+  When accessing objects in APPLICATION scope the findValiInScopes() method would
+  fail with a "Not yet implemented" exception. A missing "break" in a switch 
+  construct caused the control flow to fall through and hit the unsupported (so 
+  far) CONFIGURATION scope.
+================================================================================
 VERSION 0.42.0 (released on 2013-09-17)
 This is an enhancement, stability and performance release. As a matter of fact, 
 with this release there begins to be very little in common with Struts2 apart 
