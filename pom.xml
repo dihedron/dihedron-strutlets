@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets</artifactId>
-	<version>0.42.1</version>
+	<version>0.43.0</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime library</name>
 	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>

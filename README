@@ -1,3 +1,10 @@
+VERSION 0.43.0 (released on 2013-09-19)
+This is an enhancement release.
+--------------------------------------------------------------------------------
+ENHANCEMENT:
+  Added the @InOut annotation, to make input/output parameters easier to use when
+  no scope change is needed.
+================================================================================  
 VERSION 0.42.1 (released on 2013-09-19)
 This is a bugfix release.
 --------------------------------------------------------------------------------
