@@ -51,5 +51,5 @@ public @interface Out {
 	 * @return
 	 *   the scope into which to set the parameter.
 	 */
-	Scope scope() default Scope.RENDER;	
+	Scope scope() default Scope.REQUEST;	
 }

@@ -1231,7 +1231,7 @@ public class ActionContextImpl {
 	 * @return
 	 *   whether the given portlet preference is a read-only value.
 	 */
-	public static boolean isreadOnlyPortletPreference(String key) {
+	public static boolean isReadOnlyPortletPreference(String key) {
 		return getPortletPreferences().isReadOnly(key);
 	}
 	

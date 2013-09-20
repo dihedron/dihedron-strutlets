@@ -45,6 +45,7 @@ import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.ContainerPluginManager;
 import org.dihedron.strutlets.containers.portlet.PortletContainer;
 import org.dihedron.strutlets.containers.web.WebContainer;
+import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
@@ -145,11 +146,8 @@ public class ActionController extends GenericPortlet {
         	logger.info(              "   +------------------------------------------------------------+   ");
         	
         	logger.info("action controller '{}' starting up...", getPortletName());
-        	
-        	// dump initialisation parameters for debugging purposes
-        	for(InitParameter parameter : InitParameter.values()) {
-        		logger.info(" + parameter: {}", parameter.toString(this));
-        	}
+        	        	
+        	performSanityCheck();
         	
         	initialiseRuntimeEnvironment();
 
@@ -293,60 +291,116 @@ public class ActionController extends GenericPortlet {
     		Portlet.set(this);
     		
 	    	TargetId targetId = null;
-	    	String result = null;
-	    	
 	    	Renderer renderer = null;
 	    	
-	    	logger.trace("rendering output...");	    	
+    		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
+    		String result = request.getParameter(Strutlets.STRUTLETS_RESULT);
 	    	
-	    	do {
-		    	// first attempt, check if this is a render request following an action/event request
-	    		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
-	    		result = request.getParameter(Strutlets.STRUTLETS_RESULT);
-	    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
-	    			// yes, this is right after a processAction or processEvent
+	    	logger.trace("rendering output...");
+	    	
+	    	boolean first = true;
+	    	while(true) {
+	    		if(TargetId.isValidTarget(target)) {
+	    			logger.trace("right after an action invocation: '{}'", target);
 	    			targetId = new TargetId(target);
-	    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
-	    			break;
+	    			Target targetData = registry.getTarget(targetId);
+	    			String subtarget = targetData.getResult(result).getData();
+	    			if(TargetId.isValidTarget(subtarget)) {
+	    				targetId = new TargetId(subtarget);
+	    	    		logger.debug("target '{}' wants its output rendered by target '{}', forwarding...", target, subtarget);
+	    	    		result = invokePresentationLogic(targetId, request, response);
+	    		    	target = targetId.toString();
+	    		    	continue;
+	    			} else {
+	    				logger.trace("moving over to rendering '{}'...", subtarget);
+	    				break;
+	    			}
+	    		} else {
+	    			if(first) {
+	    				first = false;
+	    				// no, this is a plain render request, let's check "jspPage" 
+	    				// first, to comply with Liferay's worst practices
+	    	    		target = request.getParameter(Strutlets.LIFERAY_TARGET);
+	    	    		if(Strings.isValid(target)) {
+	    	    			logger.trace("redirecting to jspPage '{}' as requested by client", target);	    	    			
+	    	    		} else {		    			
+	    	    			// we have to resort to the default URL for the given mode,
+	    	    			// the ones specified in the portlet parameters; at this point
+	    	    			// we are sure it's not a target (otherwise it would have been 
+	    	    			// detected as such above, at (*)		    			
+	    		    		PortletMode mode = request.getPortletMode();
+	    		    		logger.trace("redirecting to default page for current mode '{}'", mode.toString());
+	    		    		target = getDefaultUrl(mode);	    		    		
+	    	    		}
+	    	    		continue;
+	    			} else {
+	    				logger.trace("no valid target in request, rendering does not follow an action ('{}')", target);
+	    				break;
+	    			}
 	    		}
-	    		
-	    		logger.trace("no prior action/event phase to get renderer from");
-	    		
-		    	// second attempt, check if there is a target to invoke before rendering
-		    	targetId = TargetId.makeFromRequest(request);
-		    	if(targetId != null) {
-		    		logger.trace("invoking target '{}' as per render request", targetId);
-			    	
-		    		// this is a valid target specification, dispatch to the appropriate 
-		    		// action and method, then retrieve the result's URL	    		
-		    		result = invokePresentationLogic(targetId, request, response);
-		    		
-		    		// task invoked, now exit
-		    		break;
-		    	}
-		    	
-		    	// last attempt, if there is no valid URL (no target!) in the request, 
-		    	// then this is the initial page and we might have a target there too 
-		    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
-		    		target = getDefaultUrl(request.getPortletMode());
-		    		if(TargetId.isValidTarget(target)) { // (*)
-		    			targetId = new TargetId(target);
-			    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
-				    	
-			    		// this is a valid target specification, dispatch to the appropriate 
-			    		// action and method, then retrieve the result's URL	    		
-			    		result = invokePresentationLogic(targetId, request, response);
-			    		
-			    		// task invoked, now exit
-			    		break;
-		    		} else {
-		    			target = null;
-		    		}
-		    	}
-	    		
-	    		logger.trace("no business logic to invoke in render phase");
-	    		
-	    	} while(false);   
+	    	} 
+
+	    	
+//	    	outer:
+//	    	do {
+//		    	// first attempt, check if this is a render request following an action/event request
+//	    		
+//	    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
+//	    			// yes, this is right after a processAction or processEvent
+//	    			
+//	    			// let's check if the action-phase target wants its output to be rendered by yet another target
+//	    	    	Target targetData = registry.getTarget(targetId);
+//	    	    	String url = targetData.getResult(result).getData();
+//	    	    	if(TargetId.isValidTarget(url)) {
+//	    	    		targetId = new TargetId(url);
+//	    	    		logger.debug("target '{}' wants its output rendereed by target '{}', forwarding...", target, url);
+//	    	    		result = invokePresentationLogic(targetId, request, response);
+//	    	    		// set parameters for the following render phase
+//	    		    	target = targetId.toString();	    			    	    		
+//	    	    	} else {
+//		    			targetId = new TargetId(target);
+//		    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
+//		    			break outer;
+//	    	    	}
+//	    		}
+//	    		
+//	    		logger.trace("no prior action/event phase to get renderer from");
+//	    		
+//		    	// second attempt, check if there is a target to invoke before rendering
+//		    	targetId = TargetId.makeFromRequest(request);
+//		    	if(targetId != null) {
+//		    		logger.trace("invoking target '{}' as per render request", targetId);
+//			    	
+//		    		// this is a valid target specification, dispatch to the appropriate 
+//		    		// action and method, then retrieve the result's URL	    		
+//		    		result = invokePresentationLogic(targetId, request, response);
+//		    		
+//		    		// task invoked, now exit
+//		    		break outer;
+//		    	}
+//		    	
+//		    	// last attempt, if there is no valid URL (no target!) in the request, 
+//		    	// then this is the initial page and we might have a target there too 
+//		    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
+//		    		target = getDefaultUrl(request.getPortletMode());
+//		    		if(TargetId.isValidTarget(target)) { // (*)
+//		    			targetId = new TargetId(target);
+//			    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
+//				    	
+//			    		// this is a valid target specification, dispatch to the appropriate 
+//			    		// action and method, then retrieve the result's URL	    		
+//			    		result = invokePresentationLogic(targetId, request, response);
+//			    		
+//			    		// task invoked, now exit
+//			    		break outer;
+//		    		} else {
+//		    			target = null;
+//		    		}
+//		    	}
+//	    		
+//	    		logger.trace("no business logic to invoke in render phase");
+//	    		
+//	    	} while(false);   
 	
 	    	String url = null;
 	    	// now, if target and result are valid, get the renderer
@@ -616,6 +670,35 @@ public class ActionController extends GenericPortlet {
 		}
     	return url;
     }
+    
+    // TODO: this method will be removed as soon as all portlets have migrated to 
+    // the new portlet.xml initialisation parameters
+    @Deprecated
+    private void performSanityCheck() {
+
+    	if(Strings.isValid(InitParameter.ACTIONS_CONFIGURATION_FILE.getValueForPortlet(this))) {
+    		logger.error("please remove deprecated initialisation parameter '{}' from your portlet.xml", 
+    				InitParameter.ACTIONS_CONFIGURATION_FILE.getLegacyName());
+    	}
+    	
+    	if(Strings.isValid(InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this))) {
+    		logger.error("please replace deprecated initialisation parameter '{}' with '{}' in your portlet.xml", 
+    				InitParameter.ACTIONS_JAVA_PACKAGE.getLegacyName(),
+    				InitParameter.ACTIONS_JAVA_PACKAGES.getName());
+    	}
+    	
+    	if(Strings.isValid(InitParameter.RENDERERS_JAVA_PACKAGE.getValueForPortlet(this))) {
+    		logger.error("please replace deprecated initialisation parameter '{}' with '{}' in your portlet.xml", 
+    				InitParameter.RENDERERS_JAVA_PACKAGE.getLegacyName(),
+    				InitParameter.RENDERERS_JAVA_PACKAGES.getName());
+    	}
+    	
+    	// dump initialisation parameters for debugging purposes
+    	for(InitParameter parameter : InitParameter.values()) {
+    		logger.info(" + parameter: {}", parameter.toString(this));
+    	}
+    	
+    }
         
     /**
      * Initialises the current runtime environment, with application server 
@@ -669,8 +752,27 @@ public class ActionController extends GenericPortlet {
 		
 		// pre-scan existing classes and methods in the default actions package
 		TargetFactory loader = new TargetFactory();
-		loader.makeFromJavaPackage(registry, InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this));
-
+		
+		String parameter = InitParameter.ACTIONS_JAVA_PACKAGES.getValueForPortlet(this);
+		if(Strings.isValid(parameter)) {
+			logger.trace("scanning for actions in packages: '{}'", parameter);
+			String [] packages = Strings.split(parameter, ",", true);
+			for(String pkg : packages) {
+				loader.makeFromJavaPackage(registry, pkg);
+			}
+		} else {
+			String pkg = InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this);
+			if(Strings.isValid(pkg)) {
+				logger.warn("attention: using legacy parameter '{}' to specify actions' single package: '{}' (please consider switching to '{}')", 
+						InitParameter.ACTIONS_JAVA_PACKAGE.getLegacyName(),
+						pkg,
+						InitParameter.ACTIONS_JAVA_PACKAGES.getName());
+				loader.makeFromJavaPackage(registry, pkg);
+			} else {
+				logger.error("no Java packages specified for actions: check parameter '{}'", InitParameter.ACTIONS_JAVA_PACKAGES.getName());
+				throw new DeploymentException("No Java package specified for actions: check parameter '" + InitParameter.ACTIONS_JAVA_PACKAGES.getName() + "'");
+			}
+		}
 		logger.trace("actions configuration:\n{}", registry.toString());    	
     }
     
@@ -708,7 +810,25 @@ public class ActionController extends GenericPortlet {
     	renderers = new CachingRendererRegistry(this);
     	//renderers = new RenewingRendererRegistry(this);
     	loader.loadFromJavaPackage(renderers, RendererRegistry.DEFAULT_RENDERER_PACKAGE);
-    	loader.loadFromJavaPackage(renderers, InitParameter.RENDERERS_JAVA_PACKAGE.getValueForPortlet(this));
+    	
+		String parameter = InitParameter.RENDERERS_JAVA_PACKAGES.getValueForPortlet(this);
+		if(Strings.isValid(parameter)) {
+			logger.trace("scanning for renderers in packages: '{}'", parameter);
+			String [] packages = Strings.split(parameter, ",", true);
+			for(String pkg : packages) {
+				loader.loadFromJavaPackage(renderers, pkg);
+			}
+		} else {
+			String pkg = InitParameter.RENDERERS_JAVA_PACKAGE.getValueForPortlet(this);
+			if(Strings.isValid(pkg)) {
+				logger.warn("attention: using legacy parameter '{}' to specify renderers' single package: '{}' (please consider switching to '{}')", 
+						InitParameter.RENDERERS_JAVA_PACKAGE.getLegacyName(),
+						pkg,
+						InitParameter.RENDERERS_JAVA_PACKAGES.getName());
+				loader.loadFromJavaPackage(renderers, pkg);
+			}
+		}
+		logger.trace("renderers configuration:\n{}", renderers.toString());    	
     }
 
 	/**
