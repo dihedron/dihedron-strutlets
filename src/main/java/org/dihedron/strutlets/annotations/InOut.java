@@ -60,5 +60,5 @@ public @interface InOut {
 	 * @return
 	 *   the scope into which to set the parameter.
 	 */
-	Scope to() default Scope.RENDER;	
+	Scope to() default Scope.REQUEST;	
 }
