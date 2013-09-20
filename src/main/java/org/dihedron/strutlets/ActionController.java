@@ -696,8 +696,7 @@ public class ActionController extends GenericPortlet {
     	// dump initialisation parameters for debugging purposes
     	for(InitParameter parameter : InitParameter.values()) {
     		logger.info(" + parameter: {}", parameter.toString(this));
-    	}
-    	
+    	}    	
     }
         
     /**
