@@ -86,12 +86,14 @@ public class JBossAS7x implements WebContainer {
 				Vfs.Dir dir = null;
 				try {
 					dir = createDir(new File(content.getPhysicalFile().getParentFile(), content.getName()));
-				} catch (IOException e) { /* continue */
+				} catch (IOException e) { 
+					// continue
 				}
 				if (dir == null) {
 					try {
 						dir = createDir(content.getPhysicalFile());
-					} catch (IOException e) { /* continue */
+					} catch (IOException e) { 
+						// continue
 					}
 				}
 				return dir;
