@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME) 
 @Target(ElementType.PARAMETER)
-public @interface Out {
+public @interface InOut {
 	
 	/**
 	 * The name of the output parameter which will receive the annotated field's
@@ -45,11 +45,20 @@ public @interface Out {
 	String value();
 	
 	/**
+	 * The scope in which the parameter should be looked up; by default, it is
+	 * looked up in all available scopes.
+	 * 
+	 * @return
+	 *   the scope of the parameter.
+	 */
+	Scope[] from() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION/*, Scope.CONFIGURATION */};
+	
+	/**
 	 * The scope into which the parameter should be stored; by default, it is
 	 * stored among the render parameters.
 	 * 
 	 * @return
 	 *   the scope into which to set the parameter.
 	 */
-	Scope scope() default Scope.REQUEST;	
+	Scope to() default Scope.REQUEST;	
 }

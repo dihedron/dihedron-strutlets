@@ -21,6 +21,7 @@ package org.dihedron.strutlets.renderers.impl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.portlet.GenericPortlet;
 
@@ -83,5 +84,16 @@ public class CachingRendererRegistry implements RendererRegistry {
 			renderer = this.renderers.get(id);
 		}
 		return renderer;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append("renderers: {\n");
+		for(Entry<String, Renderer> entry : renderers.entrySet()) {
+			buffer.append("  renderer('").append(entry.getValue().getId()).append("')\n");
+		}
+		buffer.append("}\n");		
+		return buffer.toString();
 	}
 }

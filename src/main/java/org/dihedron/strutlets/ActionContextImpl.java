@@ -1231,7 +1231,7 @@ public class ActionContextImpl {
 	 * @return
 	 *   whether the given portlet preference is a read-only value.
 	 */
-	public static boolean isreadOnlyPortletPreference(String key) {
+	public static boolean isReadOnlyPortletPreference(String key) {
 		return getPortletPreferences().isReadOnly(key);
 	}
 	
@@ -1283,6 +1283,7 @@ public class ActionContextImpl {
 					logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", key, value);
 					break loop;
 				}
+				break;
 			case CONFIGURATION:
 				// TODO: find a good way of providing configuration data for an action
 				throw new StrutletsException("Not implemented yet");

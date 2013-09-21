@@ -38,6 +38,7 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 
 import org.dihedron.strutlets.annotations.In;
+import org.dihedron.strutlets.annotations.InOut;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Scope;
@@ -463,14 +464,27 @@ public class ActionProxyFactory {
 				
 		In in = null;
 		Out out = null;
+		InOut inout = null;
 		for(Annotation annotation : annotations) {
 			if(annotation instanceof In) {
 				in = (In)annotation;
 			} else if (annotation instanceof Out) {
 				out = (Out)annotation;
+			} else if(annotation instanceof InOut) {
+				inout = (InOut)annotation;
 			}
 		}
-		if(in != null && out == null) {
+		if(inout != null) {
+			logger.trace("preparing input argument...");
+			// safety check: verify that no @In or @Out parameters are specified
+			if(in != null) {
+				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @In: @In will be ignored", i);
+			}
+			if(out != null) {
+				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @Out: @Out will be ignored", i);
+			}			
+			return prepareInOutArgument(i, type, inout, preCode, postCode); 			
+		} else if(in != null && out == null) {
 			logger.trace("preparing input argument...");
 			return prepareInputArgument(i, type, in, preCode); 
 		} else if(in == null && out != null) {
@@ -591,7 +605,7 @@ public class ActionProxyFactory {
 		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
 		
 		//
-		// code executed BEFORE th action fires, to prepare input parameters
+		// code executed BEFORE the action fires, to prepare input parameters
 		//		
 		preCode.append("\t//\n\t// preparing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(")\n\t//\n");
 				
@@ -628,6 +642,66 @@ public class ActionProxyFactory {
 		postCode.append("\n");
 		return "inout" + i;
 	}
+
+	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+		
+		if(!Types.isGeneric(type)) {
+			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+		}
+		
+		if(!Types.isOfClass(type, $.class))	{		
+			logger.error("output parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
+		}
+
+		if(inout.value().trim().length() == 0) {
+			logger.error("input/output parameters' storage name must be explicitly specified through the @InOut annotation's value (check parameter {}: @InOut's value is '{}')", i, inout.value());
+			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @InOut annotation's value: check parameter no. " + i + " (@InOut's value is '" + inout.value() + "')");									
+		}
+				
+		Type wrapped = Types.getParameterTypes(type)[0]; 
+		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
+		
+		//
+		// code executed BEFORE the action fires, to prepare input parameters
+		//		
+		preCode.append("\t//\n\t// preparing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(")\n\t//\n");
+				
+		String parameter = inout.value();
+		logger.trace("{}-th parameter is annotated with @InOut('{}') and @Out('{}')", i, inout.value());
+		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		boolean first = true;
+		for(Scope scope : inout.from()) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope);
+			first = false;
+		}
+		preCode.append(" });\n");
+		
+		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
+			// if parameter is not an array, pick the first element
+			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+		}					
+
+		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
+		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ inout").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\tinout").append(i).append(".set(value);\n");
+		preCode.append("\ttrace.append(\"inout").append(i).append("\").append(\" => '\").append(inout").append(i).append(".get()).append(\"', \");\n");
+		preCode.append("\n");
+		
+		//
+		// code executed AFTER the action has returned, to store values into scopes
+		//
+		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(") into scope ").append(inout.to()).append("\n\t//\n");
+		postCode.append("\tvalue = inout").append(i).append(".get();\n");
+		postCode.append("\tif(value != null) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(inout.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to()).append(", value );\n");
+		postCode.append("\t}\n");
+		postCode.append("\n");
+		return "inout" + i;
+	}
+	
 	
 	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code) throws DeploymentException {
 		
