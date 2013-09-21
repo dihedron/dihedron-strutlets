@@ -89,11 +89,11 @@ public class CachingRendererRegistry implements RendererRegistry {
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("renderers: {\n");
+		buffer.append("renderers: [\n");
 		for(Entry<String, Renderer> entry : renderers.entrySet()) {
-			buffer.append("  renderer('").append(entry.getValue().getId()).append("')\n");
+			buffer.append("  { name: '").append(entry.getValue().getId()).append("', class: '").append(entry.getValue().getClass().getCanonicalName()).append("' },\n");
 		}
-		buffer.append("}\n");		
+		buffer.append("]\n");		
 		return buffer.toString();
 	}
 }

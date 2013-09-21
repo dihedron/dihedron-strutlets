@@ -89,11 +89,11 @@ public class RenewingRendererRegistry implements RendererRegistry {
 	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append("renderers: {\n");
+		buffer.append("renderers: [\n");
 		for(Entry<String, Class<? extends Renderer>> entry : renderers.entrySet()) {
-			buffer.append("  renderer('").append(entry.getKey()).append("')\n");
+			buffer.append("  name: '").append(entry.getKey()).append("', class: '").append(entry.getValue().getCanonicalName()).append("' },\n");
 		}
-		buffer.append("}\n");		
+		buffer.append("]\n");		
 		return buffer.toString();
 	}
 	

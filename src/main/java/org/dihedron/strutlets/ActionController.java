@@ -296,24 +296,39 @@ public class ActionController extends GenericPortlet {
     		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
     		String result = request.getParameter(Strutlets.STRUTLETS_RESULT);
 	    	
-	    	logger.trace("rendering output...");
+	    	logger.trace("rendering output (target: '{}', result: '{}')...", target, result);
 	    	
 	    	boolean first = true;
 	    	while(true) {
 	    		if(TargetId.isValidTarget(target)) {
-	    			logger.trace("right after an action invocation: '{}'", target);
 	    			targetId = new TargetId(target);
-	    			Target targetData = registry.getTarget(targetId);
-	    			String subtarget = targetData.getResult(result).getData();
-	    			if(TargetId.isValidTarget(subtarget)) {
-	    				targetId = new TargetId(subtarget);
-	    	    		logger.debug("target '{}' wants its output rendered by target '{}', forwarding...", target, subtarget);
-	    	    		result = invokePresentationLogic(targetId, request, response);
-	    		    	target = targetId.toString();
-	    		    	continue;
+	    			if(Strings.isValid(result)) {
+	    				// there has been a target invocation, either in action/event or render phase,
+	    				// that has resulted in a valid target and result, now we can get information
+	    				// about what the user wants us to do when the given target returns the given
+	    				// result; this can be retrieved from the target registry
+	    				logger.trace("render phase after an action/event/render invocation: '{}' (first: {})", target, first);	    				
+	    				Target targetData = registry.getTarget(targetId);
+	    				Result r = targetData.getResult(result);
+	    				if(r == null) {
+	    					logger.error("misconfiguration in registry: target '{}' and result '{}' have no valid processing information", target, result);
+	    					throw new StrutletsException("No valid information found in registry for target '" + target + "', result '" + result + "', please check your actions");
+	    				}
+	    				String subtarget = r.getData();
+	    				if(TargetId.isValidTarget(subtarget)) {
+	    					targetId = new TargetId(subtarget);
+	    					logger.debug("target '{}' on result '{}' wants its output rendered by target '{}', forwarding...", target, result, subtarget);
+	    					result = invokePresentationLogic(targetId, request, response);
+	    					target = targetId.toString();
+	    					continue;
+		    			} else {
+		    				logger.trace("moving over to rendering '{}'...", subtarget);
+		    				break;
+		    			}
 	    			} else {
-	    				logger.trace("moving over to rendering '{}'...", subtarget);
-	    				break;
+	    				logger.trace("render phase with no prior action/event/render invocation: '{}' (first: {})", target, first);
+    					result = invokePresentationLogic(targetId, request, response);
+	    				continue;
 	    			}
 	    		} else {
 	    			if(first) {
@@ -832,10 +847,10 @@ public class ActionController extends GenericPortlet {
 
 	/**
 	 * The parameter used to specify the home page to be used by the framework
-	 * in custom XXXX (whatever) mode. This page is the starting point of the custom mode 
-	 * HTML navigation tree.
+	 * in custom XXXX (whatever) mode. This page is the starting point of the custom 
+	 * mode HTML navigation tree.
 	 */	
-	private static final String RENDER_XXXX_HOMEPAGE = "render.xxxx.homepage";    
+	private static final String RENDER_XXXX_HOMEPAGE = "strutlets:xxxx-home";    
 
 	/**
      * The logger.
