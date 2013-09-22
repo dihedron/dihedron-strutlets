@@ -21,7 +21,7 @@ package org.dihedron.strutlets;
 
 import javax.portlet.GenericPortlet;
 
-import org.dihedron.utils.Strings;
+import org.dihedron.commons.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +47,17 @@ public enum InitParameter {
 	 */
 	@Deprecated
 	ACTIONS_JAVA_PACKAGE("", "actions.java.package"),
+	
+	/**
+	 * A properties file used to initialise values for the actions managed by 
+	 * this <code>ActionController</code>. The path to the file must be expressed 
+	 * as an URL, according to one of the following formats:<ul>
+	 * <li>classpath:path/to/resource/on/classpath.properties</li>
+	 * <li>http://server:port/path/to/configuration.properties</li>
+	 * <li>file://path/to/configuration.properties</li>
+	 * </ul>.
+	 */
+	ACTIONS_CONFIGURATION("strutlets:actions-configuration", ""),
 	
 	/**
 	 * The parameter used to specify the comma-separated list of Java packages 

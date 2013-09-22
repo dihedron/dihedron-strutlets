@@ -21,6 +21,9 @@ package org.dihedron.strutlets;
 
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
@@ -40,6 +43,9 @@ import javax.portlet.StateAwareResponse;
 import javax.portlet.WindowState;
 import javax.xml.namespace.QName;
 
+import org.dihedron.commons.properties.Properties;
+import org.dihedron.commons.url.URLFactory;
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.ContainerPluginManager;
@@ -58,7 +64,6 @@ import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
 import org.dihedron.strutlets.targets.registry.TargetRegistry;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +107,11 @@ public class ActionController extends GenericPortlet {
 	 * The registry of supported renderers.
 	 */
 	private RendererRegistry renderers;
+	
+	/**
+	 * The action's configuration.
+	 */
+	private Properties configuration = null;
 	
 	/**
 	 * The current application server.
@@ -148,6 +158,8 @@ public class ActionController extends GenericPortlet {
         	logger.info("action controller '{}' starting up...", getPortletName());
         	        	
         	performSanityCheck();
+        	
+        	initialisePortletConfiguration();
         	
         	initialiseRuntimeEnvironment();
 
@@ -617,7 +629,7 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
-	    	ActionContextImpl.bindContext(request, response, invocation);
+	    	ActionContextImpl.bindContext(request, response, configuration, invocation);
 	    	
 	    	// fire the action stack invocation
 	    	result = invocation.invoke();
@@ -712,6 +724,37 @@ public class ActionController extends GenericPortlet {
     	for(InitParameter parameter : InitParameter.values()) {
     		logger.info(" + parameter: {}", parameter.toString(this));
     	}    	
+    }
+    
+    private void initialisePortletConfiguration() {
+    	String value = InitParameter.ACTIONS_CONFIGURATION.getValueForPortlet(this);
+    	if(Strings.isValid(value)) {
+    		logger.debug("loading actions' configuration from '{}'", value);
+    		InputStream stream = null;
+    		try {
+	    		URL url = URLFactory.makeURL(value);
+	    		if(url != null) {
+	    			stream = url.openConnection().getInputStream();
+	    			logger.trace("opened stream to actions configuration");
+	    			configuration = new Properties();
+	    			configuration.load(stream);
+	    			logger.trace("configuration read");
+	    		}
+    		} catch(MalformedURLException e) {
+    			logger.error("invalid URL '{}' for actions configuration: check parameter '{}' in your portlet.xml", value, InitParameter.ACTIONS_CONFIGURATION.getName());
+    		} catch (IOException e) {
+    			logger.error("error reading from URL '{}', actions configuration will be unavailable", value);
+			} finally  {
+				if(stream != null) {
+					try {
+						stream.close();
+					} catch (IOException e) {
+						logger.error("error closing input stream", e);
+					}
+				}
+			}
+    	}
+    	
     }
         
     /**

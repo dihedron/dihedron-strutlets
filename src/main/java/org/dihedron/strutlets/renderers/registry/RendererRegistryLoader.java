@@ -21,10 +21,10 @@ package org.dihedron.strutlets.renderers.registry;
 
 import java.util.Set;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.annotations.Alias;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.renderers.Renderer;
-import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;

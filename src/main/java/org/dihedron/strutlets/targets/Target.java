@@ -25,13 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
 import org.dihedron.strutlets.targets.registry.TargetRegistry;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

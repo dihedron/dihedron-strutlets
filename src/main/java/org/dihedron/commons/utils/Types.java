@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.utils;
+package org.dihedron.commons.utils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

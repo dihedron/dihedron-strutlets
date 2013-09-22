@@ -37,6 +37,7 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
+import org.dihedron.commons.utils.Types;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.InOut;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -44,7 +45,6 @@ import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.utils.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

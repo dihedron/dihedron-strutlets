@@ -19,7 +19,7 @@
 
 package org.dihedron.strutlets.actions;
 
-import org.dihedron.utils.Strings;
+import org.dihedron.commons.utils.Strings;
 
 
 

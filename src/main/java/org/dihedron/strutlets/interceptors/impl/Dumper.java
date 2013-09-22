@@ -22,12 +22,12 @@ package org.dihedron.strutlets.interceptors.impl;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContextImpl.Scope;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

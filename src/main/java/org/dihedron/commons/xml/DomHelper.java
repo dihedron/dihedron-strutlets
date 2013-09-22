@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.xml;
+package org.dihedron.commons.xml;
 
 import java.util.ArrayList;
 import java.util.List;

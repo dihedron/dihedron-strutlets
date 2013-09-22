@@ -25,10 +25,10 @@ import java.util.Map.Entry;
 
 import javax.portlet.GenericPortlet;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.renderers.Renderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -52,11 +52,12 @@ import javax.portlet.WindowStateException;
 import javax.servlet.http.Cookie;
 import javax.xml.namespace.QName;
 
+import org.dihedron.commons.properties.Properties;
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,6 +249,11 @@ public class ActionContextImpl {
 	 * The action invocation object.
 	 */
 	private ActionInvocation invocation;
+	
+	/**
+	 * The actions' configuration.
+	 */
+	private Properties configuration;
 		
 	/**
 	 * Retrieves the per-thread instance.
@@ -273,12 +279,13 @@ public class ActionContextImpl {
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(PortletRequest request, PortletResponse response, ActionInvocation... invocation) {
+	static void bindContext(PortletRequest request, PortletResponse response, Properties configuration, ActionInvocation... invocation) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
 		getContext().request = request;
 		getContext().response = response;
+		getContext().configuration = configuration;
 				
 		if(invocation != null && invocation.length > 0) {
 			getContext().invocation = invocation[0];

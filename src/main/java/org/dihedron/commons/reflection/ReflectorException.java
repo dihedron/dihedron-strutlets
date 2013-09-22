@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.reflection;
+package org.dihedron.commons.reflection;
 
 
 /**

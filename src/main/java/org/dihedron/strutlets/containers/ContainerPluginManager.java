@@ -21,13 +21,13 @@ package org.dihedron.strutlets.containers;
 
 import javax.portlet.GenericPortlet;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.InitParameter;
 import org.dihedron.strutlets.containers.portlet.PortletContainer;
 import org.dihedron.strutlets.containers.portlet.liferay61x.Liferay61xPlugin;
 import org.dihedron.strutlets.containers.web.WebContainer;
 import org.dihedron.strutlets.containers.web.jbossas7x.JBossAS7xPlugin;
 import org.dihedron.strutlets.containers.web.tomcat7x.Tomcat7xPlugin;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

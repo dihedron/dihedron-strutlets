@@ -26,13 +26,13 @@ import java.util.Map.Entry;
 
 import javax.xml.namespace.QName;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

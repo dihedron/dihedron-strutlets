@@ -23,11 +23,11 @@ import java.lang.reflect.Method;
 
 import javax.portlet.PortletRequest;
 
-import org.dihedron.regex.Regex;
+import org.dihedron.commons.regex.Regex;
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.Strutlets;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

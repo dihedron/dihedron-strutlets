@@ -18,7 +18,7 @@
  */
 
 
-package org.dihedron.utils;
+package org.dihedron.commons.utils;
 
 
 /**

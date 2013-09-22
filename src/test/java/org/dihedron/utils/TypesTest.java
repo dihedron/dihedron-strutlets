@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.dihedron.commons.utils.Types;
 import org.junit.Test;
 
 /**

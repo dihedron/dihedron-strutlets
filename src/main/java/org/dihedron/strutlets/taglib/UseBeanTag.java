@@ -30,10 +30,10 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContextImpl;
 import org.dihedron.strutlets.Portlet;
-import org.dihedron.utils.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

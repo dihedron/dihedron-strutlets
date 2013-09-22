@@ -24,12 +24,12 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.aop.ActionProxy;
 import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.utils.Strings;
 import org.reflections.Reflections;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
@@ -129,7 +129,9 @@ public class TargetFactory {
 	    		}
 	    	}
     	} else {
-    		logger.trace("class '{}' is abstract, skipping", actionClass.getSimpleName());
+			// if the input class is abstract, we skip it altogether: its methods 
+			// will be made available through its subclasses (if ever)    		
+    		logger.info("discarding abstract class '{}'", actionClass.getSimpleName());
     	}
     	logger.trace("... done analysing action class: '{}'!", actionClass.getName());
     }
