@@ -44,6 +44,7 @@ import javax.portlet.WindowState;
 import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
+import org.dihedron.commons.properties.PropertiesException;
 import org.dihedron.commons.url.URLFactory;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.Result;
@@ -365,70 +366,10 @@ public class ActionController extends GenericPortlet {
 	    				break;
 	    			}
 	    		}
-	    	} 
-
-	    	
-//	    	outer:
-//	    	do {
-//		    	// first attempt, check if this is a render request following an action/event request
-//	    		
-//	    		if(TargetId.isValidTarget(target) && Strings.isValid(result)) {
-//	    			// yes, this is right after a processAction or processEvent
-//	    			
-//	    			// let's check if the action-phase target wants its output to be rendered by yet another target
-//	    	    	Target targetData = registry.getTarget(targetId);
-//	    	    	String url = targetData.getResult(result).getData();
-//	    	    	if(TargetId.isValidTarget(url)) {
-//	    	    		targetId = new TargetId(url);
-//	    	    		logger.debug("target '{}' wants its output rendereed by target '{}', forwarding...", target, url);
-//	    	    		result = invokePresentationLogic(targetId, request, response);
-//	    	    		// set parameters for the following render phase
-//	    		    	target = targetId.toString();	    			    	    		
-//	    	    	} else {
-//		    			targetId = new TargetId(target);
-//		    			logger.trace("rendering after action/event target '{}' invoked with result '{}'", targetId, result);
-//		    			break outer;
-//	    	    	}
-//	    		}
-//	    		
-//	    		logger.trace("no prior action/event phase to get renderer from");
-//	    		
-//		    	// second attempt, check if there is a target to invoke before rendering
-//		    	targetId = TargetId.makeFromRequest(request);
-//		    	if(targetId != null) {
-//		    		logger.trace("invoking target '{}' as per render request", targetId);
-//			    	
-//		    		// this is a valid target specification, dispatch to the appropriate 
-//		    		// action and method, then retrieve the result's URL	    		
-//		    		result = invokePresentationLogic(targetId, request, response);
-//		    		
-//		    		// task invoked, now exit
-//		    		break outer;
-//		    	}
-//		    	
-//		    	// last attempt, if there is no valid URL (no target!) in the request, 
-//		    	// then this is the initial page and we might have a target there too 
-//		    	if(!Strings.isValid(request.getParameter(Strutlets.LIFERAY_TARGET))) {
-//		    		target = getDefaultUrl(request.getPortletMode());
-//		    		if(TargetId.isValidTarget(target)) { // (*)
-//		    			targetId = new TargetId(target);
-//			    		logger.trace("invoking target '{}' as per default URL for mode '{}'", targetId, request.getPortletMode());
-//				    	
-//			    		// this is a valid target specification, dispatch to the appropriate 
-//			    		// action and method, then retrieve the result's URL	    		
-//			    		result = invokePresentationLogic(targetId, request, response);
-//			    		
-//			    		// task invoked, now exit
-//			    		break outer;
-//		    		} else {
-//		    			target = null;
-//		    		}
-//		    	}
-//	    		
-//	    		logger.trace("no business logic to invoke in render phase");
-//	    		
-//	    	} while(false);   
+	    	}    
 	
+	    	// when we get here, either we have a target that is a URL (such as a 
+	    	// JSP) or we have no target at all and must resort to the default page
 	    	String url = null;
 	    	// now, if target and result are valid, get the renderer
 	    	if(targetId != null && Strings.isValid(result)) {
@@ -508,7 +449,6 @@ public class ActionController extends GenericPortlet {
     		Portlet.remove();
     	}
     }    
-
     
     /**
      * Processes an action request in the action and event phases.
@@ -738,12 +678,15 @@ public class ActionController extends GenericPortlet {
 	    			logger.trace("opened stream to actions configuration");
 	    			configuration = new Properties();
 	    			configuration.load(stream);
+	    			configuration.lock();
 	    			logger.trace("configuration read");
 	    		}
     		} catch(MalformedURLException e) {
     			logger.error("invalid URL '{}' for actions configuration: check parameter '{}' in your portlet.xml", value, InitParameter.ACTIONS_CONFIGURATION.getName());
     		} catch (IOException e) {
     			logger.error("error reading from URL '{}', actions configuration will be unavailable", value);
+			} catch (PropertiesException e) {
+				logger.error("is you see this error, the code has attempted to fill a locked configuration map", e);
 			} finally  {
 				if(stream != null) {
 					try {

@@ -27,7 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -42,13 +42,8 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class Properties extends HashMap<String, String> {
-	
-	/**
-	 * Serial version ID. 
-	 */
-	private static final long serialVersionUID = 4356540255433454048L;
-	
+public class Properties {
+		
 	/**
 	 * The logger.
 	 */
@@ -60,10 +55,20 @@ public class Properties extends HashMap<String, String> {
 	public final static String DEFAULT_SEPARATOR = "=";
 	
 	/**
+	 * A constant indicating whether the properties can be modified.
+	 */
+	private boolean locked = false;
+	
+	/**
+	 * The map that actually implements the properties dictionary.
+	 */
+	private Map<String, String> map;
+	
+	/**
 	 * Constructor.
 	 */
 	public Properties() {
-		super();
+		map = new LinkedHashMap<String, String>();
 	}
 	
 	/**
@@ -73,17 +78,56 @@ public class Properties extends HashMap<String, String> {
 	 *   a map of initial values.
 	 */
 	public Properties(Map<String, String> values) {
-		super(values);
+		this.map = new LinkedHashMap<String, String>(values);
 	}
 	
+	/**
+	 * Sets the properties map in read-only mode.
+	 */
+	public void lock() {
+		this.locked = true;
+	}
+	
+	/**
+	 * Sets the properties map in modifiable mode.
+	 */
+	public void unlock() {
+		this.locked = false;
+	}
+	
+	/**
+	 * Returns whether the object contents is read only or it can be modified 
+	 * (e.g. a property can be added or removed).
+	 * 
+	 * @return
+	 *   whether the object contents are not modifiable (e.g. properies can be 
+	 *   added or removed).
+	 */
+	public boolean isLocked() {
+		return locked;
+	}
+	
+	/**
+	 * Returns whether the object contents can be modified (e.g. a property can be added or removed).
+	 * 
+	 * @return
+	 *   whether the object contents can be modified (e.g. a property 
+	 *   can be added or removed).
+	 */
+	public boolean isModifiable() {
+		return !locked;
+	}
+		
 	/**
 	 * Loads the properties from an input file.
 	 * 
 	 * @param filename
 	 *   the name of the file.
 	 * @throws IOException
+	 * @throws PropertiesException
+	 *   if the mapis locked. 
 	 */
-	public void load(String filename) throws IOException {
+	public void load(String filename) throws IOException, PropertiesException {
 		load(new File(filename), DEFAULT_SEPARATOR);
 	}
 
@@ -95,8 +139,9 @@ public class Properties extends HashMap<String, String> {
 	 * @param separator
 	 *   the separator character.
 	 * @throws IOException
+	 * @throws PropertiesException 
 	 */
-	public void load(String filename, String separator) throws IOException {
+	public void load(String filename, String separator) throws IOException, PropertiesException {
 		load(new File(filename), separator);
 	}
 	
@@ -106,8 +151,9 @@ public class Properties extends HashMap<String, String> {
 	 * @param file
 	 *   the input file.
 	 * @throws IOException
+	 * @throws PropertiesException 
 	 */
-	public void load(File file) throws IOException {
+	public void load(File file) throws IOException, PropertiesException {
 		load(file, DEFAULT_SEPARATOR);
 	}
 
@@ -119,8 +165,9 @@ public class Properties extends HashMap<String, String> {
 	 * @param separator
 	 *   the separator character.
 	 * @throws IOException
+	 * @throws PropertiesException 
 	 */
-	public void load(File file, String separator) throws IOException {
+	public void load(File file, String separator) throws IOException, PropertiesException {
 		FileInputStream stream = null;
 		try {
 			stream = new FileInputStream(file);
@@ -138,8 +185,9 @@ public class Properties extends HashMap<String, String> {
 	 * @param stream
 	 *   an input stream.
 	 * @throws IOException
+	 * @throws PropertiesException 
 	 */
-	public void load(InputStream stream) throws IOException {
+	public void load(InputStream stream) throws IOException, PropertiesException {
 		load(stream, DEFAULT_SEPARATOR);
 	}
 	
@@ -151,8 +199,9 @@ public class Properties extends HashMap<String, String> {
 	 * @param separator
 	 *   the separator character.
 	 * @throws IOException
+	 * @throws PropertiesException 
 	 */
-	public void load(InputStream stream, String separator) throws IOException {
+	public void load(InputStream stream, String separator) throws IOException, PropertiesException {
 		DataInputStream in = null;
 		try {
 			in = new DataInputStream(stream);
@@ -183,8 +232,12 @@ public class Properties extends HashMap<String, String> {
 	 *  
 	 * @param properties
 	 *   the other property set to merge into this (possibly overriding).
+	 * @throws PropertiesException 
 	 */
-	public void merge(Properties properties) {
+	public void merge(Properties properties) throws PropertiesException {
+		if(isLocked()) {
+			throw new PropertiesException("properties map is locked, its contents cannot be altered.");
+		}				
 		assert(properties != null);
 		for(Entry<String, String> entry : properties.entrySet()) {
 			this.put(entry.getKey(), entry.getValue());
@@ -192,13 +245,15 @@ public class Properties extends HashMap<String, String> {
 	}
 	
 	/**
-	 * Returns the keys in the configuration file.
+	 * Returns whether the properties map contains the given key.
 	 * 
+	 * @param key
+	 *   the key of the property whose existence is being tested.
 	 * @return
-	 *   the keys in the configuration file.
+	 *   whether the properties map contains the given key.
 	 */
-	public Set<String> getKeys() {
-		return keySet();
+	public boolean hasKey(String key) {
+		return map.containsKey(key);
 	}
 	
 	/**
@@ -209,18 +264,57 @@ public class Properties extends HashMap<String, String> {
 	 * @return
 	 *   the corresponding value.
 	 */
-	public String getValue(String key) {
-		return get(key);
-	}
-	
+	public String get(String key) {
+		return map.get(key);
+	}	
 	
 	/**
-	 * @param args
-	 * @throws IOException 
+	 * Puts a new value into the properties map.
+	 * 
+	 * @param key
+	 *   the key of the property to set.
+	 * @param value
+	 *   the value of the proeprty to set.
+	 * @return
+	 *   the previous value associated with the key, or null if no such value
+	 *   was present in the map.
+	 * @throws PropertiesException
+	 *   if the map is in read-only mode.
 	 */
-	public static void main(String[] args) throws IOException {
-		Properties properties = new Properties();
-		properties.load("custom.properties", "=");
-
+	public String put(String key, String value) throws PropertiesException {
+		if(isLocked()) {
+			throw new PropertiesException("properties map is locked, its contents cannot be altered.");
+		}		
+		return map.put(key, value);
+	}
+	
+	/**
+	 * Returns the keys in the configuration file.
+	 * 
+	 * @return
+	 *   the keys in the configuration file.
+	 */
+	public Set<String> getKeys() {
+		return map.keySet();
+	}
+	
+	/**
+	 * Returns the set of keys in the map.
+	 * 
+	 * @return
+	 *   the set of keys in the map.
+	 */
+	public Set<String> keySet() {
+		return map.keySet();
+	}
+	
+	/**
+	 * Returns the set of entries in the map.
+	 * 
+	 * @return
+	 *   the set of entries in the map.
+	 */
+	public Set<Entry<String, String>> entrySet() {
+		return map.entrySet();
 	}
 }

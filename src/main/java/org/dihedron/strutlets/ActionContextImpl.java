@@ -1292,48 +1292,16 @@ public class ActionContextImpl {
 				}
 				break;
 			case CONFIGURATION:
-				// TODO: find a good way of providing configuration data for an action
-				throw new StrutletsException("Not implemented yet");
+				value = ActionContext.getConfigurationValue(key);
+				if(value != null) {
+					logger.trace("... value for '{}' found in CONFIGURATION properties: '{}'", key, value);
+					break loop;
+				}
+				break;
 			default:				
 				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
 				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
 			}
-//			if(scope == org.dihedron.strutlets.annotations.Scope.FORM) {
-//				value = ActionContext.getParameterValues(key);
-//				if(value != null) {
-//					logger.trace("... value for '{}' found in FORM parameters: '{}'", key, value);
-//					break;
-//				}
-//			} else if(scope == org.dihedron.strutlets.annotations.Scope.REQUEST) {
-//				value = ActionContext.getRequestAttribute(key);
-//				if(value != null) {
-//					logger.trace("... value for '{}' found in REQUEST attributes: '{}'", key, value);
-//					break;
-//				}
-//			} else if(scope == org.dihedron.strutlets.annotations.Scope.PORTLET) {
-//				value = ActionContext.getPortletAttribute(key);
-//				if(value != null) {
-//					logger.trace("... value for '{}' found in PORTLET attributes: '{}'", key, value);
-//					break;
-//				}
-//			} else if(scope == org.dihedron.strutlets.annotations.Scope.APPLICATION) {
-//				value = ActionContext.getApplicationAttribute(key);
-//				if(value != null) {
-//					logger.trace("... value for '{}' found in APPLICATION attributes: '{}'", key, value);
-//					break;
-//				}
-//			} else if(scope == org.dihedron.strutlets.annotations.Scope.CONFIGURATION) {
-//				// TODO: find a good way of providing configuration data for an action
-//				throw new StrutletsException("Not implemented yet");
-////				value = ActionContext.getActionInvocation().getAction().getParameter(key);
-////				if(value != null) {
-////					logger.trace("... value for '{}' found in CONFIGURATION parameters: '{}'", key, value);
-////					break;
-////				}
-//			} else {
-//				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
-//				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
-//			}
 		}
 		return value;
 	}
@@ -1966,7 +1934,7 @@ public class ActionContextImpl {
 			names.add(enumeration.nextElement());
 		}
 		return names;
-	}
+	} 
 	
 	/**
 	 * Returns the value of the request attribute corresponding to the given name.
@@ -1982,6 +1950,38 @@ public class ActionContextImpl {
 		return getContext().request.getAttribute(key);
 	}
 	
+	/**
+	 * Returns the list of all configuration keys in the actions configuration 
+	 * properties file, if available, or an emty list otherwise.
+	 *  
+	 * @return
+	 *   the list of all configuration keys in the actions configuration 
+	 * properties file, if available, or an emty list otherwise.
+	 */
+	public static List<String> getConfigurationKeys() {
+		List<String> keys = new ArrayList<String>();
+		if(getContext().configuration != null) {
+			keys.addAll(getContext().configuration.keySet());
+		}
+		return keys;
+	}
+	
+	/**
+	 * Returns the value in the actions configuration properties file corresponding
+	 * to the given key, if available; null otherwise.
+	 * 
+	 * @param key
+	 *   the property key.
+	 * @return
+	 *   the value in the actions configuration properties file corresponding
+	 *   to the given key, if available; null otherwise.
+	 */
+	public static String getConfigurationValue(String key) {
+		if(getContext().configuration != null) {
+			return getContext().configuration.get(key);
+		}
+		return null;
+	}
 	
 	/**
 	 * Returns an array containing all of the Cookie properties. This method 

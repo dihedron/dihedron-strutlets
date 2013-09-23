@@ -51,7 +51,7 @@ public @interface InOut {
 	 * @return
 	 *   the scope of the parameter.
 	 */
-	Scope[] from() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION/*, Scope.CONFIGURATION */};
+	Scope[] from() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, /*Scope.HTTP,*/ Scope.CONFIGURATION };
 	
 	/**
 	 * The scope into which the parameter should be stored; by default, it is

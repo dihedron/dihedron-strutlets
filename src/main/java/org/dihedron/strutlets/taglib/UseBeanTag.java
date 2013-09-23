@@ -70,7 +70,12 @@ public class UseBeanTag extends TagSupport {
 		 * The parameter is persistently stored in the current session, and 
 		 * available throughout the application to all portlets. 
 		 */
-		APPLICATION("application");
+		APPLICATION("application"),
+		
+		/**
+		 * The parameter is available in the portlet's configuration properties.
+		 */
+		CONFIGURATION("configuration");
 		
 		/**
 		 * Constructor.
@@ -192,7 +197,7 @@ public class UseBeanTag extends TagSupport {
 	 * will be looked up; by default it will be looked up the different scopes,
 	 * from narrowest to broadest.
 	 */
-	private static final Scope[] DEFAULT_SCOPES = { Scope.RENDER , Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION };
+	private static final Scope[] DEFAULT_SCOPES = { Scope.RENDER , Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, Scope.CONFIGURATION };
 	
 	/**
 	 * The name of the attribute to be made available to the page and EL. 
@@ -209,6 +214,8 @@ public class UseBeanTag extends TagSupport {
 	 * details see {@link ActionContextImpl.Scope#SESSION},</li>
 	 * <li>{@code application}: the attribute is supposed to be in the application
 	 * (for details see {@link ActionContextImpl.Scope#SESSION}.</li>
+	 * <li>{@code application}: the attribute is supposed to be in the configuration
+	 * (for details see {@link ActionContextImpl.Scope#CONFIGURATION}.</li>
 	 * </ol>
 	 */
 	private Scope[] scopes = DEFAULT_SCOPES;
@@ -346,6 +353,9 @@ public class UseBeanTag extends TagSupport {
 			case APPLICATION:
 				value = getAttribute(name, PortletSession.APPLICATION_SCOPE);
 				break;
+			case CONFIGURATION:
+				value = ActionContext.getConfigurationValue(name);
+				break;				
 			}
 			
 			if(value != null) {

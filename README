@@ -1,7 +1,11 @@
-VERSION 0.47.0 (released in 2013-09-21)
-This is an enhancement release
+VERSION 0.48.0 (released in 2013-09-21)
+This is an enhancement release.
 --------------------------------------------------------------------------------
-
+ENHANCEMENT:
+  The initial support for actions configuration parameters has been put in place
+  with this release; it is now possible to provide configuration values, which
+  will be accessible through the ActionContext and through the tag library,
+  under the "configuration" scope.
 ================================================================================
 VERSION 0.46.0 (released on 2013-09-21)
 This is a mostly a bugfix and stability release.
