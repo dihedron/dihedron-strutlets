@@ -4,10 +4,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets</artifactId>
-	<version>0.49.0</version>
+	<version>0.50.0</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime library</name>
-	<description>A framework to support pseudo-Struts2 actions development on JSR-286 portlets.</description>
+	<description>An MVC framework supporting action-based development JSR-286-compliant portal servers.</description>
 	<url>http://www.dihedron.org/strutlets</url>
 	
 	<developers>
