@@ -18,11 +18,11 @@
  */
 package org.dihedron.strutlets.containers.web;
 
-import org.dihedron.strutlets.containers.Container;
+import org.dihedron.strutlets.plugins.Pluggable;
 
 /**
  * @author Andrea Funto'
  */
-public interface WebContainer extends Container {
+public interface WebContainer extends Pluggable {
 	
 }

@@ -17,7 +17,35 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
+package org.dihedron.strutlets.plugins;
+
 /**
  * @author Andrea Funto'
  */
-package org.dihedron.strutlets.containers.web.tomcat7x;
+public interface Pluggable {
+	
+	/**
+	 * Returns the name of the <code>Pluggable</code> instance.
+	 * 
+	 * @return
+	 *   the name of the <code>Pluggable</code> instance.
+	 */	
+	String getName();
+	
+	/**
+	 * Initialises the <code>Pluggable</code> object, and gets it ready for 
+	 * providing services. This method needs not be reentrant, as it will be 
+	 * called only once per instance.
+	 *  
+	 * @return
+	 *   <code>true</code> if the initialisation succeeded, <code>false</code>
+	 *   otherwise.
+	 */	
+	boolean initialise();
+	
+	/**
+	 * Cleans up any resources that might have been created or allocated at
+	 * initialisation time.
+	 */	
+	void cleanup();
+}

@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -49,13 +50,16 @@ import org.dihedron.commons.url.URLFactory;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
-import org.dihedron.strutlets.containers.ContainerPluginManager;
 import org.dihedron.strutlets.containers.portlet.PortletContainer;
+import org.dihedron.strutlets.containers.portlet.PortletContainerPlugin;
 import org.dihedron.strutlets.containers.web.WebContainer;
+import org.dihedron.strutlets.containers.web.WebContainerPlugin;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
 import org.dihedron.strutlets.interceptors.registry.InterceptorsRegistry;
+import org.dihedron.strutlets.plugins.Plugin;
+import org.dihedron.strutlets.plugins.PluginManager;
 import org.dihedron.strutlets.renderers.Renderer;
 import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
@@ -715,15 +719,17 @@ public class ActionController extends GenericPortlet {
 		logger.trace(buffer.toString());
 
 		logger.trace("initialising runtime environment...");
-		ContainerPluginManager cpm = new ContainerPluginManager();
-		server = cpm.makeWebContainer(this);
+		
+		Set<Class<? extends Plugin>> plugins = PluginManager.getPlugins(WebContainerPlugin.class);
+		server = (WebContainer)PluginManager.loadFirstPluggable(plugins);
 		if(server != null) {
 			logger.trace("initialising application server {} runtime", server.getName());
 			server.initialise();
 			logger.trace("application server {} runtime initialised", server.getName());
 		}
 				
-		container = cpm.makePortletContainer(this);
+		plugins = PluginManager.getPlugins(PortletContainerPlugin.class);
+		container = (PortletContainer)PluginManager.loadFirstPluggable(plugins);
 		if(container != null) {
 			logger.trace("initialising portlet container {} runtime", container.getName());
 			container.initialise();

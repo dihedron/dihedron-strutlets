@@ -17,7 +17,7 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strutlets.containers;
+package org.dihedron.strutlets.plugins;
 
 
 /**
@@ -28,17 +28,18 @@ package org.dihedron.strutlets.containers;
  *  
  * @author Andrea Funto'
  */
-public interface ContainerProbe {
+public interface Probe {
 
 	/**
-	 * Returns whether the given runtime is available on the host server; in order 
-	 * to detect whether the container is appropriate, it must <em>not</em> link
-	 * runtime classes through <code>import</code>, as this would result in
-	 * <code>UnsatisfiedLinkError</code> on unsupporting container runtimes: it 
-	 * should employ Java Reflection instead.
+	 * Returns whether the given <code>Pluggable</code> is supported on the 
+	 * host environment; in order to detect whether the <code>Pluggable</code> 
+	 * object can be run in the current hosting environment, it must <em>not</em> 
+	 * link runtime classes through <code>import</code>, as this would result in
+	 * class loading exceptins on unsupporting hosting environments: it should 
+	 * employ Java Reflection instead.
 	 * 
 	 * @return
-	 *   whether the given container runtime is available on the host server.
+	 *   whether the current hosting environment is supported by this plugin.
 	 */
-	boolean isAvailable();
+	boolean isSupportedEnvironment();
 }

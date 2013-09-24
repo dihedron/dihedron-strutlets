@@ -83,10 +83,8 @@ public class Types {
 			buffer.append(containerType).append("<");
 			// now grab the names of all generic types (those within <...>)
 			Type[] generics = container.getActualTypeArguments();
-			boolean first = true;
-			for(Type generic : generics) {
-				buffer.append(first ? "" : ", ").append("?");
-				first = false;
+			for(int i = 0; i < generics.length; ++i) {
+				buffer.append(i == 0 ? "" : ", ").append("?");
 			}
 			buffer.append(">");
 			result = buffer.toString();			

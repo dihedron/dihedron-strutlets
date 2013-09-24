@@ -18,7 +18,7 @@
  */
 
 /**
- * A package containing portlet-conatiner-specific plugins.
+ * A package containing portlet-container-specific plugins.
  *  
  * @author Andrea Funto'
  */

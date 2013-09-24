@@ -26,7 +26,6 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 
-import org.dihedron.strutlets.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
