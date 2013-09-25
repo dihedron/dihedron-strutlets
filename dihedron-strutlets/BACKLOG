@@ -1,0 +1,30 @@
+--------------------------------------------------------------------------------
+FEATURE:
+	Implement sendRedirect() properly in ACTION phase, with annotation-based
+	redirection provided no prior call to setWindowState(), setPortletMode() or 
+	setRenderParameter() has been issued (see JSR-168 for details). URL must be
+	complete (http://...) or full (/my/path...), no relative URLs are admitted.
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+	Allow object passing from action to JSON/XML renderer through a class field
+	instead of only through session state.
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------  
+FEATURE:
+	Check forms with server side validation: forms that fail validation should
+	be presented to the end users with fields partially filled. This can probably
+	be achieved by a simple combination of @In and @Out(Scope.RENDER) annotations
+	that help the following render phase pre-fill the form fields.
+PRIORITY:
+	MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+	Implement a mechanism (based on form submittal date, available in AlloyUI tags,
+	or on an equivalent mechanism provided by a custom or standard tag, see Struts2 
+	for details) to check double submits of forms with a few milliseconds.
+PRIORITY:
+	LOW
+--------------------------------------------------------------------------------

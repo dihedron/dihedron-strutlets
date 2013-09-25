@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+  <HEAD>
+    <TITLE>Strutlets - A Model-View-Controller framework for JSR-286 portlets</TITLE>
+  </HEAD>
+  <BODY>
+  	<h2>1. Abstract</h2>
+  	
+    <p>    
+    The <b>Strutlets</b> project is an attempt to create a simple framework 
+    to ease the development of JSR-286 compliant portlets. It is deeply inspired 
+    by the elegant MVC implementation provided by Struts2, from which it borrows 
+    part of its name (Struts2 + Portlets yields Strutlets).
+    </p>
+    
+    <h2>2. Description</h2>
+    
+    <p>
+    The Strutlets library implements the MVC pattern the Struts2 way: it provides 
+    a single controller portlet that receives all incoming requests and translates 
+    them into action method invocations; once the action's method has completed, 
+    the framework regains control and based on the action result and on an XML 
+    configuration file, on annotations or on educated guesses it dispatches the
+    call to the appropriate render engine, whether a JSP or some other rendering
+    mechanism (e.g. one producing JSON or XML output).
+    </p> 
+    <p>
+    In addition to this basic logic, the framework provides multiple extension
+    points, e.g. by emulating the interceptors logic of its senior brother. The
+    invocation process flows through a stack of interceptors before reaching the 
+    action method, and each of these (pluggable) interceptors can massage the 
+    request and response objects, manipulating parameters, results and the action
+    itself, and adding value to the processing. Interceptors are the ideal place
+    to plug in any additional aspects, such as reporting, auditing, profiling, 
+    dependency injection and the like; all of this can be implemented in a fully
+    reusable way.
+    </p>
+    
+    <h2>3. How to use the framework</h2>
+    
+    <h3>3.1 Setting up the necessary libraries</h3>
+    <p>
+    Before creating any portlet, the strutlets JAR and a few other libraries must
+    be imported; when using strutlets through Maven this configuration step can
+    be automatically done for you by Maven itself, by simply adding this fragment 
+    to your POM:<pre>
+      &lt;dependency&gt;
+          &lt;groupId&gt;org.dihedron.strutlets&lt;/groupId&gt;
+          &lt;artifactId&gt;strutlets&lt;/artifactId&gt;
+          &lt;version&gt;0.4.0&lt;/version&gt;
+      &lt;/dependency&gt;
+    </pre>
+    
+    Otherwise, you need to add the following JARs to your WEB-INF/lib directory:
+    <ol>
+    <li>the strutlets-X.Y.Z.jar file</li>
+    <li>the reflections-X.Y.Z.jar file (see <a href="http://search.maven.org/#artifactdetails%7Corg.reflections%7Creflections%7C0.9.9-RC1%7Cjar">here</a> 
+    for details and additional dependencies)</li>
+    <li>the slf4j-api-X.Y.Z.jar file and a SLF4J binding library (e.g. if you're 
+    planning to use LOG4J as the backing logging engine, add slf4j-log4j12-X.Y.Z.jar)</li>
+    </ol>
+    </p>
+    
+    <h3>3.2 Defining the Action Controller portlet in portlet.xml</h3>
+    <p>
+    The framework relies on a single portlet to dispatch control to actions and 
+    then to views as necessary. Each portlet in your project will need to have its 
+    own instance of the portlet, with its own configuration, its own Actions and
+    Views.
+    </p>
+    <p>
+    In order to set up the Action Controller, you need to declare it in the 
+    portlet.xml and in any additional configuration files, as per your portal
+    server documentation (e.g. liferay-portlet.xml on Liferay). The typical setup
+    in portlet.xml is achieved by adding the following lines:
+    <pre>
+      &lt;portlet&gt;
+        &lt;portlet-name>portlet1&lt;/portlet-name&gt;
+        &lt;display-name>My First Portlet&lt;/display-name&gt;
+        &lt;portlet-class>org.dihedron.strutlets.ActionController&lt;/portlet-class&gt;
+        [... configuration goes here ...]
+      &lt;/portlet&gt;
+    </pre>For details on the configuration, see the next chapter. You can add 
+    this same snippet multiple times: just make sure you've modified the portlet 
+    references (name, display name, and configuration) in order to make each 
+    instance unique.
+    </p>    
+    <p>
+    Once you've added the other JSR-286 required parameters, the portlet is ready 
+    to be deployed even without specifying any parameter: the framework will 
+    assume the defaults are OK for you, and will self-configure accordingly.
+    </p>
+    
+    <h3>3.3 Configuring the Action Controller</h3>
+    <p>The portlet is highly configurable. It currently supports the following 
+    parameters:
+    <ul>
+    <li><em>actions.configuration.filename</em>: this is where you can specify 
+    the path to the resource where the XML-configured Actions are declared and
+    configured. It usually takes the form of a path on the classpath, such as
+    <pre>com/example/applicationX/portletY/actions/my-actions-config.xml</pre>
+    </li>
+    <li><em>actions.java.package</em>: this is where you specify the package to
+    scan at runtime in order to look up auto-configured, annotated Actions; the
+    given package and all subpackages are scanned for subclasses of the
+    framework's Action class; there is nothing special with inheriting from the 
+    framework's Action class, so in future releases this contraint might be 
+    removed altogether and you will be able to place just any plain class with
+    annotated methods in there
+    </li>
+    <li><em>interceptors.configuration.filename</em>: this is where you specify 
+    the optional custom interceptors configuration; by default the framework 
+    comes with a set of interceptor stacks providing basic functionalities such
+    as profiling, auditing, parameters injection, results extraction; this is
+    where you can plug your own stack, which can be composed of a combination of
+    framework-provided interceptors and custom interceptors; as with actions' 
+    configuration, the value should be a path of a valid resource in the classpath
+    </li>
+    <li><em>interceptors.default.stack</em>: this is the name of the default 
+    interceptors stack to be applied when no overriding value is provided; if 
+    left emty, the framework will apply the "default" stack whenever not 
+    specified otherwise
+    </li>
+    <li><em>render.root.directory</em>: this parameter provides the path to the 
+    root directory for this portlet's view resources; it is normally in the form
+    <code>/jsp/portlet1/</code>and it gets appended to the application's web
+    root: it will typically be a subdirectory of /docroot in your WAR file; this
+    parameter is used to build the path to view resources for automatically 
+    configured Actions
+    </li>
+    <li><em>render.path.pattern</em>: this parameter specifies the rule used
+    to build up the name of the view resources for auto-configured actions; it 
+    is typically in the form <pre>${rootdir}/${action}/${method}/${result}.jsp</pre>
+    which will yield <pre>/jsp/portlet1/MyAction/myMethod/success.jsp</pre>
+    for a <code>success</code>ful invocation of <code>MyAction</code>'s 
+    <code>myMethod()</code>; the accepted variables are shown in the example, 
+    along with their meaning
+    </li>
+    <li><em>render.&lt;mode&gt;.homepage</em>: there should be one such entry for 
+    any supported portlet mode (e.g. <code>view</code>, <code>edit</code>,
+    <code>help</code>; each entry will specify the name of the initial JSP or
+    web page for this portlet in the given mode.
+    </li>
+    <li>TODO: add documentation about the default portlet error page, yet to be
+    implemented</li>   
+    </ul>
+    </p>
+    
+    <h2>4. Programming with Actions</h2>
+    
+    <h3>4.1 How Strutlets applies the MVC pattern</h3>
+    TODO
+    
+    <h3>4.2 Configuring your Actions: XML vs &#64;Annotations</h3> 
+    <p>
+    The Strutlets framework provides two ways of configuring one's Actions: the 
+    first is via the <code>actions-config.xml</code> file, the second is through 
+    annotations. Which one to choose depends on one's tastes, yet we feel that 
+    the use of annotations caters for improved productivity and easier maintenance; 
+    moreover it provides a way to leverage the framework's "convention over 
+    configuration" paradigm, so that a complex Action can be registered an made 
+    fully functional with a single empty annotation, as follows:
+    <pre>
+      &#64;Invocable public String myMethod() throws ActionException {
+        ... do whatever you want here, then return a string
+      }
+    </pre>... and that's it!
+    </p>
+    
+    <h3>4.3 XML-configured Actions</h2>
+    <p>
+    In order to configure your Actions <em>ye oulde way</em> you have to provide 
+    an XML configuration file. Normally, this file would be called
+
+The Strutlets framework enables developers to handler "render" requests through Actions: the render request
+goes to an Action method, which perfomrs some (read-only) business logic and accordin to the processing
+outcomes decides which view to render. This feature provides an additional degree of freedom to the application
+designer, which can choose to have her application perform some "initialisation" business logic.
+In order to do this, the oly necessary thing is a <pre>renderURL</pre>, an opetional set of input parameters
+to it, and a server side <em>read-only</em> Action method. It is important for the method to have "read-only"
+semantics because the portlet container may reiterate the same render request to the portlet multiple times.
+A "read-only" portlet is idempotent: it can be called as many tames as one wishes and it will always return 
+the same results. or at least it does not do anything that changes the internal application status and disrupts
+the possibility of furthe calls to the same method being performed and handled properly.
+In order to specify this "read-onlyness", the method should be annotated with the appropriate value or the
+same value should be specified in the <pre>actions-config.xml</pre> for statically configured Actions.      
+    
+  </BODY>
+</HTML>
