@@ -1,0 +1,557 @@
+<?xml version="1.0"?>
+
+<portlet-app xmlns="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd"
+	version="2.0">
+
+	<portlet>
+		<portlet-name>portlet1</portlet-name>
+		<display-name>1. AOP Proxy Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<init-param>
+			<name>strutlets:actions-packages</name>
+			<value>org.dihedron.demo.portlets.portlet1.actions</value>
+		</init-param>
+
+
+		<init-param>
+			<name>strutlets:view-home</name>
+			<!-- by specifying an action method, you are instructing the framework 
+				to dispatch control to the given method; the method will decide (based on 
+				some business logic), which view will be used to render the homepage -->
+			<value>ProxiedAction!initView</value>
+		</init-param>
+		<init-param>
+			<name>render.edit.homepage</name>
+			<value>/html/portlet1/edit.jsp</value>
+		</init-param>
+		<init-param>
+			<name>render.help.homepage</name>
+			<value>/html/portlet1/help.jsp</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>1. AOP Proxy Portlet</title>
+			<short-title>1. AOP Proxy Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
+
+	<portlet>
+		<portlet-name>portlet2</portlet-name>
+		<display-name>2. Event Sender Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Specify here the path to the actions' configuration file; if not given, 
+			the framework will try to locate "actions-config.xml" under the root of the 
+			class path; if no configuration file is found, the framework will try to 
+			detect information at runtime through annotations and smart defaults, provided 
+			that actions.javapackage points to the Java package where self-configuring 
+			actions can be found. -->
+		<init-param>
+			<name>actions.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet2.actions</value>
+		</init-param>
+
+		<!-- Use this parameter to provide your custom interceptor stacks. -->
+		<init-param>
+			<name>interceptors.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to override the default interceptor stack; if not 
+			indicated otherwise, each action gets the "default" stack, as defined in 
+			the framework's internal files. -->
+		<init-param>
+			<name>interceptors.default.stack</name>
+			<value>default</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the root directory to start from when 
+			building up the path to the JSPs for self-configuring actions. By default 
+			the framework will try to locate these JSPs by names built according to the 
+			pattern expressed in the following parameter -->
+		<init-param>
+			<name>render.root.directory</name>
+			<value>/html/portlet2/dynamic</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the pattern to be used by the framework 
+			when creating the paths to JSP pages for auto-configured targets. By default 
+			the framework will try to locate these JSPs by names built according to thie 
+			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
+			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
+		<init-param>
+			<name>render.path.pattern</name>
+			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>/html/portlet2/view.jsp</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>2. Event Sender Portlet</title>
+			<short-title>2. Event Sender Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+		<supported-publishing-event>
+			<qname xmlns:demo="http://www.dihedron.org/events">demo:TestEvent</qname>
+		</supported-publishing-event>
+
+	</portlet>
+
+	<portlet>
+		<portlet-name>portlet3</portlet-name>
+		<display-name>3. Event Receiver Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Specify here the path to the actions' configuration file; if not given, 
+			the framework will try to locate "actions-config.xml" under the root of the 
+			class path; if no configuration file is found, the framework will try to 
+			detect information at runtime through annotations and smart defaults, provided 
+			that actions.javapackage points to the Java package where self-configuring 
+			actions can be found. -->
+		<init-param>
+			<name>actions.configuration.filename</name>
+			<value>it/bankitalia/intranet/portlet3/actions/actions-config.xml</value>
+		</init-param>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet3.actions</value>
+		</init-param>
+
+		<!-- Use this parameter to provide your custom interceptor stacks. -->
+		<init-param>
+			<name>interceptors.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to override the default interceptor stack; if not 
+			indicated otherwise, each action gets the "default" stack, as defined in 
+			the framework's internal files. -->
+		<init-param>
+			<name>interceptors.default.stack</name>
+			<value>default</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the root directory to start from when 
+			building up the path to the JSPs for self-configuring actions. By default 
+			the framework will try to locate these JSPs by names built according to the 
+			pattern expressed in the following parameter -->
+		<init-param>
+			<name>render.root.directory</name>
+			<value>/html/portlet3/dynamic</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the pattern to be used by the framework 
+			when creating the paths to JSP pages for auto-configured targets. By default 
+			the framework will try to locate these JSPs by names built according to thie 
+			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
+			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
+		<init-param>
+			<name>render.path.pattern</name>
+			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>/html/portlet3/view.jsp</value>
+		</init-param>
+		<init-param>
+			<name>render.edit.homepage</name>
+			<value>/html/portlet3/edit.jsp</value>
+		</init-param>
+		<init-param>
+			<name>render.help.homepage</name>
+			<value>/html/portlet3/help.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>error.PortletException</name>
+			<value></value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>3. Event Receiver Portlet</title>
+			<short-title>3. Event Receiver Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+		<supported-processing-event>
+			<qname xmlns:demo="http://www.dihedron.org/events">demo:TestEvent</qname>
+		</supported-processing-event>
+
+	</portlet>
+	
+	<portlet>
+		<portlet-name>portlet4</portlet-name>
+		<display-name>4. Annotations Configured Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Specify here the path to the actions' configuration file; if not given, 
+			the framework will try to locate "actions-config.xml" under the root of the 
+			class path; if no configuration file is found, the framework will try to 
+			detect information at runtime through annotations and smart defaults, provided 
+			that actions.javapackage points to the Java package where self-configuring 
+			actions can be found. -->
+		<init-param>
+			<name>actions.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet4.actions</value>
+		</init-param>
+
+		<!-- Use this parameter to provide your custom interceptor stacks. -->
+		<init-param>
+			<name>interceptors.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to override the default interceptor stack; if not 
+			indicated otherwise, each action gets the "default" stack, as defined in 
+			the framework's internal files. -->
+		<init-param>
+			<name>interceptors.default.stack</name>
+			<value>default</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the root directory to start from when 
+			building up the path to the JSPs for self-configuring actions. By default 
+			the framework will try to locate these JSPs by names built according to the 
+			pattern expressed in the following parameter -->
+		<init-param>
+			<name>render.root.directory</name>
+			<value>/html/portlet4/dynamic</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the pattern to be used by the framework 
+			when creating the paths to JSP pages for auto-configured targets. By default 
+			the framework will try to locate these JSPs by names built according to thie 
+			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
+			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
+		<init-param>
+			<name>render.path.pattern</name>
+			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>/html/portlet4/view.jsp</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>4. Annotations Configured Portlet</title>
+			<short-title>4. Annotations Configured Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
+	
+	<portlet>
+		<portlet-name>portlet5</portlet-name>
+		<display-name>5. Form Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Specify here the path to the actions' configuration file; if not given, 
+			the framework will try to locate "actions-config.xml" under the root of the 
+			class path; if no configuration file is found, the framework will try to 
+			detect information at runtime through annotations and smart defaults, provided 
+			that actions.javapackage points to the Java package where self-configuring 
+			actions can be found. -->
+		<init-param>
+			<name>actions.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet5.actions</value>
+		</init-param>
+
+		<!-- Use this parameter to provide your custom interceptor stacks. -->
+		<init-param>
+			<name>interceptors.configuration.filename</name>
+			<value></value>
+		</init-param>
+
+		<!-- Use this parameter to override the default interceptor stack; if not 
+			indicated otherwise, each action gets the "default" stack, as defined in 
+			the framework's internal files. -->
+		<init-param>
+			<name>interceptors.default.stack</name>
+			<value>default</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the root directory to start from when 
+			building up the path to the JSPs for self-configuring actions. By default 
+			the framework will try to locate these JSPs by names built according to the 
+			pattern expressed in the following parameter -->
+		<init-param>
+			<name>render.root.directory</name>
+			<value>/html/portlet5/dynamic</value>
+		</init-param>
+
+		<!-- Use this parameter to specify the pattern to be used by the framework 
+			when creating the paths to JSP pages for auto-configured targets. By default 
+			the framework will try to locate these JSPs by names built according to thie 
+			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
+			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
+		<init-param>
+			<name>render.path.pattern</name>
+			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>/html/portlet5/view.jsp</value>
+		</init-param>
+		<init-param>
+			<name>render.edit.homepage</name>
+			<value></value>
+		</init-param>
+		<init-param>
+			<name>render.help.homepage</name>
+			<value></value>
+		</init-param>
+
+		<init-param>
+			<name>error.PortletException</name>
+			<value></value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>5. Form Portlet</title>
+			<short-title>5. Form Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
+	
+	<portlet>
+		<portlet-name>portlet6</portlet-name>
+		<display-name>6. TagLib Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet6.actions</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>ParameterFillingAction!initView</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>6. TagLib Portlet</title>
+			<short-title>6. TagLib Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
+	
+	<portlet>
+		<portlet-name>portlet7</portlet-name>
+		<display-name>7. Ajax Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<!-- Use this parameter to set the Java package where the framework should 
+			expect to find self-configuring actions; this parameter is necessary only 
+			in this situation. -->
+		<init-param>
+			<name>actions.java.package</name>
+			<value>org.dihedron.demo.portlets.portlet7.actions</value>
+		</init-param>
+
+		<init-param>
+			<name>render.view.homepage</name>
+			<value>/html/portlet7/view.jsp</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+			<portlet-mode>edit</portlet-mode>
+			<portlet-mode>help</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>7. Ajax Portlet</title>
+			<short-title>7. Ajax Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
+	
+	
+
+	<event-definition>
+		<qname xmlns:demo="http://www.dihedron.org/events">demo:TestEvent</qname>
+		<value-type>java.lang.String</value-type>
+	</event-definition>
+
+</portlet-app>
