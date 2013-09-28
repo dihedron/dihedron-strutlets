@@ -5,36 +5,19 @@
 	<parent>
 		<groupId>org.dihedron.strutlets</groupId>
 		<artifactId>strutlets-parent</artifactId>
-		<version>0.52.0</version>
+		<version>0.55.0</version>
 		<relativePath>../dihedron-strutlets-parent</relativePath>		
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>	
 	<artifactId>strutlets</artifactId>
 	<packaging>jar</packaging>
-	<name>Strutlets - Runtime library</name>
+	<name>Strutlets - Runtime Library</name>
 	<description>An MVC framework supporting action-based development JSR-286-compliant portal servers.</description>
 	<url>http://www.dihedron.org/strutlets</url>
 		
-	<licenses>
-		<license>
-			<comments>Copyright (C) Andrea Funt&ograve; 2012-2013 - All rights reserved</comments>
-			<name>GNU Lesser General Public License ver. 3 or later</name>
-			<url>http://www.gnu.org/licenses/lgpl.html</url>
-		</license>
-	</licenses>
-	
-	<scm>
-		<url>http://code.google.com/p/dihedron-strutlets/</url>
-		<connection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets/</connection>
-		<developerConnection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets/</developerConnection>		
-	</scm>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<sonar.language>java</sonar.language>
-	</properties>
 	<build>
+	 
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -52,9 +35,7 @@
 				<configuration>
 					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
 					<bottom>
-            <![CDATA[
-              Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
-            ]]>
+            			<![CDATA[Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.]]>
 					</bottom>
 				</configuration>
 			</plugin>
@@ -72,60 +53,29 @@
 		</plugins> </reporting> -->
 	<dependencies>
 		<dependency>
-			<groupId>javax.portlet</groupId>
-			<artifactId>portlet-api</artifactId>
-			<version>2.0</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>javax.servlet.jsp</groupId>
 			<artifactId>javax.servlet.jsp-api</artifactId>
-			<version>2.3.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
-			<version>0.9.9-RC1</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
-			<scope>compile</scope>
+			<groupId>org.javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<scope>compile</scope>		
 		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<scope>compile</scope>
+		</dependency>		
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.2.1</version>
 			<scope>compile</scope>
-		</dependency>
-		<!-- 
-		<dependency>
-			<groupId>org.jboss</groupId>
-			<artifactId>jboss-vfs</artifactId>
-			<version>3.0.1.GA</version>
-			<scope>provided</scope>
-		</dependency>
-		-->		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -4,14 +4,14 @@
 	<parent>
 		<groupId>org.dihedron.strutlets</groupId>
 		<artifactId>strutlets-parent</artifactId>
-		<version>0.52.0</version>		
+		<version>0.55.0</version>		
 		<relativePath>../dihedron-strutlets-parent</relativePath>
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>strutlets-tomcat</artifactId>
 	<packaging>jar</packaging>
-	<name>Strutlets - Tomcat plugin</name>
+	<name>Strutlets - Plug-in for Tomcat</name>
 	<description>A plugin to provide access to Tomcat-specific functionalities through Strutlets.</description>
 	<url>http://www.dihedron.org/strutlets</url>
 	
@@ -84,31 +84,27 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.5</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-vfs</artifactId>
-			<version>3.0.1.GA</version>
 			<scope>provided</scope>
 		</dependency>				
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets</artifactId>
-			<version>0.50.0</version>
+			<version>${strutlets.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.5</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>		
 	</dependencies>

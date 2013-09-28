@@ -33,7 +33,6 @@ import javax.servlet.jsp.tagext.TagSupport;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContextImpl;
-import org.dihedron.strutlets.Portlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -337,7 +336,8 @@ public class UseBeanTag extends TagSupport {
 				}
 				break;
 			case REQUEST:
-				String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
+//				String keyName = ActionContext.getRequestScopedAttributesKeyByPortletName(Portlet.get().getPortletName());
+				String keyName = ActionContext.getRequestScopedAttributesKey();
 				value = getAttribute(keyName, PortletSession.PORTLET_SCOPE);
 				if(value != null) {				
 					@SuppressWarnings("unchecked")

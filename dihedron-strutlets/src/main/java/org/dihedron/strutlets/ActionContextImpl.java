@@ -36,6 +36,7 @@ import java.util.Set;
 import javax.portlet.ActionResponse;
 import javax.portlet.Event;
 import javax.portlet.EventRequest;
+import javax.portlet.GenericPortlet;
 import javax.portlet.PortalContext;
 import javax.portlet.PortletModeException;
 import javax.portlet.PortletPreferences;
@@ -230,6 +231,11 @@ public class ActionContextImpl {
 			return new ActionContextImpl();
 		}		
 	};
+	
+	/**
+	 * The action controller portlet.
+	 */
+	private GenericPortlet portlet;
 
 	/**
 	 * The portlet request (it might be an <code>ActionRequest</code>, a 
@@ -244,11 +250,11 @@ public class ActionContextImpl {
 	 * the lifecycle and the phase).
 	 */
 	private PortletResponse response;
-		
-	/**
-	 * The action invocation object.
-	 */
-	private ActionInvocation invocation;
+//		
+//	/**
+//	 * The action invocation object.
+//	 */
+//	private ActionInvocation invocation;
 	
 	/**
 	 * The actions' configuration.
@@ -279,17 +285,18 @@ public class ActionContextImpl {
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(PortletRequest request, PortletResponse response, Properties configuration, ActionInvocation... invocation) {
+	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration/*, ActionInvocation... invocation*/) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
+		getContext().portlet = portlet;
 		getContext().request = request;
 		getContext().response = response;
 		getContext().configuration = configuration;
 				
-		if(invocation != null && invocation.length > 0) {
-			getContext().invocation = invocation[0];
-		}
+//		if(invocation != null && invocation.length > 0) {
+//			getContext().invocation = invocation[0];
+//		}
 		
 		PortletSession session = request.getPortletSession();
 		
@@ -317,9 +324,10 @@ public class ActionContextImpl {
 	 */	
 	static void unbindContext() {
 		logger.debug("removing action context for thread {}", Thread.currentThread().getId());
-		context.get().invocation = null;
+//		context.get().invocation = null;
 		context.get().request = null;
 		context.get().response = null;
+		context.get().portlet = null;
 		context.remove();
 	}
 	
@@ -381,7 +389,7 @@ public class ActionContextImpl {
 	 *   the current portlet's name.
 	 */
 	public static String getPortletName() {
-		return Portlet.get().getPortletName();
+		return getContext().portlet.getPortletName();
 	}
 	
 	/**
@@ -404,7 +412,7 @@ public class ActionContextImpl {
 	 *   the value of the given portlet's initialisation parameter.
 	 */
 	public static String getPortletInitialisationParameter(String name) {
-		return Portlet.get().getInitParameter(name);
+		return getContext().portlet.getInitParameter(name);
 	}
 	
 	/**
@@ -459,15 +467,15 @@ public class ActionContextImpl {
 	// TODO: get other stuff from portlet.xml and web.xml
 	// PortletContext and PorteltConfig (see Ashish Sarin pages 119-120)
 	
-	/**
-	 * Retrieves the <code>ActionInvocation</code> object.
-	 * 
-	 * @return
-	 *   the <code>ActionInvocation</code> object.
-	 */
-	public static ActionInvocation getActionInvocation() {
-		return getContext().invocation;
-	}
+//	/**
+//	 * Retrieves the <code>ActionInvocation</code> object.
+//	 * 
+//	 * @return
+//	 *   the <code>ActionInvocation</code> object.
+//	 */
+//	public static ActionInvocation getActionInvocation2() {
+//		return getContext().invocation;
+//	}
 	
 	/**
 	 * In case of an <code>EventRequest</code>, returns the name of the event.
@@ -1045,7 +1053,7 @@ public class ActionContextImpl {
 	 *   the portlet's configured resource bundle.
 	 */
 	public static ResourceBundle getResouceBundle(Locale locale) {
-		return Portlet.get().getResourceBundle(locale);
+		return getContext().portlet.getResourceBundle(locale);
 	}
 	
 	/**

@@ -212,7 +212,12 @@ public class ActionController extends GenericPortlet {
     @Override
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
     	try {
-	    	Portlet.set(this);
+//	    	Portlet.set(this);
+	    	
+	    	// bind the per-thread invocation context to the current request,
+	    	// response and invocation objects
+    		logger.trace("binding context to thread-local storage");
+	    	ActionContextImpl.bindContext(this, request, response, configuration);
 
 	    	logger.trace("processing action...");
 	    		    	
@@ -223,7 +228,13 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	logger.trace("... action processing done with result '{}'", result);
 		} finally {
-			Portlet.remove();
+			
+    		// unbind the invocation context from the thread-local storage to
+    		// prevent memory leaks and complaints by the application server
+			logger.trace("unbinding context from thread-local storage");
+			ActionContextImpl.unbindContext();    			
+//			
+//			Portlet.remove();
 		}
     }
     
@@ -242,7 +253,13 @@ public class ActionController extends GenericPortlet {
     @Override
     public void processEvent(EventRequest request, EventResponse response) throws PortletException, IOException {
     	try {
-    		Portlet.set(this);
+    		
+	    	// bind the per-thread invocation context to the current request,
+	    	// response and invocation objects
+    		logger.trace("binding context to thread-local storage");
+	    	ActionContextImpl.bindContext(this, request, response, configuration);
+    		
+//    		Portlet.set(this);
     	
 	    	logger.trace("processing event...");
 	    	
@@ -254,7 +271,13 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	logger.trace("... event processing done with result '{}'", result);
     	} finally {
-    		Portlet.remove();
+
+    		// unbind the invocation context from the thread-local storage to
+    		// prevent memory leaks and complaints by the application server
+			logger.trace("unbinding context from thread-local storage");
+			ActionContextImpl.unbindContext();
+    		
+//    		Portlet.remove();
     	}
     }        
     
@@ -305,7 +328,12 @@ public class ActionController extends GenericPortlet {
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
     	try {
-    		Portlet.set(this);
+//    		Portlet.set(this);
+    		
+	    	// bind the per-thread invocation context to the current request,
+	    	// response and invocation objects
+    		logger.trace("binding context to thread-local storage");
+	    	ActionContextImpl.bindContext(this, request, response, configuration);    		
     		
 	    	TargetId targetId = null;
 	    	Renderer renderer = null;
@@ -408,8 +436,14 @@ public class ActionController extends GenericPortlet {
 	    	}    	
 	    	logger.trace("... output rendering done");
     	} finally {
+    		
+    		// unbind the invocation context from the thread-local storage to
+    		// prevent memory leaks and complaints by the application server
+			logger.trace("unbinding context from thread-local storage");
+			ActionContextImpl.unbindContext();		
+    		
     		logger.trace("removing portlet from thread-local storage");
-    		Portlet.remove();
+//    		Portlet.remove();
     	}
     }
     
@@ -421,7 +455,13 @@ public class ActionController extends GenericPortlet {
     public void serveResource(ResourceRequest request, ResourceResponse response) throws PortletException, IOException {
     	
     	try {
-    		Portlet.set(this);
+    		
+	    	// bind the per-thread invocation context to the current request,
+	    	// response and invocation objects
+    		logger.trace("binding context to thread-local storage");
+	    	ActionContextImpl.bindContext(this, request, response, configuration);
+	    	
+//    		Portlet.set(this);
     	
 	    	String target = request.getResourceID();
 	    	logger.trace("serving resource '{}'...", target);
@@ -450,7 +490,13 @@ public class ActionController extends GenericPortlet {
 	    		super.serveResource(request, response);
 	    	}
     	} finally {
-    		Portlet.remove();
+    		
+    		// unbind the invocation context from the thread-local storage to
+    		// prevent memory leaks and complaints by the application server
+			logger.trace("unbinding context from thread-local storage");
+			ActionContextImpl.unbindContext();
+			
+//    		Portlet.remove();
     	}
     }    
     
@@ -548,7 +594,7 @@ public class ActionController extends GenericPortlet {
     protected String invokeTarget(TargetId targetId, PortletRequest request, PortletResponse response) throws StrutletsException {
     	Object action = null;
     	String result = null;
-    	try {
+//    	try {
     		logger.info("invoking target '{}'", targetId);
     		
     		// check if there's configuration available for the given action
@@ -571,18 +617,18 @@ public class ActionController extends GenericPortlet {
 			// create the invocation object
 	    	ActionInvocation invocation = new ActionInvocation(action, target, stack, request, response);
 	    	
-	    	// bind the per-thread invocation context to the current request,
-	    	// response and invocation objects
-	    	ActionContextImpl.bindContext(request, response, configuration, invocation);
+//	    	// bind the per-thread invocation context to the current request,
+//	    	// response and invocation objects
+//	    	ActionContextImpl.bindContext(request, response, configuration);
 	    	
 	    	// fire the action stack invocation
 	    	result = invocation.invoke();
 	    	
-    	} finally {
-    		// unbind the invocation context from the thread-local storage to
-    		// prevent memory leaks and complaints by the application server
-    		ActionContextImpl.unbindContext();
-    	}
+//    	} finally {
+//    		// unbind the invocation context from the thread-local storage to
+//    		// prevent memory leaks and complaints by the application server
+//    		ActionContextImpl.unbindContext();
+//    	}
     	return result;
     }
     
