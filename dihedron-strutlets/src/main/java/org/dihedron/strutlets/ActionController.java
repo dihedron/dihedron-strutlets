@@ -212,12 +212,14 @@ public class ActionController extends GenericPortlet {
     @Override
     public void processAction(ActionRequest request, ActionResponse response) throws IOException, PortletException {
     	try {
-//	    	Portlet.set(this);
-	    	
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
 	    	ActionContextImpl.bindContext(this, request, response, configuration);
+	    	
+	    	// TODO: remove this stuff from the ActionContextImpl.bindContext() 
+	    	// and move it to here, where it only happens when an action is invoked 
+//	    	ActionContext.clearRequestAttributes();
 
 	    	logger.trace("processing action...");
 	    		    	
@@ -233,8 +235,6 @@ public class ActionController extends GenericPortlet {
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
 			ActionContextImpl.unbindContext();    			
-//			
-//			Portlet.remove();
 		}
     }
     
@@ -259,7 +259,9 @@ public class ActionController extends GenericPortlet {
     		logger.trace("binding context to thread-local storage");
 	    	ActionContextImpl.bindContext(this, request, response, configuration);
     		
-//    		Portlet.set(this);
+	    	// TODO: remove this stuff from the ActionContextImpl.bindContext() 
+	    	// and move it to here, where it only happens when an event is invoked 
+//	    	ActionContext.clearRequestAttributes();
     	
 	    	logger.trace("processing event...");
 	    	
@@ -276,8 +278,6 @@ public class ActionController extends GenericPortlet {
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
 			ActionContextImpl.unbindContext();
-    		
-//    		Portlet.remove();
     	}
     }        
     
@@ -328,8 +328,6 @@ public class ActionController extends GenericPortlet {
     public void render(RenderRequest request, RenderResponse response) throws IOException, PortletException {
 
     	try {
-//    		Portlet.set(this);
-    		
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
@@ -440,10 +438,7 @@ public class ActionController extends GenericPortlet {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
-			ActionContextImpl.unbindContext();		
-    		
-    		logger.trace("removing portlet from thread-local storage");
-//    		Portlet.remove();
+			ActionContextImpl.unbindContext();		    		
     	}
     }
     
@@ -461,8 +456,6 @@ public class ActionController extends GenericPortlet {
     		logger.trace("binding context to thread-local storage");
 	    	ActionContextImpl.bindContext(this, request, response, configuration);
 	    	
-//    		Portlet.set(this);
-    	
 	    	String target = request.getResourceID();
 	    	logger.trace("serving resource '{}'...", target);
 	    	if(TargetId.isValidTarget(target)) {
@@ -495,8 +488,6 @@ public class ActionController extends GenericPortlet {
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
 			ActionContextImpl.unbindContext();
-			
-//    		Portlet.remove();
     	}
     }    
     
@@ -592,44 +583,28 @@ public class ActionController extends GenericPortlet {
     
     
     protected String invokeTarget(TargetId targetId, PortletRequest request, PortletResponse response) throws StrutletsException {
-    	Object action = null;
-    	String result = null;
-//    	try {
-    		logger.info("invoking target '{}'", targetId);
-    		
-    		// check if there's configuration available for the given action
-			Target target = registry.getTarget(targetId);
-			
-			logger.trace("target configuration:\n{}", target.toString());
-    		
-			// instantiate the action
-			action = ActionFactory.makeAction(target);
-			if(action != null) {
-				logger.info("action instance '{}' ready", target.getActionClass().getSimpleName());
-			} else {    			 	
-				logger.error("could not create an action instance for target '{}'", targetId);
-				throw new StrutletsException("No action could be found for target '" + targetId + "'");
-			}
-			
-			// get the stack for the given action
-			InterceptorStack stack = interceptors.getStackOrDefault(target.getInterceptorStackId());
 
-			// create the invocation object
-	    	ActionInvocation invocation = new ActionInvocation(action, target, stack, request, response);
-	    	
-//	    	// bind the per-thread invocation context to the current request,
-//	    	// response and invocation objects
-//	    	ActionContextImpl.bindContext(request, response, configuration);
-	    	
-	    	// fire the action stack invocation
-	    	result = invocation.invoke();
-	    	
-//    	} finally {
-//    		// unbind the invocation context from the thread-local storage to
-//    		// prevent memory leaks and complaints by the application server
-//    		ActionContextImpl.unbindContext();
-//    	}
-    	return result;
+		logger.info("invoking target '{}'", targetId);
+		
+		// check if there's configuration available for the given action
+		Target target = registry.getTarget(targetId);
+		
+		logger.trace("target configuration:\n{}", target.toString());
+		
+		// instantiate the action
+		Object action = ActionFactory.makeAction(target);
+		if(action != null) {
+			logger.info("action instance '{}' ready", target.getActionClass().getSimpleName());
+		} else {    			 	
+			logger.error("could not create an action instance for target '{}'", targetId);
+			throw new StrutletsException("No action could be found for target '" + targetId + "'");
+		}
+		
+		// get the stack for the given action
+		InterceptorStack stack = interceptors.getStackOrDefault(target.getInterceptorStackId());
+    	    	
+    	// create and fire the action stack invocation
+    	return new ActionInvocation(action, target, stack, request, response).invoke();
     }
     
     /**
@@ -746,8 +721,7 @@ public class ActionController extends GenericPortlet {
 					}
 				}
 			}
-    	}
-    	
+    	}    	
     }
         
     /**

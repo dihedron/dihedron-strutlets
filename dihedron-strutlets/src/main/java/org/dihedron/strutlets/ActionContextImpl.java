@@ -51,6 +51,7 @@ import javax.portlet.StateAwareResponse;
 import javax.portlet.ValidatorException;
 import javax.portlet.WindowStateException;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
@@ -250,11 +251,6 @@ public class ActionContextImpl {
 	 * the lifecycle and the phase).
 	 */
 	private PortletResponse response;
-//		
-//	/**
-//	 * The action invocation object.
-//	 */
-//	private ActionInvocation invocation;
 	
 	/**
 	 * The actions' configuration.
@@ -285,7 +281,7 @@ public class ActionContextImpl {
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration/*, ActionInvocation... invocation*/) {
+	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
@@ -294,10 +290,6 @@ public class ActionContextImpl {
 		getContext().response = response;
 		getContext().configuration = configuration;
 				
-//		if(invocation != null && invocation.length > 0) {
-//			getContext().invocation = invocation[0];
-//		}
-		
 		PortletSession session = request.getPortletSession();
 		
 		// remove all request-scoped attributes from previous invocations		
@@ -305,6 +297,9 @@ public class ActionContextImpl {
 		Map<String, Object> map = 
 			(Map<String, Object>)session.getAttribute(
 					getRequestScopedAttributesKey(), PortletSession.PORTLET_SCOPE);
+		
+		logger.error("I AM REMOVING ALL REQUEST_SCOPED STUFF: IS THIS RIGHT IN THIS CONTEXT???");;
+		
 		if(map != null) {
 			map.clear();
 		} else {
@@ -324,7 +319,6 @@ public class ActionContextImpl {
 	 */	
 	static void unbindContext() {
 		logger.debug("removing action context for thread {}", Thread.currentThread().getId());
-//		context.get().invocation = null;
 		context.get().request = null;
 		context.get().response = null;
 		context.get().portlet = null;
@@ -466,16 +460,6 @@ public class ActionContextImpl {
 	
 	// TODO: get other stuff from portlet.xml and web.xml
 	// PortletContext and PorteltConfig (see Ashish Sarin pages 119-120)
-	
-//	/**
-//	 * Retrieves the <code>ActionInvocation</code> object.
-//	 * 
-//	 * @return
-//	 *   the <code>ActionInvocation</code> object.
-//	 */
-//	public static ActionInvocation getActionInvocation2() {
-//		return getContext().invocation;
-//	}
 	
 	/**
 	 * In case of an <code>EventRequest</code>, returns the name of the event.

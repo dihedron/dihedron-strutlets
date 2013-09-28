@@ -278,13 +278,14 @@ public class ActionInvocation {
 	 * @throws StrutletsException
 	 */
 	public String invoke() throws StrutletsException {
+		// invoke the interceptors stack
 		if(iterator.get() == null) {
 			iterator.set(interceptors.iterator());
 		}
 		if(iterator.get().hasNext()) {
 			return iterator.get().next().intercept(this);
 		}
-		//return action.invoke(getMethod());
+		// now invoke the static proxy method 
 		try {
 			Method proxy = target.getProxyMethod();
 			logger.trace("invoking actual method on action instance through proxy '{}'", proxy.getName());
