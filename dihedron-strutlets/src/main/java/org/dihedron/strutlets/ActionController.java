@@ -261,7 +261,7 @@ public class ActionController extends GenericPortlet {
     		
 	    	// TODO: remove this stuff from the ActionContextImpl.bindContext() 
 	    	// and move it to here, where it only happens when an event is invoked 
-//	    	ActionContext.clearRequestAttributes();
+	    	ActionContext.clearRequestAttributes();
     	
 	    	logger.trace("processing event...");
 	    	

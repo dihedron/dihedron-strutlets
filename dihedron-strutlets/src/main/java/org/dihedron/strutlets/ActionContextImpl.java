@@ -290,24 +290,24 @@ public class ActionContextImpl {
 		getContext().response = response;
 		getContext().configuration = configuration;
 				
-		PortletSession session = request.getPortletSession();
+//		PortletSession session = request.getPortletSession();
 		
-		// remove all request-scoped attributes from previous invocations		
-		@SuppressWarnings("unchecked")
-		Map<String, Object> map = 
-			(Map<String, Object>)session.getAttribute(
-					getRequestScopedAttributesKey(), PortletSession.PORTLET_SCOPE);
-		
-		logger.error("I AM REMOVING ALL REQUEST_SCOPED STUFF: IS THIS RIGHT IN THIS CONTEXT???");;
-		
-		if(map != null) {
-			map.clear();
-		} else {
-			session.setAttribute(
-					getRequestScopedAttributesKey(), 
-					new HashMap<String, Object>(), 
-					PortletSession.PORTLET_SCOPE);
-		}
+//		// remove all request-scoped attributes from previous invocations		
+//		@SuppressWarnings("unchecked")
+//		Map<String, Object> map = 
+//			(Map<String, Object>)session.getAttribute(
+//					getRequestScopedAttributesKey(), PortletSession.PORTLET_SCOPE);
+//		
+//		logger.error("I AM REMOVING ALL REQUEST_SCOPED STUFF: IS THIS RIGHT IN THIS CONTEXT???");;
+//		
+//		if(map != null) {
+//			map.clear();
+//		} else {
+//			session.setAttribute(
+//					getRequestScopedAttributesKey(), 
+//					new HashMap<String, Object>(), 
+//					PortletSession.PORTLET_SCOPE);
+//		}
 	}
 	
 	/**
@@ -319,9 +319,10 @@ public class ActionContextImpl {
 	 */	
 	static void unbindContext() {
 		logger.debug("removing action context for thread {}", Thread.currentThread().getId());
-		context.get().request = null;
-		context.get().response = null;
-		context.get().portlet = null;
+		getContext().request = null;
+		getContext().response = null;
+		getContext().portlet = null;
+		getContext().configuration = null;
 		context.remove();
 	}
 	
