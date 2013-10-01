@@ -28,3 +28,34 @@ FEATURE:
 PRIORITY:
 	LOW
 --------------------------------------------------------------------------------
+FEATURE:
+  Remove the dumping of Strutlet's Request Attributes also in the portlet scope.
+PRIORITY:
+  LOW
+--------------------------------------------------------------------------------
+BUG:
+  Manage request attributes with portlet id, not portlet name.
+PRIORITY:
+  MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+  Implement initialiser object.
+PRIORITY:
+  MEDIUM
+--------------------------------------------------------------------------------
+FEATURE:
+  Load configuration of interceptor stacks from URL (file://, http://, classpath:).
+PRIORITY:
+  LOW
+--------------------------------------------------------------------------------
+FEATURE:
+  Add support for PortletContainer and WebContainer to ActionContext.
+PRIORITY:
+  HIGH
+--------------------------------------------------------------------------------
+BUG:
+  Fix ActionContext resetting at each invocation.
+PRIORITY:
+  VERY HIGH
+--------------------------------------------------------------------------------
+
