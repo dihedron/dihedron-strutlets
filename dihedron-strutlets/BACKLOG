@@ -24,7 +24,7 @@ PRIORITY:
 FEATURE:
 	Implement a mechanism (based on form submittal date, available in AlloyUI tags,
 	or on an equivalent mechanism provided by a custom or standard tag, see Struts2 
-	for details) to check double submits of forms with a few milliseconds.
+	for details) to check double submits of forms within a few milliseconds.
 PRIORITY:
 	LOW
 --------------------------------------------------------------------------------
