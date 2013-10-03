@@ -84,14 +84,16 @@ public class Dumper extends Interceptor {
 	 *   the buffer used for output accumulation.
 	 */
 	private void dumpFormParameters(StringBuilder builder) {
-		Map<String, String[]> parameters = ActionContext.getParameters();		
-		builder.append(Strings.centre(" WEB FORM ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
-		for(Entry<String, String[]> entry : parameters.entrySet()) {
-			builder.append("'").append(entry.getKey()).append("' = [ ");
-			for(String value : entry.getValue()) {
-				builder.append("'").append(value).append("', ");
+		Map<String, String[]> parameters = ActionContext.getParameters();	
+		if(parameters != null) {
+			builder.append(Strings.centre(" WEB FORM ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
+			for(Entry<String, String[]> entry : parameters.entrySet()) {
+				builder.append("'").append(entry.getKey()).append("' = [ ");
+				for(String value : entry.getValue()) {
+					builder.append("'").append(value).append("', ");
+				}
+				builder.append("]\n");
 			}
-			builder.append("]\n");
 		}
 	}
 	
@@ -126,9 +128,11 @@ public class Dumper extends Interceptor {
 	private void dumpAttributes(Scope scope, StringBuilder builder) {
 		Map<String, Object> attributes = ActionContext.getAttributes(scope);
 		builder.append(Strings.centre(" " + scope.name() + " SCOPE ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
-		for(Entry<String, Object> entry : attributes.entrySet()) {
-			String value = entry.getValue() != null ? entry.getValue().toString() : null; 
-			builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+		if(attributes != null) {			
+			for(Entry<String, Object> entry : attributes.entrySet()) {
+				String value = entry.getValue() != null ? entry.getValue().toString() : null; 
+				builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+			}
 		}
 	}
 	

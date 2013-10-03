@@ -97,7 +97,7 @@ public enum InitParameter {
 	 * to conjure the name of renderer JSPs based on the action's result and
 	 * the current portlet mode.
 	 */
-	RENDER_ROOT_DIRECTORY("strutlets:render-root-directory", "render.root.directory"),
+	RENDER_ROOT_DIRECTORY("strutlets:jsp-root-path", "render.root.directory"),
 			
 	/**
 	 * The parameter used to specify the pattern to create the path to JSP 
@@ -112,7 +112,7 @@ public enum InitParameter {
 	 * <li><b>${state}</b>: the new portlet window state after the method 
 	 * execution, e.g. "success".<li></ul>
 	 */
-	RENDER_PATH_PATTERN("strutlets:render-path-pattern", "render.path.pattern"),
+	RENDER_PATH_PATTERN("strutlets:jsp-path-pattern", "render.path.pattern"),
 
 	/**
 	 * The parameter used to specify the home page to be used by the framework
@@ -136,13 +136,13 @@ public enum InitParameter {
 	RENDER_HELP_HOMEPAGE("strutlets:help-home", "render.help.homepage"),
 	
 	/**
-	 * The parameter used to specify an optional per-application-server plugin,
+	 * The parameter used to specify an optional application-server-specific plugin,
 	 * which will be used by the framework to retrieve platform-specific data.
 	 */
 	WEB_CONTAINER_PLUGIN("strutlets:web-container-plugin", "web.container.plugin"),
 	
 	/**
-	 * The parameter used to specify an optional per-portlet-container plugin,
+	 * The parameter used to specify an optional portlet-container-specific plugin,
 	 * which will be used by the framework to retrieve platform-specific data.
 	 */
 	PORTLET_CONTAINER_PLUGIN("strutlets:portlet-container-plugin", "portlet.container.plugin");

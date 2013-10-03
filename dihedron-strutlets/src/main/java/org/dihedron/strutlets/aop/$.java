@@ -69,4 +69,26 @@ public class $<T> {
 	public T get() {
 		return this.reference;
 	}
+	
+	/**
+	 * Checks whether the reference is initialised and bound to some object or 
+	 * it is still dangling. 
+	 * 
+	 * @return
+	 *   whether the reference point to a valid object.
+	 */
+	public boolean isBound() {
+		return this.reference != null;
+	}
+	
+	/**
+	 * Returns whether the internal reference does not point to a valid object 
+	 * yet (it is not bound to any object).
+	 * 
+	 * @return
+	 *   whether the internal reference does not point to a valid object yet.
+	 */
+	public boolean isUnbound() {
+		return this.reference == null;
+	}
 }

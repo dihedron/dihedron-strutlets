@@ -500,14 +500,17 @@ public class ActionProxyFactory {
 	}
 	
 	
-	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode) throws DeploymentException {
-		
-		preCode.append("\t//\n\t// preparing input argument no. ").append(i).append(" (").append(Types.getAsString(type)).append(")\n\t//\n");
+	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode) throws DeploymentException {		
 
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
-			logger.error("primitive types are not supported on annotated parameters (check parameter {}: type is '{}')", i, Types.getAsString(type));
-			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter no. " + i + " (type is '" + Types.getAsString(type) + "')");
+			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", in.value(), i, Types.getAsString(type));
+			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter '" + in.value() + "' ( no. " + i + ", type is '" + Types.getAsString(type) + "')");
 		}
+		
+		if(Types.isGeneric(type) && Types.isOfClass(type, $.class))	{		
+			logger.error("input parameters must not be wrapped in typed reference holders ($) (check parameter no. {})", i);
+			throw new DeploymentException("Input parameters must not be wrapped in typed reference holders ($): check parameter no. " + i);									
+		}		
 		
 		if(in.value().trim().length() == 0) {
 			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (check parameter {}: @In's value is '{}')", i, in.value());
@@ -515,6 +518,10 @@ public class ActionProxyFactory {
 		}
 		
 		String parameter = in.value();
+		String variable = parameter + "_" + i;
+		
+		preCode.append("\t//\n\t// preparing input argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
+		
 		logger.trace("{}-th parameter is annotated with @In('{}')", i, in.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
@@ -528,10 +535,10 @@ public class ActionProxyFactory {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}					
-		preCode.append("\t").append(Types.getAsRawType(type)).append(" in").append(i).append(" = (").append(Types.getAsRawType(type)).append(") value;\n");
-		preCode.append("\ttrace.append(\"in").append(i).append("\").append(\" => '\").append(in").append(i).append(").append(\"', \");\n");
+		preCode.append("\t").append(Types.getAsRawType(type)).append(" ").append(variable).append(" = (").append(Types.getAsRawType(type)).append(") value;\n");
+		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
 		preCode.append("\n");
-		return "in" + i;
+		return variable;
 	}
 	
 	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
@@ -551,31 +558,34 @@ public class ActionProxyFactory {
 			throw new DeploymentException("Output parameters's name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
 		}		
 		
+		String parameter = out.value();
+		String variable = parameter + "_" + i;
+		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
-		logger.trace("output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
+		logger.trace("output parameter '{}' (no. {}) is of type $<{}>", parameter, i, Types.getAsString(wrapped));
 		
 		//
 		// code executed BEFORE the action fires, to prepare input parameters
 		//
-		preCode.append("\t//\n\t// preparing output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(")\n\t//\n");
+		preCode.append("\t//\n\t// preparing output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");
 		
 		logger.trace("{}-th parameter is annotated with @Out('{}')", i, out.value());
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> out").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
-		preCode.append("\torg.dihedron.strutlets.aop.$ out").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
 		preCode.append("\n");
 		
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
-		postCode.append("\tvalue = out").append(i).append(".get();\n");
+		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
-		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		
-		return "out" + i;
+		return variable;
 	}
 	
 	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
@@ -600,6 +610,8 @@ public class ActionProxyFactory {
 			throw new DeploymentException("Output parameters's name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
 		}		
 		
+		String parameter = in.value();
+		String variable = parameter + "_" + i;
 		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
@@ -607,9 +619,9 @@ public class ActionProxyFactory {
 		//
 		// code executed BEFORE the action fires, to prepare input parameters
 		//		
-		preCode.append("\t//\n\t// preparing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(")\n\t//\n");
+		preCode.append("\t//\n\t// preparing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");
 				
-		String parameter = in.value();
+		
 		logger.trace("{}-th parameter is annotated with @In('{}') and @Out('{}')", i, in.value(), out.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
@@ -626,21 +638,21 @@ public class ActionProxyFactory {
 
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
-		preCode.append("\torg.dihedron.strutlets.aop.$ inout").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
-		preCode.append("\tinout").append(i).append(".set(value);\n");
-		preCode.append("\ttrace.append(\"inout").append(i).append("\").append(\" => '\").append(inout").append(i).append(".get()).append(\"', \");\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\t").append(variable).append(".set(value);\n");
+		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
 		preCode.append("\n");
 		
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
-		postCode.append("\tvalue = inout").append(i).append(".get();\n");
+		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
-		return "inout" + i;
+		return variable;
 	}
 
 	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
@@ -659,16 +671,18 @@ public class ActionProxyFactory {
 			logger.error("input/output parameters' storage name must be explicitly specified through the @InOut annotation's value (check parameter {}: @InOut's value is '{}')", i, inout.value());
 			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @InOut annotation's value: check parameter no. " + i + " (@InOut's value is '" + inout.value() + "')");									
 		}
-				
+		
+		String parameter = inout.value();
+		String variable = parameter + "_" + i;
+		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
 		
 		//
 		// code executed BEFORE the action fires, to prepare input parameters
 		//		
-		preCode.append("\t//\n\t// preparing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(")\n\t//\n");
-				
-		String parameter = inout.value();
+		preCode.append("\t//\n\t// preparing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");				
+		
 		logger.trace("{}-th parameter is annotated with @InOut('{}') and @Out('{}')", i, inout.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
@@ -685,21 +699,22 @@ public class ActionProxyFactory {
 
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
-		preCode.append("\torg.dihedron.strutlets.aop.$ inout").append(i).append(" = new org.dihedron.strutlets.aop.$();\n");
-		preCode.append("\tinout").append(i).append(".set(value);\n");
-		preCode.append("\ttrace.append(\"inout").append(i).append("\").append(\" => '\").append(inout").append(i).append(".get()).append(\"', \");\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
+		preCode.append("\t").append(variable).append(".set(value);\n");
+		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
 		preCode.append("\n");
 		
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument no. ").append(i).append(" (").append(Types.getAsString(wrapped)).append(") into scope ").append(inout.to()).append("\n\t//\n");
-		postCode.append("\tvalue = inout").append(i).append(".get();\n");
+		postCode.append("\t//\n\t// storing input/output argument ").append(parameter).append(" (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(inout.to()).append("\n\t//\n");
+		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
-		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(inout.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to()).append(", value );\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to()).append(", value );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
-		return "inout" + i;
+		
+		return variable;
 	}
 	
 	

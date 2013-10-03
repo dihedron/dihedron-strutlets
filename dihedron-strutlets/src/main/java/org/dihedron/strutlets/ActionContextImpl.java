@@ -289,6 +289,16 @@ public class ActionContextImpl {
 		getContext().request = request;
 		getContext().response = response;
 		getContext().configuration = configuration;
+
+		// check if a map for REQUEST-scoped attributes is already available in
+		// the PORTLET, if not instantiate it and load it into PORTLET scope
+		PortletSession session = request.getPortletSession();
+		@SuppressWarnings("unchecked")
+		Map<String, Object> map = (Map<String, Object>)session.getAttribute(getRequestScopedAttributesKey(), PortletSession.PORTLET_SCOPE);
+		if(map == null) {
+			logger.trace("installing REQUEST scoped attributes map into PORTLET scope");
+			session.setAttribute(getRequestScopedAttributesKey(), new HashMap<String, Object>(), PortletSession.PORTLET_SCOPE);			
+		}		
 				
 //		PortletSession session = request.getPortletSession();
 		
@@ -2079,7 +2089,7 @@ public class ActionContextImpl {
 	 *   a portlet-specific key for request-scoped attributes.
 	 */
 	public static String getRequestScopedAttributesKey() {
-		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + getPortletName().toUpperCase();
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "['" + getPortletName().toUpperCase() + "']";
 	}
 	
 	/**
@@ -2093,7 +2103,7 @@ public class ActionContextImpl {
 	 *   te portlet-specific key for request-scoped attributes.
 	 */
 	public static String getRequestScopedAttributesKeyByPortletName(String portletName) {
-		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "_" + portletName.toUpperCase();
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "['" + portletName.toUpperCase() + "']";
 	}
 	
 	/**

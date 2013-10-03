@@ -56,11 +56,32 @@ public class ProxiedAction {
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(ProxiedAction.class);
 	
-	
+
 	@Invocable (
 		idempotent = true,
 		results = {
-			@Result(value = "success", renderer = "jsp", data = "/html/portlet1/view.jsp")	
+			@Result(value = Action.SUCCESS, renderer = "jsp", data = "/html/portlet1/view.jsp")	
+		}
+	)
+	public String render(
+			@Out(value="friendsAttribute", scope = Scope.REQUEST) $<Set<List<Map<String, Vector<String>>>>> friends,
+			@Out(value="descriptionAttribute", scope = Scope.PORTLET) $<String> description,
+			@Out(value="ageAttribute", scope = Scope.APPLICATION) $<Integer> age,			
+			@Out(value="genderAttribute", scope = Scope.APPLICATION) $<Boolean> gender
+		) {
+		logger.debug("initialising view, storing parameters into session");
+		friends.set(new HashSet<List<Map<String, Vector<String>>>>());
+		description.set("a very good person");
+		gender.set(true);
+		age.set(100);
+		return Action.SUCCESS;
+	}
+	
+	/*
+	@Invocable (
+		idempotent = true,
+		results = {
+			@Result(value = Action.SUCCESS, renderer = "jsp", data = "/html/portlet1/view.jsp")	
 		}
 	)
 	public String initView(
@@ -76,6 +97,7 @@ public class ProxiedAction {
 		arg3.set(true);		
 		return Action.SUCCESS;
 	}
+	*/
 	
 	@Invocable(
 		idempotent = true,
@@ -84,28 +106,30 @@ public class ProxiedAction {
 		}
 	)
 	public String dumpInputs(
-			@In(value = "formParam", scopes = Scope.FORM) String arg0 
-			,@In(value = "applAttr1", scopes = Scope.APPLICATION) Integer arg1 
-			,@In("applAttr2") Set<List<Map<String, Vector<String>>>> arg2
-			,@In(value = "portAttr1", scopes = Scope.PORTLET) String arg3 
-			,@In("portAttr2") Boolean arg4
-			,String arg5
-			,double arg6 
-			,@Out(value = "inputs", scope = Scope.RENDER) $<String> arg7 
-			,@In("portAttr2") @Out("portAttr3") $<Set<List<Map<String, Vector<String>>>>> arg8  
+			@In(value = "nameParameter", scopes = Scope.FORM) String name, 
+			@In(value = "surnameParameter", scopes = Scope.FORM) String surname,
+			@In(value = "phoneParameter", scopes = Scope.FORM) String phone,
+			@In(value = "emailParameter", scopes = Scope.FORM) String email,
+			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
+			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
+			@In(value="ageAttribute", scopes = Scope.APPLICATION) Integer age,			
+			@In(value="genderAttribute", scopes = Scope.APPLICATION) Boolean gender,
+			String aString,
+			double aDouble,
+			@Out(value = "result", scope = Scope.RENDER) $<String> result   
 	) throws InvalidPhaseException {
 		logger.debug("dumping input parameters from session & form");
 		StringBuilder buffer = new StringBuilder("{\n");
-		buffer.append("\t'arg0' : '").append(arg0).append("' (").append(Types.getAsString(arg0.getClass())).append("),\n");
-		buffer.append("\t'arg1' : '").append(arg1).append("' (").append(Types.getAsString(arg1.getClass())).append("),\n");
-		buffer.append("\t'arg2' : '").append(arg2).append("' (").append(Types.getAsString(arg2.getClass())).append("),\n");
-		buffer.append("\t'arg3' : '").append(arg3).append("' (").append(Types.getAsString(arg3.getClass())).append("),\n");
-		buffer.append("\t'arg4' : '").append(arg4).append("' (").append(Types.getAsString(arg4.getClass())).append("),\n");
-//		buffer.append("\t'arg5' : '").append(arg5).append("' (").append(Types.getAsString(arg5.getClass())).append("),\n");
-//		buffer.append("\t'arg6' : '").append(arg6).append("',\n");
-		buffer.append("\t'arg8' : '").append(arg8).append("' (").append(Types.getAsString(arg8.get().getClass())).append("),\n");
+		buffer.append("\t'name' : '").append(name).append("' (").append(Types.getAsString(name.getClass())).append("),\n");
+		buffer.append("\t'surname' : '").append(surname).append("' (").append(Types.getAsString(surname.getClass())).append("),\n");
+		buffer.append("\t'phone' : '").append(phone).append("' (").append(Types.getAsString(phone.getClass())).append("),\n");
+		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsString(email.getClass())).append("),\n");
+		buffer.append("\t'friends' : '").append(friends).append("' (").append(friends != null ? Types.getAsString(friends.getClass()) : "<null>").append("),\n");
+		buffer.append("\t'description' : '").append(description).append("' (").append(Types.getAsString(description.getClass())).append("),\n");
+		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsString(age.getClass())).append("),\n");
+		buffer.append("\t'gender' : '").append(gender).append("' (").append(Types.getAsString(gender.getClass())).append("),\n");
 		buffer.append("}");
-		arg7.set(buffer.toString());
+		result.set(buffer.toString());
 		return Action.SUCCESS;
 	}	
 }

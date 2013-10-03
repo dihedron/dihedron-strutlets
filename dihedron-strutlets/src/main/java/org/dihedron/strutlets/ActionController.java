@@ -217,9 +217,8 @@ public class ActionController extends GenericPortlet {
     		logger.trace("binding context to thread-local storage");
 	    	ActionContextImpl.bindContext(this, request, response, configuration);
 	    	
-	    	// TODO: remove this stuff from the ActionContextImpl.bindContext() 
-	    	// and move it to here, where it only happens when an action is invoked 
-//	    	ActionContext.clearRequestAttributes();
+	    	// request attributes are removed upon a brand new action request 
+	    	ActionContext.clearRequestAttributes();
 
 	    	logger.trace("processing action...");
 	    		    	
@@ -259,8 +258,7 @@ public class ActionController extends GenericPortlet {
     		logger.trace("binding context to thread-local storage");
 	    	ActionContextImpl.bindContext(this, request, response, configuration);
     		
-	    	// TODO: remove this stuff from the ActionContextImpl.bindContext() 
-	    	// and move it to here, where it only happens when an event is invoked 
+	    	// request attributes are removed upon a brand new event request
 	    	ActionContext.clearRequestAttributes();
     	
 	    	logger.trace("processing event...");
