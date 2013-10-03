@@ -58,6 +58,8 @@ import org.dihedron.commons.properties.Properties;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
+import org.dihedron.strutlets.containers.portlet.PortalServer;
+import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
@@ -253,9 +255,22 @@ public class ActionContextImpl {
 	private PortletResponse response;
 	
 	/**
-	 * The actions' configuration.
+	 * The actions' configuration; this map is read only and it's loaded at startup 
+	 * if the URL of a properties file is provided in the portlet.xml.
 	 */
 	private Properties configuration;
+	
+	/**
+	 * A reference to the <code>ApplicationServer</code> plug-in; this is useful if
+	 * the portlets need to exploitm application.server specific APIs.
+	 */
+	private ApplicationServer server = null;
+	
+	/**
+	 * A reference to the <code> PortalServer</code> plug-in, if available; 
+	 * this is useful if the portlets want to use portal-server-specific APIs.
+	 */
+	private PortalServer portal = null;
 		
 	/**
 	 * Retrieves the per-thread instance.
@@ -281,7 +296,7 @@ public class ActionContextImpl {
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
 	 */
-	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration) {
+	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration, ApplicationServer server, PortalServer portal) {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
@@ -289,6 +304,8 @@ public class ActionContextImpl {
 		getContext().request = request;
 		getContext().response = response;
 		getContext().configuration = configuration;
+		getContext().server = server;
+		getContext().portal = portal;
 
 		// check if a map for REQUEST-scoped attributes is already available in
 		// the PORTLET, if not instantiate it and load it into PORTLET scope
@@ -333,6 +350,8 @@ public class ActionContextImpl {
 		getContext().response = null;
 		getContext().portlet = null;
 		getContext().configuration = null;
+		getContext().server = null;
+		getContext().portal = null;
 		context.remove();
 	}
 	
@@ -1301,6 +1320,15 @@ public class ActionContextImpl {
 					break loop;
 				}
 				break;
+			case HTTP:
+				if(getContext().portal != null) {
+					value = ActionContext.getHttpParameterValue(key);
+					if(value != null) {
+						logger.trace("... value for '{}' found in HTTP parameters: '{}'", key, value);
+						break loop;						
+					}
+				}
+				break;
 			default:				
 				logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
 				throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
@@ -1344,6 +1372,115 @@ public class ActionContextImpl {
 			throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
 		}			
 	}
+	
+	/**
+	 * Retrieves the list of all parameter names in the original HTTP request.
+	 * 
+	 * @return
+	 *   the list of all parameter names in the original HTTP request.
+	 */
+	public static List<String> getHttpParameterNames() {
+		List<String> names = new ArrayList<String>();
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);
+			@SuppressWarnings("unchecked")
+			Enumeration<String> enumeration = (Enumeration<String>)servlet.getParameterNames();
+			while(enumeration.hasMoreElements()) {
+				names.add(enumeration.nextElement());
+			}
+		}
+		return names;
+	}
+	
+	/**
+	 * Returns the complete map of all HTTP paramaters along with their values.
+	 * 
+	 * @return
+	 *   the complete map of all HTTP paramaters along with their values.
+	 */
+	public static Map<String, String[]> getHttpParametersMap() {
+		Map<String, String[]> parameters = new HashMap<String, String[]>();
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);
+			for(Object entry : servlet.getParameterMap().entrySet()) {
+				String key = (String)(((Entry<?, ?>)entry).getKey());
+				String[] values = (String[])(((Entry<?, ?>)entry).getValue());
+				parameters.put(key,  values);
+			}
+		}
+		return parameters;
+	}
+	
+	/**
+	 * Returns the value of the HTTP paramneter corresponfding to the given key.
+	 * 
+	 * @param key
+	 *   the name of the parameter.
+	 * @return
+	 *   the parameter value, or null if no portal server plugin is available or 
+	 *   no parameter corresponds to the given key.
+	 */
+	public static String getHttpParameterValue(String key) {
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);			
+			return servlet.getParameter(key);
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the set of values for the given HTTP parameter key, or null.
+	 * 
+	 * @param key
+	 *   the name of the paramter.
+	 * @return
+	 *   the set of values for the given HTTP parameter, or null if no portal 
+	 *   server plugin is active or no parameter exists with the given name.
+	 */
+	public static String[] getHttpParameterValues(String key) {
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);
+			return servlet.getParameterValues(key);
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the list of all HTTP request attribute names.
+	 * 
+	 * @return
+	 *   the list of all HTTP request attribute names.
+	 */
+	public static List<String> getHttpAttributeNames() {
+		List<String> names = new ArrayList<String>();
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);
+			@SuppressWarnings("unchecked")
+			Enumeration<String> enumeration = (Enumeration<String>)servlet.getAttributeNames();
+			while(enumeration.hasMoreElements()) {
+				names.add(enumeration.nextElement());
+			}
+		}
+		return names;
+	}
+	
+	/**
+	 * Returns the complete map of all HTTP attributes along with their values.
+	 * 
+	 * @return
+	 *   the complete map of all HTTP attributes along with their values.
+	 */
+	public static Map<String, Object> getHttpAttributesMap() {
+		Map<String, Object> attributes = new HashMap<String, Object>();
+		if(getContext().portal != null) {
+			HttpServletRequest servlet = getContext().portal.getHTTPServletRequest(getContext().request);		
+			for(String attribute : getHttpAttributeNames()) {
+				Object value = servlet.getAttribute(attribute);
+				attributes.put(attribute, value);
+			}
+		}
+		return attributes;
+	}	
 	
 	/**
 	 * Returns the application-scoped attribute corresponding to the given key. 
@@ -2033,6 +2170,21 @@ public class ActionContextImpl {
 	public static PortletResponse getPortletResponse() {
 		return getContext().response;
 	}
+
+	/**
+	 * Returns the original HTTP request object.
+	 * 
+	 * @return
+	 *   the original HTTP request object.
+	 */
+	@Deprecated
+	public static HttpServletRequest getHttpServletRequest() {
+		if(getContext().portal != null) {
+			return getContext().portal.getHTTPServletRequest(getContext().request);
+		}
+		return null;
+	}
+	
 	
 //	/**
 //	 * Returns the underlying HTTP server request object, which is common to all

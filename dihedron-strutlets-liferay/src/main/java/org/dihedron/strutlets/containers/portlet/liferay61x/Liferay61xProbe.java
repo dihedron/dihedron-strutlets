@@ -43,6 +43,7 @@ public class Liferay61xProbe implements Probe {
 	 */
 	@Override
 	public boolean isSupportedEnvironment() {
+		logger.trace("this is a Liferay environment");
 		return true;
 	}
 }

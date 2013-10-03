@@ -10,6 +10,6 @@ import org.dihedron.strutlets.plugins.Plugin;
 /**
  * @author Andrea Funto'
  */
-public interface PortletContainerPlugin extends Plugin {
+public interface PortalServerPlugin extends Plugin {
 
 }

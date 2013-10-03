@@ -18,7 +18,7 @@
  */
 package org.dihedron.strutlets.containers.web.tomcat7x;
 
-import org.dihedron.strutlets.containers.web.WebContainer;
+import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class Tomcat7x implements WebContainer {
+public class Tomcat7x implements ApplicationServer {
 	/**
 	 * The logger
 	 */
@@ -54,7 +54,7 @@ public class Tomcat7x implements WebContainer {
 	/**
 	 * Performs Tomcat-specific initialisation tasks.
 	 * 
-	 * @see org.dihedron.strutlets.containers.web.WebContainer#initialise()
+	 * @see org.dihedron.strutlets.containers.web.ApplicationServer#initialise()
 	 */
 	public boolean initialise() {
 		logger.debug("initialising Tomcat 7.x runtime environment...");

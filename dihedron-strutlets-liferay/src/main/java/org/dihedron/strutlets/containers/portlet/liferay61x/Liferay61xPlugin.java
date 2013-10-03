@@ -19,14 +19,14 @@
 
 package org.dihedron.strutlets.containers.portlet.liferay61x;
 
+import org.dihedron.strutlets.containers.portlet.PortalServerPlugin;
 import org.dihedron.strutlets.plugins.Pluggable;
-import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
  * @author Andrea Funto'
  */
-public class Liferay61xPlugin implements Plugin {
+public class Liferay61xPlugin implements PortalServerPlugin {
 
 	/**
 	 * @see org.dihedron.strutlets.plugins.Plugin#makeProbe()

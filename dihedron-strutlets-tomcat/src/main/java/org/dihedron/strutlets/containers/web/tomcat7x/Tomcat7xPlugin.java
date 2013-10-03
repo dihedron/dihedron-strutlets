@@ -19,14 +19,14 @@
 
 package org.dihedron.strutlets.containers.web.tomcat7x;
 
+import org.dihedron.strutlets.containers.web.ApplicationServerPlugin;
 import org.dihedron.strutlets.plugins.Pluggable;
-import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
  * @author Andrea Funto'
  */
-public class Tomcat7xPlugin implements Plugin {
+public class Tomcat7xPlugin implements ApplicationServerPlugin {
 
 	/**
 	 * @see org.dihedron.strutlets.plugins.Plugin#makeContainerProbe()

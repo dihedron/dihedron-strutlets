@@ -65,11 +65,11 @@ public enum Scope {
 	 * storage is supported, but deprecated as it can lead to situations where
 	 * debugging is extremely difficult.
 	 */
-	CONFIGURATION;
+	CONFIGURATION,
 	
-//	/**
-//	 * The parameter can be found among the HTTP request parameters, in a portlet-
-//	 * container specific way.
-//	 */
-//	HTTP
+	/**
+	 * The parameter can be found among the HTTP request parameters, in a portlet-
+	 * container specific way.
+	 */
+	HTTP
 }

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.jar.JarFile;
 
-import org.dihedron.strutlets.containers.web.WebContainer;
+import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.jboss.vfs.VirtualFile;
 import org.reflections.ReflectionsException;
 import org.reflections.vfs.SystemDir;
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class JBossAS7x implements WebContainer {
+public class JBossAS7x implements ApplicationServer {
 	
 	/**
 	 * The logger
@@ -63,7 +63,7 @@ public class JBossAS7x implements WebContainer {
 	 * type for classpath-related resources, needed by Strutlets to be able to
 	 * scan the classpath for packages and for resources contained therein. 
 	 * 
-	 * @see org.dihedron.strutlets.containers.web.WebContainer#initialise()
+	 * @see org.dihedron.strutlets.containers.web.ApplicationServer#initialise()
 	 */
 	@Override
 	public boolean initialise() {

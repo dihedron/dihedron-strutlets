@@ -50,10 +50,10 @@ import org.dihedron.commons.url.URLFactory;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
-import org.dihedron.strutlets.containers.portlet.PortletContainer;
-import org.dihedron.strutlets.containers.portlet.PortletContainerPlugin;
-import org.dihedron.strutlets.containers.web.WebContainer;
-import org.dihedron.strutlets.containers.web.WebContainerPlugin;
+import org.dihedron.strutlets.containers.portlet.PortalServer;
+import org.dihedron.strutlets.containers.portlet.PortalServerPlugin;
+import org.dihedron.strutlets.containers.web.ApplicationServer;
+import org.dihedron.strutlets.containers.web.ApplicationServerPlugin;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
@@ -121,12 +121,12 @@ public class ActionController extends GenericPortlet {
 	/**
 	 * The current application server.
 	 */
-	private WebContainer server;
+	private ApplicationServer server;
 	
 	/**
-	 * The current portlet conatiner.
+	 * The current portlet container.
 	 */
-	private PortletContainer container;
+	private PortalServer portal;
 	
     /**
      * Initialises the controller portlet. 
@@ -185,9 +185,9 @@ public class ActionController extends GenericPortlet {
     @Override
     public void destroy() {
     	logger.info("action controller {} shutting down...", this.getPortletName());
-    	if(container != null) {
+    	if(portal != null) {
     		logger.trace("... cleaning up portlet container");
-    		container.cleanup();
+    		portal.cleanup();
     	}
     	if(server != null) {
     		logger.trace("... cleaning up application server");
@@ -215,7 +215,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration);
+	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
 	    	
 	    	// request attributes are removed upon a brand new action request 
 	    	ActionContext.clearRequestAttributes();
@@ -256,7 +256,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration);
+	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
     		
 	    	// request attributes are removed upon a brand new event request
 	    	ActionContext.clearRequestAttributes();
@@ -329,7 +329,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration);    		
+	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);    		
     		
 	    	TargetId targetId = null;
 	    	Renderer renderer = null;
@@ -452,7 +452,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration);
+	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
 	    	
 	    	String target = request.getResourceID();
 	    	logger.trace("serving resource '{}'...", target);
@@ -723,8 +723,8 @@ public class ActionController extends GenericPortlet {
     }
         
     /**
-     * Initialises the current runtime environment, with application server 
-     * specific activities and tasks.
+     * Initialises the current runtime environment, with application server and 
+     * portal server specific activities and tasks.
      */
     private void initialiseRuntimeEnvironment() {
     	
@@ -738,20 +738,20 @@ public class ActionController extends GenericPortlet {
 
 		logger.trace("initialising runtime environment...");
 		
-		Set<Class<? extends Plugin>> plugins = PluginManager.getPlugins(WebContainerPlugin.class);
-		server = (WebContainer)PluginManager.loadFirstPluggable(plugins);
+		Set<Class<? extends Plugin>> plugins = PluginManager.getPlugins(ApplicationServerPlugin.class);
+		server = (ApplicationServer)PluginManager.loadFirstPluggable(plugins);
 		if(server != null) {
 			logger.trace("initialising application server {} runtime", server.getName());
 			server.initialise();
 			logger.trace("application server {} runtime initialised", server.getName());
 		}
 				
-		plugins = PluginManager.getPlugins(PortletContainerPlugin.class);
-		container = (PortletContainer)PluginManager.loadFirstPluggable(plugins);
-		if(container != null) {
-			logger.trace("initialising portlet container {} runtime", container.getName());
-			container.initialise();
-			logger.trace("portlet container {} runtime initialised", container.getName());
+		plugins = PluginManager.getPlugins(PortalServerPlugin.class);
+		portal = (PortalServer)PluginManager.loadFirstPluggable(plugins);
+		if(portal != null) {
+			logger.trace("initialising portlet container {} runtime", portal.getName());
+			portal.initialise();
+			logger.trace("portlet container {} runtime initialised", portal.getName());
 		}
 		logger.trace("runtime initialisation done!");
     }

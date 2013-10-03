@@ -19,6 +19,7 @@
 
 package org.dihedron.strutlets.plugins;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,10 +53,12 @@ public class PluginManager {
 		Reflections reflections = 
 				new Reflections(new ConfigurationBuilder()
 					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
-					.setUrls(ClasspathHelper.forPackage(""))
+					.setUrls(ClasspathHelper.forPackage("org.dihedron"))
 					.setScanners(new SubTypesScanner())
 				);
-		return reflections.getSubTypesOf(Plugin.class);
+		Set<Class<? extends Plugin>> plugins = reflections.getSubTypesOf(Plugin.class);
+		logger.trace("found {} plugins in classpath", plugins.size());
+		return plugins;
 	}
 	
 	/**
@@ -69,6 +72,10 @@ public class PluginManager {
 	public static Set<Class<? extends Plugin>> getPlugins(Class<? extends Plugin> filter) {
 		Set<Class<? extends Plugin>> plugins = new HashSet<Class<? extends Plugin>>();
 		for(Class<? extends Plugin> clazz : getPlugins()) {
+			if(Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers())) {
+				logger.trace("skipping class '{}' as it is abstract (or an interface)", clazz.getCanonicalName());
+				continue;
+			}
 			if(filter.isAssignableFrom(clazz)) {
 				logger.trace("plugin '{}' is of type '{}'", clazz.getCanonicalName(), filter.getCanonicalName());
 				plugins.add(clazz);
@@ -80,7 +87,7 @@ public class PluginManager {
 	}
 	
 	/**
-	 * Loads the actual business loging implementations of the <code>Pluggable</code>
+	 * Loads the actual business logic implementations of the <code>Pluggable</code>
 	 * class from the given set of plugins.
 	 * 
 	 * @param plugins

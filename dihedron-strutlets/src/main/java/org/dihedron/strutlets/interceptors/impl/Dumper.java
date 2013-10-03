@@ -64,6 +64,8 @@ public class Dumper extends Interceptor {
 		dumpAttributes(Scope.REQUEST, builder);
 		dumpAttributes(Scope.PORTLET, builder);
 		dumpAttributes(Scope.APPLICATION, builder);
+		dumpHttpParameters(builder);
+		dumpHttpAttributes(builder);
 		builder.append(SECTION_FOOTER).append("\n");
 		logger.debug("action context BEFORE execution:\n{}", builder);
 		builder.setLength(0);
@@ -72,6 +74,8 @@ public class Dumper extends Interceptor {
 		dumpAttributes(Scope.REQUEST, builder);
 		dumpAttributes(Scope.PORTLET, builder);
 		dumpAttributes(Scope.APPLICATION, builder);
+		dumpHttpParameters(builder);
+		dumpHttpAttributes(builder);
 		builder.append(SECTION_FOOTER).append("\n");
 		logger.debug("action context AFTER execution:\n{}", builder);
 		return result;		
@@ -134,6 +138,32 @@ public class Dumper extends Interceptor {
 				builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
 			}
 		}
+	}
+	
+	private void dumpHttpParameters(StringBuilder builder) {
+		Map<String, String[]> parameters = ActionContext.getHttpParametersMap();		
+		builder.append(Strings.centre(" HTTP PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
+		if(parameters != null) {
+			for(Entry<String, String[]> entry : parameters.entrySet()) {
+				builder.append("'").append(entry.getKey()).append("' = [ ");
+				for(String value : entry.getValue()) {
+					builder.append("'").append(value).append("', ");
+				}
+				builder.append("]\n");
+			}
+		}		
+	}
+	
+	private void dumpHttpAttributes(StringBuilder builder) {
+		Map<String, Object> attributes = ActionContext.getHttpAttributesMap();
+		builder.append(Strings.centre(" HTTP ATTRIBUTES ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
+		if(attributes != null) {			
+			for(Entry<String, Object> entry : attributes.entrySet()) {
+				String value = entry.getValue() != null ? entry.getValue().toString() : null; 
+				builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+			}
+		}
+		
 	}
 	
 }

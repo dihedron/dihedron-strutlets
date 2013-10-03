@@ -66,6 +66,18 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.dihedron.strutlets</groupId>
+			<artifactId>strutlets-liferay</artifactId>
+			<version>${strutlets.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dihedron.strutlets</groupId>
+			<artifactId>strutlets-tomcat</artifactId>
+			<version>${strutlets.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>portal-service</artifactId>
 			<scope>provided</scope>

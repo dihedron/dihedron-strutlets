@@ -16,13 +16,27 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.containers.web;
+package org.dihedron.strutlets.containers.portlet;
+
+import javax.portlet.PortletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import org.dihedron.strutlets.plugins.Pluggable;
 
 /**
  * @author Andrea Funto'
  */
-public interface WebContainer extends Pluggable {
+public interface PortalServer extends Pluggable {
+	
+	/**
+	 * Returns the HTTP servlet request object underlying the current portlet
+	 * request.
+	 * 
+	 * @param request
+	 *   the current portlet request object.
+	 * @return
+	 *   the servlet request object.
+	 */
+	HttpServletRequest getHTTPServletRequest(PortletRequest request);
 	
 }

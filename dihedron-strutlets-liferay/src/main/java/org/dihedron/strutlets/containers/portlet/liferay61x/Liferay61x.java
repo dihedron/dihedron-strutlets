@@ -21,14 +21,21 @@ package org.dihedron.strutlets.containers.portlet.liferay61x;
 import javax.portlet.PortletRequest;
 import javax.servlet.http.HttpServletRequest;
 
-import org.dihedron.strutlets.containers.portlet.PortletContainer;
+import org.dihedron.strutlets.containers.portlet.PortalServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.liferay.portal.util.PortalUtil;
 
 /**
  * @author Andrea Funto'
  */
-public class Liferay61x implements PortletContainer {
+public class Liferay61x implements PortalServer {
+	
+	/**
+	 * The logger.
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(Liferay61x.class);
 
 	@Override
 	public String getName() {		
@@ -36,16 +43,16 @@ public class Liferay61x implements PortletContainer {
 	}
 
 	/**
-	 * @see org.dihedron.strutlets.containers.portlet.PortletContainer#initialise()
+	 * @see org.dihedron.strutlets.containers.portlet.PortalServer#initialise()
 	 */
 	@Override
 	public boolean initialise() {
-		// TODO: implement
+		logger.trace("initialising Liferay 61x plugin");
 		return true;
 	}
 
 	/**
-	 * @see org.dihedron.strutlets.containers.portlet.PortletContainer#cleanup()
+	 * @see org.dihedron.strutlets.containers.portlet.PortalServer#cleanup()
 	 */
 	@Override
 	public void cleanup() {
@@ -53,7 +60,7 @@ public class Liferay61x implements PortletContainer {
 	}
 
 	/**
-	 * @see org.dihedron.strutlets.containers.portlet.PortletContainer#getHTTPServletRequest(org.dihedron.strutlets.containers.portlet.PortletRequest)
+	 * @see org.dihedron.strutlets.containers.portlet.PortalServer#getHTTPServletRequest(org.dihedron.strutlets.containers.portlet.PortletRequest)
 	 */
 	@Override
 	public HttpServletRequest getHTTPServletRequest(PortletRequest request) {
