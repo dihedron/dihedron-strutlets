@@ -356,6 +356,28 @@ public class ActionContextImpl {
 	}
 	
 	/**
+	 * Returns a reference to the current portal-server-specific plug-in, if 
+	 * available. If no plug-in was loaded, returns null.
+	 * 
+	 * @return
+	 *   a reference to the current portal-server-specific plug-in.
+	 */
+	public static PortalServer getPortalServer() {
+		return getContext().portal;
+	}
+	
+	/**
+	 * Returns a reference to the current application-server-specific plug-in, if 
+	 * available. If no plug-in was loaded, returns null.
+	 * 
+	 * @return
+	 *   a reference to the current application-server-specific plug-in.
+	 */
+	public static ApplicationServer getApplicationServer() {
+		return getContext().server;
+	}	
+	
+	/**
 	 * Returns the current phase of the action request lifecycle.
 	 * 
 	 * @return
