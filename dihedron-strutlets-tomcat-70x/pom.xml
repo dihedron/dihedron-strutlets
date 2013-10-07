@@ -9,24 +9,35 @@
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>strutlets-liferay</artifactId>
+	<artifactId>strutlets-tomcat-70x</artifactId>
 	<packaging>jar</packaging>
-	<name>Strutlets - Plug-in for Liferay</name>
-	<description>A plugin to provide access to Liferay-specific functionalities through Strutlets.</description>
+	<name>Strutlets - Plug-in for Tomcat</name>
+	<description>A plugin to provide access to Tomcat-specific functionalities through Strutlets.</description>
 	<url>http://www.dihedron.org/strutlets</url>
-		
+	
+	<developers>
+		<developer>
+			<id>Dihedron</id>
+			<name>Andrea Funt&#x00F2;</name>
+			<email>dihedron.dev@gmail.com</email>
+			<roles>
+				<role>Lead Developer</role>
+			</roles>
+		</developer>
+	</developers>
+	
 	<licenses>
 		<license>
-			<comments>Copyright (C) Andrea Funt&ograve; 2012-2013 - All rights reserved</comments>
+			<comments>Copyright (C) Andrea Funt&#x00F2; 2012-2013 - All rights reserved</comments>
 			<name>GNU Lesser General Public License ver. 3 or later</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
 		</license>
 	</licenses>
 	
 	<scm>
-		<url>http://code.google.com/p/dihedron-strutlets-liferay/</url>
-		<connection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-liferay/</connection>
-		<developerConnection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-liferay/</developerConnection>		
+		<url>http://code.google.com/p/dihedron-strutlets-tomcat/</url>
+		<connection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-tomcat/</connection>
+		<developerConnection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-tomcat/</developerConnection>		
 	</scm>
 
 	<properties>
@@ -51,7 +62,9 @@
 				<configuration>
 					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
 					<bottom>
-            			<![CDATA[Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.]]>
+            <![CDATA[
+              Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
+            ]]>
 					</bottom>
 				</configuration>
 			</plugin>
@@ -74,25 +87,15 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.jboss</groupId>
+			<artifactId>jboss-vfs</artifactId>
+			<scope>provided</scope>
+		</dependency>				
+		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets</artifactId>
 			<version>${strutlets.version}</version>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.portlet</groupId>
-			<artifactId>portlet-api</artifactId>
-			<scope>provided</scope>
-		</dependency>	
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<scope>provided</scope>
-		</dependency>			
-		<dependency>
-			<groupId>com.liferay.portal</groupId>
-            <artifactId>portal-service</artifactId>            
-           	<scope>provided</scope>		
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

@@ -35,7 +35,7 @@
 				<configuration>
 					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
 					<bottom>
-            			<![CDATA[Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.]]>
+            			<![CDATA[Copyright &copy; 2012-2013 Andrea Funt&#x00F2;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.]]>
 					</bottom>
 				</configuration>
 			</plugin>

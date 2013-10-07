@@ -11,7 +11,7 @@
 	<developers>
 		<developer>
 			<id>Dihedron</id>
-			<name>Andrea Funt&ograve;</name>
+			<name>Andrea Funt&#x00F2;</name>
 			<email>dihedron.dev@gmail.com</email>
 			<roles>
 				<role>Lead Developer</role>
@@ -27,7 +27,7 @@
 	
 	<licenses>
 		<license>
-			<comments>Copyright (C) Andrea Funt&ograve; 2012-2013 - All rights reserved</comments>
+			<comments>Copyright (C) Andrea Funt&#x00F2; 2012-2013 - All rights reserved</comments>
 			<name>GNU Lesser General Public License ver. 3 or later</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
 		</license>
@@ -41,9 +41,9 @@
 
 	<modules>
 		<module>../dihedron-strutlets</module>
-		<module>../dihedron-strutlets-tomcat</module>
-		<module>../dihedron-strutlets-jboss</module>
-		<module>../dihedron-strutlets-liferay</module>
+		<module>../dihedron-strutlets-tomcat-70x</module>
+		<module>../dihedron-strutlets-jboss-71x</module>
+		<module>../dihedron-strutlets-liferay-61x</module>
 		<module>../dihedron-strutlets-demo-portlet</module>
 	</modules>
 			

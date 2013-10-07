@@ -10,15 +10,15 @@
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>strutlets-jboss</artifactId>
+	<artifactId>strutlets-jboss-71x</artifactId>
 	<packaging>jar</packaging>
-	<name>Strutlets - Plug-in for JBossAS</name>
+	<name>Strutlets - Plug-in for JBossA 7.1.x</name>
 	<description>A plugin to provide access to JBossAS-specific functionalities through Strutlets.</description>
 	<url>http://www.dihedron.org/strutlets</url>
 	
 	<licenses>
 		<license>
-			<comments>Copyright (C) Andrea Funt&ograve; 2012-2013 - All rights reserved</comments>
+			<comments>Copyright (C) Andrea Funt&#x00F2; 2012-2013 - All rights reserved</comments>
 			<name>GNU Lesser General Public License ver. 3 or later</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
 		</license>
