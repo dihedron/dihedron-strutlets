@@ -87,8 +87,9 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss</groupId>
-			<artifactId>jboss-vfs</artifactId>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>7.0.42</version>
 			<scope>provided</scope>
 		</dependency>				
 		<dependency>

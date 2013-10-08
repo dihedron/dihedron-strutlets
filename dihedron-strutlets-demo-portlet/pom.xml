@@ -66,13 +66,13 @@
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
-			<artifactId>strutlets-liferay</artifactId>
+			<artifactId>strutlets-liferay-61x</artifactId>
 			<version>${strutlets.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
-			<artifactId>strutlets-tomcat</artifactId>
+			<artifactId>strutlets-tomcat-70x</artifactId>
 			<version>${strutlets.version}</version>
 			<scope>compile</scope>
 		</dependency>

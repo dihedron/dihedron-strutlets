@@ -18,6 +18,7 @@
  */
 package org.dihedron.strutlets.containers.web.tomcat7x;
 
+import org.apache.catalina.util.ServerInfo;
 import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +28,17 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class Tomcat7x implements ApplicationServer {
+public class Tomcat70x implements ApplicationServer {
 	/**
 	 * The logger
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(Tomcat7x.class);
+	private static final Logger logger = LoggerFactory.getLogger(Tomcat70x.class);
 	
 	/**
 	 * Constructor has package visibility to prevent construction by anyone except 
 	 * its plugin.
 	 */
-	Tomcat7x() {		
+	Tomcat70x() {		
 	}
 
 	/**
@@ -66,5 +67,25 @@ public class Tomcat7x implements ApplicationServer {
 	 */
 	@Override
 	public void cleanup() {
+	}
+	
+	/**
+	 * Returns a string describing the Tomcat application server name and version.
+	 * 
+	 * @return
+	 *   a string describing the Tomcat application server name and version.
+	 */
+	public String getServerInfo() {
+		return ServerInfo.getServerInfo();
+	}
+	
+	/**
+	 * Returns a string describing the Tomcat application server version.
+	 * 
+	 * @return
+	 *   a string describing the Tomcat application server version.
+	 */
+	public String getServerNumber() {
+		return ServerInfo.getServerNumber();
 	}
 }

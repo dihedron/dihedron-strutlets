@@ -26,14 +26,14 @@ import org.dihedron.strutlets.plugins.Probe;
 /**
  * @author Andrea Funto'
  */
-public class Tomcat7xPlugin implements ApplicationServerPlugin {
+public class Tomcat70xPlugin implements ApplicationServerPlugin {
 
 	/**
 	 * @see org.dihedron.strutlets.plugins.Plugin#makeContainerProbe()
 	 */
 	@Override
 	public Probe makeProbe() {
-		return new Tomcat7xProbe();
+		return new Tomcat70xProbe();
 	}
 	
 	/**
@@ -41,6 +41,6 @@ public class Tomcat7xPlugin implements ApplicationServerPlugin {
 	 */
 	@Override
 	public Pluggable makePluggable() {
-		return new Tomcat7x();
+		return new Tomcat70x();
 	}
 }
