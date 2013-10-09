@@ -41,9 +41,9 @@
 
 	<modules>
 		<module>../dihedron-strutlets</module>
-		<module>../dihedron-strutlets-tomcat-70x</module>
-		<module>../dihedron-strutlets-jboss-71x</module>
-		<module>../dihedron-strutlets-liferay-61x</module>
+		<module>../dihedron-strutlets-tomcat</module>
+		<module>../dihedron-strutlets-jboss</module>
+		<module>../dihedron-strutlets-liferay</module>
 		<module>../dihedron-strutlets-demo-portlet</module>
 	</modules>
 			

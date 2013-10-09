@@ -1,0 +1,7 @@
+analyseLocally=false
+eclipse.preferences.version=1
+extraProperties=sonar.host.url\=http\://localhost\:9000\r\nsonar.jdbc.password\=w1ttg4nst41n\r\nsonar.jdbc.username\=root\r\nsonar.jdbc.url\=jdbc\:mysql\://localhost\:3306/sonar?useUnicode\r\nsonar.language\=java
+lastAnalysisDate=1368134835319
+projectKey=org.dihedron.strutlets\:strutlets-tomcat
+serverUrl=http\://localhost\:9000
+version=2
