@@ -3,13 +3,13 @@
  *
  * Released under the EUPL ver. 1.1 (see http://ec.europa.eu/idabc/eupl.html).
  */
-package org.dihedron.strutlets.containers.web;
+package org.dihedron.strutlets.containers.portlet;
 
-import org.dihedron.strutlets.plugins.Plugin;
+import org.dihedron.strutlets.plugins.PluginFactory;
 
 /**
  * @author Andrea Funto'
  */
-public interface ApplicationServerPlugin extends Plugin {
+public interface PortalServerPluginFactory extends PluginFactory {
 
 }

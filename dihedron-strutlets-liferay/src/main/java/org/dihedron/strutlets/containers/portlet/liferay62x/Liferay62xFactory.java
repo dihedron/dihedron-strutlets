@@ -19,17 +19,17 @@
 
 package org.dihedron.strutlets.containers.portlet.liferay62x;
 
-import org.dihedron.strutlets.containers.portlet.PortalServerPlugin;
-import org.dihedron.strutlets.plugins.Pluggable;
+import org.dihedron.strutlets.containers.portlet.PortalServerPluginFactory;
+import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
  * @author Andrea Funto'
  */
-public class Liferay62xPlugin implements PortalServerPlugin {
+public class Liferay62xFactory implements PortalServerPluginFactory {
 
 	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makeProbe()
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makeProbe()
 	 */
 	@Override
 	public Probe makeProbe() {
@@ -37,10 +37,10 @@ public class Liferay62xPlugin implements PortalServerPlugin {
 	}
 	
 	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makePluggable()
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makePlugin()
 	 */
 	@Override
-	public Pluggable makePluggable() {
-		return (Pluggable) new Liferay62x();
+	public Plugin makePlugin() {
+		return (Plugin) new Liferay62x();
 	}
 }

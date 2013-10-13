@@ -16,31 +16,26 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
+package org.dihedron.strutlets.containers.web.jbossas7x;
 
-package org.dihedron.strutlets.containers.portlet.liferay61x;
-
-import org.dihedron.strutlets.containers.portlet.PortalServerPlugin;
-import org.dihedron.strutlets.plugins.Pluggable;
+import org.dihedron.strutlets.containers.web.ApplicationServerPluginFactory;
+import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
+ * The JBossAS-specific plugin (factory class).
+ * 
  * @author Andrea Funto'
  */
-public class Liferay61xPlugin implements PortalServerPlugin {
+public class JBossAS7xFactory implements ApplicationServerPluginFactory {
 
-	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makeProbe()
-	 */
 	@Override
 	public Probe makeProbe() {
-		return new Liferay61xProbe();
+		return new JBossAS7xProbe();
 	}
 	
-	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makePluggable()
-	 */
 	@Override
-	public Pluggable makePluggable() {
-		return (Pluggable) new Liferay61x();
+	public Plugin makePlugin() {
+		return new JBossAS7x();
 	}
 }

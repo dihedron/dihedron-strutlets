@@ -17,30 +17,30 @@
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.dihedron.strutlets.containers.web.tomcat7x;
+package org.dihedron.strutlets.containers.portlet.liferay61x;
 
-import org.dihedron.strutlets.containers.web.ApplicationServerPlugin;
-import org.dihedron.strutlets.plugins.Pluggable;
+import org.dihedron.strutlets.containers.portlet.PortalServerPluginFactory;
+import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
  * @author Andrea Funto'
  */
-public class Tomcat70xPlugin implements ApplicationServerPlugin {
+public class Liferay61xFactory implements PortalServerPluginFactory {
 
 	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makeContainerProbe()
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makeProbe()
 	 */
 	@Override
 	public Probe makeProbe() {
-		return new Tomcat70xProbe();
+		return new Liferay61xProbe();
 	}
 	
 	/**
-	 * @see org.dihedron.strutlets.plugins.Plugin#makeContainer()
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makePlugin()
 	 */
 	@Override
-	public Pluggable makePluggable() {
-		return new Tomcat70x();
+	public Plugin makePlugin() {
+		return (Plugin) new Liferay61x();
 	}
 }

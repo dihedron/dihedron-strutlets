@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -51,9 +51,9 @@ import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.portlet.PortalServer;
-import org.dihedron.strutlets.containers.portlet.PortalServerPlugin;
+import org.dihedron.strutlets.containers.portlet.PortalServerPluginFactory;
 import org.dihedron.strutlets.containers.web.ApplicationServer;
-import org.dihedron.strutlets.containers.web.ApplicationServerPlugin;
+import org.dihedron.strutlets.containers.web.ApplicationServerPluginFactory;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
@@ -127,6 +127,11 @@ public class ActionController extends GenericPortlet {
 	 * The current portlet container.
 	 */
 	private PortalServer portal;
+	
+	/**
+	 * The default package for stock portal- and application-server plugins.
+	 */
+	public static final String DEFAULT_CONTAINERS_CLASSPATH = "org.dihedron.strutlets.containers";	
 	
     /**
      * Initialises the controller portlet. 
@@ -646,13 +651,13 @@ public class ActionController extends GenericPortlet {
     	String url = null;    	
 		if(mode.equals(PortletMode.VIEW)) {
 			logger.trace("getting default URL for mode 'view'");
-			url = InitParameter.RENDER_VIEW_HOMEPAGE.getValueForPortlet(this);
+			url = InitParameter.VIEW_MODE_HOME.getValueForPortlet(this);
 		} else if(mode.equals(PortletMode.EDIT)) {
 			logger.trace("getting default URL for mode 'edit'");
-			url = InitParameter.RENDER_EDIT_HOMEPAGE.getValueForPortlet(this);
+			url = InitParameter.EDIT_MODE_HOME.getValueForPortlet(this);
 		} else if(mode.equals(PortletMode.HELP)) {
 			logger.trace("getting default URL for mode 'help'");
-			url = InitParameter.RENDER_HELP_HOMEPAGE.getValueForPortlet(this);
+			url = InitParameter.HELP_MODE_HOME.getValueForPortlet(this);
 		} else {
 			logger.trace("getting default URL for custom render mode: '{}'", mode);
 			String parameter = RENDER_XXXX_HOMEPAGE.replaceFirst("xxxx", mode.toString());
@@ -738,20 +743,76 @@ public class ActionController extends GenericPortlet {
 
 		logger.trace("initialising runtime environment...");
 		
-		Set<Class<? extends Plugin>> plugins = PluginManager.getPlugins(ApplicationServerPlugin.class);
-		server = (ApplicationServer)PluginManager.loadFirstPluggable(plugins);
-		if(server != null) {
-			logger.trace("initialising application server {} runtime", server.getName());
-			server.initialise();
-			logger.trace("application server {} runtime initialised", server.getName());
+		String value = InitParameter.WEB_CONTAINER_PLUGIN.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.trace("trying to load web container as per user's explicit request: '{}'", value);
+			Plugin plugin = PluginManager.loadPlugin(value);
+			if(plugin != null) {
+				logger.trace("web container '{}' loaded", value);
+				this.server = (ApplicationServer) plugin;
+			}
 		}
-				
-		plugins = PluginManager.getPlugins(PortalServerPlugin.class);
-		portal = (PortalServer)PluginManager.loadFirstPluggable(plugins);
-		if(portal != null) {
-			logger.trace("initialising portlet container {} runtime", portal.getName());
-			portal.initialise();
-			logger.trace("portlet container {} runtime initialised", portal.getName());
+		if(this.server == null) {
+			// the server plug-in has not been initialised either because there 
+			// was no valid value in the WEB_CONTAINER_PLUGIN parameter or the
+			// class probing/loading process failed, try with class path
+			value = InitParameter.WEB_CONTAINER_PACKAGES.getValueForPortlet(this);
+			if(Strings.isValid(value)) {
+				logger.trace("using user-provided class paths to load web container plugin: '{}'", value);
+			} else {
+				value = DEFAULT_CONTAINERS_CLASSPATH;
+				logger.trace("using default classpath to load web container plugin: '{}'", value);
+			}
+			List<Plugin> plugins = PluginManager.loadPluginsInPath(ApplicationServerPluginFactory.class, Strings.split(value, ",", true));
+			switch(plugins.size()) {
+			case 0:
+				logger.warn("no application server plugin found, some functionalities might not be available through ActionContext");
+				break;
+			case 1:
+				logger.trace("exactly one application server plugin found that supports the current environment");
+				this.server = (ApplicationServer)plugins.get(0);
+				break;
+			default:
+				logger.warn("more than a single application server plugin found: we're picking the first one, but you may want to check your plugin probes' effectiveness");
+				this.server = (ApplicationServer)plugins.get(0);
+				break;
+			}
+		}
+		
+		value = InitParameter.PORTLET_CONTAINER_PLUGIN.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.trace("trying to load portlet container as per user's explicit request: '{}'", value);
+			Plugin plugin = PluginManager.loadPlugin(value);
+			if(plugin != null) {
+				logger.trace("portlet container '{}' loaded", value);
+				this.portal = (PortalServer) plugin;
+			}
+		}
+		if(this.portal == null) {
+			// the portal plug-in has not been initialised either because there 
+			// was no valid value in the PORTLET_CONTAINER_PLUGIN parameter or the
+			// class probing/loading process failed, try with class path
+			value = InitParameter.PORTLET_CONTAINER_PACKAGES.getValueForPortlet(this);
+			if(Strings.isValid(value)) {
+				logger.trace("using user-provided class paths to load portlet container plugin: '{}'", value);
+			} else {
+				value = DEFAULT_CONTAINERS_CLASSPATH;
+				logger.trace("using default classpath to load portlet container plugin: '{}'", value);
+			}
+			List<Plugin> plugins = PluginManager.loadPluginsInPath(PortalServerPluginFactory.class, Strings.split(value, ",", true));
+			switch(plugins.size()) {
+			case 0:
+				logger.warn("no portal server plugin found, some functionalities might not be available through ActionContext");
+				break;
+			case 1:
+				logger.trace("exactly one portal server plugin found that supports the current environment");
+				this.portal = (PortalServer)plugins.get(0);
+				break;
+			default:
+				logger.warn("more than a single portal server plugin found: we're picking the first one, but you may want to check your plugin probes' effectiveness");
+				this.portal = (PortalServer)plugins.get(0);
+				break;
+			}
 		}
 		logger.trace("runtime initialisation done!");
     }
@@ -772,7 +833,7 @@ public class ActionController extends GenericPortlet {
     	registry = new TargetRegistry();
     	
 		// set the root directory for HTML files and JSPs, for auto-configured annotated actions
-		registry.setHtmlPathInfo(InitParameter.RENDER_ROOT_DIRECTORY.getValueForPortlet(this), InitParameter.RENDER_PATH_PATTERN.getValueForPortlet(this));
+		registry.setHtmlPathInfo(InitParameter.JSP_ROOT_PATH.getValueForPortlet(this), InitParameter.JSP_PATH_PATTERN.getValueForPortlet(this));
 		
 		// pre-scan existing classes and methods in the default actions package
 		TargetFactory loader = new TargetFactory();
@@ -817,13 +878,35 @@ public class ActionController extends GenericPortlet {
 		logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
 		
 		// load the custom interceptors configuration
-		String file = InitParameter.INTERCEPTORS_CONFIGURATION_FILE.getValueForPortlet(this);
-		if(Strings.isValid(file)) {
-			logger.info("loading interceptors configuration from custom location: '{}'", file);
-			interceptors.loadFromClassPath(file);
-			logger.trace("interceptors stacks:\n{}", interceptors.toString());
+		String value = InitParameter.INTERCEPTORS_CONFIGURATION.getValueForPortlet(this);
+		if(Strings.isValid(value)) {			
+    		logger.debug("loading interceptors' configuration from '{}'", value);
+    		InputStream stream = null;
+    		try {
+	    		URL url = URLFactory.makeURL(value);
+	    		if(url != null) {
+	    			stream = url.openConnection().getInputStream();	    			
+	    			interceptors.loadFromStream(stream);
+	    			logger.trace("interceptors stacks:\n{}", interceptors.toString());
+	    		}
+    		} catch(MalformedURLException e) {
+    			logger.error("invalid URL '{}' for actions configuration: check parameter '{}' in your portlet.xml", value, InitParameter.ACTIONS_CONFIGURATION.getName());
+    		} catch (IOException e) {
+    			logger.error("error reading from URL '{}', actions configuration will be unavailable", value);
+			} finally  {
+				if(stream != null) {
+					try {
+						stream.close();
+					} catch (IOException e) {
+						logger.error("error closing input stream", e);
+					}
+				}
+			}			
 		}    	
     }
+
+    
+    
     
     /**
      * Initialises the registry of view renderers.

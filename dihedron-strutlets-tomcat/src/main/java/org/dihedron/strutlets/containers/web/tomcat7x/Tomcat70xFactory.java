@@ -16,26 +16,31 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.strutlets.containers.web.jbossas7x;
 
-import org.dihedron.strutlets.plugins.Pluggable;
+package org.dihedron.strutlets.containers.web.tomcat7x;
+
+import org.dihedron.strutlets.containers.web.ApplicationServerPluginFactory;
 import org.dihedron.strutlets.plugins.Plugin;
 import org.dihedron.strutlets.plugins.Probe;
 
 /**
- * The JBossAS-specific plugin (factory class).
- * 
  * @author Andrea Funto'
  */
-public class JBossAS7xPlugin implements Plugin {
+public class Tomcat70xFactory implements ApplicationServerPluginFactory {
 
+	/**
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makeProbe()
+	 */
 	@Override
 	public Probe makeProbe() {
-		return new JBossAS7xProbe();
+		return new Tomcat70xProbe();
 	}
 	
+	/**
+	 * @see org.dihedron.strutlets.plugins.PluginFactory#makePlugin()
+	 */
 	@Override
-	public Pluggable makePluggable() {
-		return new JBossAS7x();
+	public Plugin makePlugin() {
+		return new Tomcat70x();
 	}
 }

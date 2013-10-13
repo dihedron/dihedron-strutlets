@@ -70,7 +70,7 @@ public enum InitParameter {
 	 * The parameter used to override the name of the interceptors stack
 	 * configuration XML file; by default it is called "interceptors-config.xml".
 	 */
-	INTERCEPTORS_CONFIGURATION_FILE("strutlets:interceptors-configuration", "interceptors.configuration.filename"),
+	INTERCEPTORS_CONFIGURATION("strutlets:interceptors-configuration", "interceptors.configuration.filename"),
 	
 	/**
 	 * The parameter used to override the default interceptors stack to be 
@@ -97,7 +97,7 @@ public enum InitParameter {
 	 * to conjure the name of renderer JSPs based on the action's result and
 	 * the current portlet mode.
 	 */
-	RENDER_ROOT_DIRECTORY("strutlets:jsp-root-path", "render.root.directory"),
+	JSP_ROOT_PATH("strutlets:jsp-root-path", "render.root.directory"),
 			
 	/**
 	 * The parameter used to specify the pattern to create the path to JSP 
@@ -112,28 +112,40 @@ public enum InitParameter {
 	 * <li><b>${state}</b>: the new portlet window state after the method 
 	 * execution, e.g. "success".<li></ul>
 	 */
-	RENDER_PATH_PATTERN("strutlets:jsp-path-pattern", "render.path.pattern"),
+	JSP_PATH_PATTERN("strutlets:jsp-path-pattern", "render.path.pattern"),
 
 	/**
 	 * The parameter used to specify the home page to be used by the framework
 	 * in VIEW mode. This page is the starting point of the VIEW mode HTML 
 	 * navigation tree.
 	 */
-	RENDER_VIEW_HOMEPAGE("strutlets:view-home", "render.view.homepage"),
+	VIEW_MODE_HOME("strutlets:view-home", "render.view.homepage"),
 	
 	/**
 	 * The parameter used to specify the home page to be used by the framework
 	 * in EDIT mode. This page is the starting point of the EDIT mode HTML 
 	 * navigation tree.
 	 */
-	RENDER_EDIT_HOMEPAGE("strutlets:edit-home", "render.edit.homepage"),
+	EDIT_MODE_HOME("strutlets:edit-home", "render.edit.homepage"),
 
 	/**
 	 * The parameter used to specify the home page to be used by the framework
 	 * in HELP mode. This page is the starting point of the HELP mode HTML 
 	 * navigation tree.
 	 */
-	RENDER_HELP_HOMEPAGE("strutlets:help-home", "render.help.homepage"),
+	HELP_MODE_HOME("strutlets:help-home", "render.help.homepage"),
+
+	/**
+	 * The parameter used to specify an optional set of packages to be scanned 
+	 * for aapplication-server-specific plugins.
+	 */
+	WEB_CONTAINER_PACKAGES("strutlets:web-container-packages", ""),	
+
+	/**
+	 * The parameter used to specify an optional set of packages to be scanned 
+	 * for portlet-container-specific plugins.
+	 */
+	PORTLET_CONTAINER_PACKAGES("strutlets:portlet-container-packages", ""),
 	
 	/**
 	 * The parameter used to specify an optional application-server-specific plugin,

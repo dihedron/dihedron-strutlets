@@ -85,7 +85,7 @@ public final class Strutlets {
 	 * serviced while keeping information about the latest action's execution status.
 	 */
 	public static final String STRUTLETS_RESULT = "org.dihedron.strutlets.result";
-
+	
 	/**
 	 * Returns the framework's version (as per the project's POM).
 	 * 

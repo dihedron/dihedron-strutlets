@@ -19,43 +19,33 @@
 
 package org.dihedron.strutlets.plugins;
 
-
 /**
- * The base interface of plugins: they must provide a factory method to create a 
- * probe, which will be used to detect whether the given plugin is supported under
- * the current conditions; the probe must not statically link any resources which
- * might not be available at runtime (e.g. some application-server-specific JARs 
- * and classes), it should resort to Reflection based methods to asses whether 
- * the necessary runtime components would be available if the plugin were to be
- * used.
- * Plugins must provide another factory method to instantiate the actual
- * <code>pluggable</code> object, which is allowed to statically link classes of
- * since the runtime is supposed to be availble at this stage, after the probe
- * has been run.
- *   
  * @author Andrea Funto'
  */
 public interface Plugin {
-
-	/**
-	 * Creates a new <code>Probe</code> object, which will employ Java Reflection 
-	 * and other artifices to detect if the given <code>Pluggable</code>
-	 * business object can be instantiated. The probe is a lightweight dependency 
-	 * in that it does not require the availability of its supporting classes, 
-	 * it will simply sniff for their availability, and only if so will the
-	 * <code>PluginManager</code> proceed to actual <code>Pluggable</code> 
-	 * instantiation.
-	 * 
-	 * @return
-	 *   a <code>Probe</code> object instance.
-	 */
-	Probe makeProbe();
 	
 	/**
-	 * Creates a new <code>Pluggable</code> object.
+	 * Returns the name of the <code>Plugin</code> instance.
 	 * 
 	 * @return
-	 *   a new <code>Pluggable</code> object.
-	 */
-	Pluggable makePluggable();
+	 *   the name of the <code>Plugin</code> instance.
+	 */	
+	String getName();
+	
+	/**
+	 * Initialises the <code>Plugin</code> object, and gets it ready for 
+	 * providing services. This method needs not be reentrant, as it will be 
+	 * called only once per instance.
+	 *  
+	 * @return
+	 *   <code>true</code> if the initialisation succeeded, <code>false</code>
+	 *   otherwise.
+	 */	
+	boolean initialise();
+	
+	/**
+	 * Cleans up any resources that might have been created or allocated at
+	 * initialisation time.
+	 */	
+	void cleanup();
 }

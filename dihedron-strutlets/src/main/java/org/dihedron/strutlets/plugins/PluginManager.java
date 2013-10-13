@@ -42,193 +42,144 @@ public class PluginManager {
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(PluginManager.class);
 
-	
 	/**
-	 * Returns all the plugins available in the class path.
+	 * Loads a plug-in given its factory class; in order to do so, it loads the 
+	 * probe and checks if the plug-in is supported on the current environment.
 	 * 
+	 * @param clazz
+	 *   the class for the plug-in factory interface.
 	 * @return
-	 *   all the plugins available in the class path.
+	 *   the <code>Plugin</code> if it could be loaded, null otherwise.
 	 */
-	public static Set<Class<? extends Plugin>> getPlugins() {
-		Reflections reflections = 
-				new Reflections(new ConfigurationBuilder()
-					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
-					.setUrls(ClasspathHelper.forPackage("org.dihedron"))
-					.setScanners(new SubTypesScanner())
-				);
-		Set<Class<? extends Plugin>> plugins = reflections.getSubTypesOf(Plugin.class);
-		logger.trace("found {} plugins in classpath", plugins.size());
-		return plugins;
-	}
-	
-	/**
-	 * Returns all the plugins of the given type available on the class path.
-	 * 
-	 * @param filter
-	 *   the plugin class.
-	 * @return
-	 *   all the plugins of the given type available on the class path.
-	 */
-	public static Set<Class<? extends Plugin>> getPlugins(Class<? extends Plugin> filter) {
-		Set<Class<? extends Plugin>> plugins = new HashSet<Class<? extends Plugin>>();
-		for(Class<? extends Plugin> clazz : getPlugins()) {
-			if(Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers())) {
-				logger.trace("skipping class '{}' as it is abstract (or an interface)", clazz.getCanonicalName());
-				continue;
-			}
-			if(filter.isAssignableFrom(clazz)) {
-				logger.trace("plugin '{}' is of type '{}'", clazz.getCanonicalName(), filter.getCanonicalName());
-				plugins.add(clazz);
-			} else {
-				logger.trace("plugin '{}' is not of type '{}'", clazz.getCanonicalName(), filter.getCanonicalName());
-			}
-		}
-		return plugins;
-	}
-	
-	/**
-	 * Loads the actual business logic implementations of the <code>Pluggable</code>
-	 * class from the given set of plugins.
-	 * 
-	 * @param plugins
-	 *   the set of plugins that must be asked for support on the current environemnt.
-	 * @return
-	 *   a set of actual business logic <code>Pluggable</code> objects..
-	 */
-	public static List<Pluggable> loadPluggable(Set<Class<? extends Plugin>> plugins) {
-		List<Pluggable> pluggables = new ArrayList<Pluggable>();
-		for(Class<? extends Plugin> clazz : plugins) {
-			try {
-				Plugin plugin = (Plugin)clazz.newInstance();
-				Probe probe = plugin.makeProbe();
-				if(probe.isSupportedEnvironment()) {
-					logger.trace("plugin '{}' supports the current environemnt", clazz.getCanonicalName());
-					pluggables.add(plugin.makePluggable());
-				} else {
-					logger.trace("plugin '{}' does not support the current environemnt", clazz.getCanonicalName());
+	public static Plugin loadPlugin(Class<? extends PluginFactory> clazz) {
+		Plugin plugin = null;
+		try {
+			logger.trace("attempting to load plugin from '{}' factory class", clazz.getCanonicalName());
+			PluginFactory factory = clazz.newInstance();
+			logger.trace("factory class '{}' loaded, checking if supported on current platform", clazz.getCanonicalName());
+			Probe probe = factory.makeProbe();
+			if(probe.isSupportedEnvironment()) {
+				logger.trace("probe returned success, loading plugin class");
+				plugin = factory.makePlugin();
+				if(plugin != null) {
+					logger.trace("plugin of class '{}' loaded", plugin.getClass().getCanonicalName());
 				}
-			} catch (InstantiationException e) {
-				logger.error("error instantiating plugin of class '" + clazz.getCanonicalName() + "'", e);
-			} catch (IllegalAccessException e) {
-				logger.error("illegal access to plugin of class '" + clazz.getCanonicalName() + "'", e);
 			}
+		} catch (InstantiationException e) {
+			logger.error("error instantiating class '" + clazz.getCanonicalName() + "', skipped", e);
+		} catch (IllegalAccessException e) {
+			logger.error("illegal access to class class '" + clazz.getCanonicalName() + "', skipped", e);
 		}
-		return pluggables;
+		return plugin;
 	}
 	
 	/**
-	 * Returns the first <code>Pluggable</code> object from the given set of plugins.
+	 * Loads a plug-in given the name of its factory class; in order to do so, it
+	 * loads the probe and checks if the plug-in is supported on the current 
+	 * environment.
 	 * 
-	 * @param plugins
-	 *   the set of plugins.
+	 * @param factoryClass
+	 *   the name of the class for the plug-in factory interface.
 	 * @return
-	 *   the first <code>Pluggable</code> object from the set of supporting
-	 *   plugins, null if none found. 
+	 *   the <code>Plugin</code> if it could be loaded, null otherwise.
 	 */
-	public static Pluggable loadFirstPluggable(Set<Class<? extends Plugin>> plugins) {
-		List<Pluggable> pluggables = loadPluggable(plugins);
-		if(!pluggables.isEmpty()) {
-			return pluggables.get(0);
+	public static Plugin loadPlugin(String factoryClass) {
+		try {
+			@SuppressWarnings("unchecked")
+			Class<? extends PluginFactory> factory = (Class<? extends PluginFactory>) Class.forName(factoryClass);
+			return loadPlugin(factory);
+		} catch (ClassNotFoundException e) {
+			logger.error("error loading class '" + factoryClass + "'", e);
 		}
 		return null;
 	}
 	
-//	/**
-//	 * Factory method: tries to load an application-server-specific plugin, by
-//	 * loading the class declared in the portlet.xml (if any) or alternatively 
-//	 * trying to detect if any of the existing "stock" plugins support the 
-//	 * current runtime environment.
-//	 * 
-//	 * @param portlet
-//	 *   the current portlet, to get the value of the 
-//	 *   <code>APPLICATION_SERVER_PLUGIN</code> initialisation parameter.
-//	 * @return
-//	 */
-//	public WebContainer makeWebContainer(GenericPortlet portlet) {
-//		String classname = InitParameter.WEB_CONTAINER_PLUGIN.getValueForPortlet(portlet);
-//		
-//		Reflections reflections = 
-//				new Reflections(new ConfigurationBuilder()
-//					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
-//						.setUrls(ClasspathHelper.forPackage(""))
-//						.setScanners(new SubTypesScanner())
-//					);
-//		Set<Class<? extends WebContainer>> plugins = reflections.getSubTypesOf(WebContainer.class);
-//        for(Class<?> clazz : plugins) {
-//        	logger.trace("loading web container plugin '{}'...", clazz.getCanonicalName());
-//        	ContainerPlugin plugin = (ContainerPlugin)clazz.newInstance();
-//        	
-//			try {
-//				logger.trace("loading web container plugin '{}'...", clazz.getCanonicalName());
-//				ContainerPlugin plugin = (ContainerPlugin) Class.forName(classname).newInstance();
-//				logger.trace("application server plugin loaded");
-//				Probe probe = plugin.makeContainerProbe();
-//				if(probe.isAvailable()) {
-//					logger.trace("probe successfully detected runtime components and settings");
-//					return (WebContainer)plugin.makeContainer();
-//				}
-//			} catch (InstantiationException e) {
-//				logger.error("error instantiating application server plugin of class '" + classname + "'", e);
-//			} catch (IllegalAccessException e) {
-//				logger.error("security restriction apply to class '" + classname + "'", e);
-//			} catch (ClassNotFoundException e) {
-//				logger.error("declared application server plugin class '" + classname + "' not found on class path", e);
-//			}
-//        }
-//		
-//		logger.trace("no valid application server plugin declared in portlet.xml, trying to auto-detect");
-//		for(ContainerPlugin plugin : webContainers) {
-//			logger.trace("checking if the {} plugin supports the current environment", plugin.getClass().getCanonicalName());			
-//			Probe probe = plugin.makeContainerProbe();
-//			if(probe.isAvailable()) {
-//				logger.trace("probe successfully detected runtime components and settings");
-//				return (WebContainer)plugin.makeContainer();
-//			}
-//		}
-//		return null;
-//	}
-//	
-//	/**
-//	 * Factory method: tries to load an application-server-specific plugin, by
-//	 * loading the class declared in the portlet.xml (if any) or alternatively 
-//	 * trying to detect if any of the existing "stock" plugins support the 
-//	 * current runtime environment.
-//	 * 
-//	 * @param portlet
-//	 *   the current portlet, to get the value of the 
-//	 *   <code>APPLICATION_SERVER_PLUGIN</code> initialisation parameter.
-//	 * @return
-//	 */
-//	public PortletContainer makePortletContainer(GenericPortlet portlet) {
-//		String classname = InitParameter.PORTLET_CONTAINER_PLUGIN.getValueForPortlet(portlet);
-//		if(Strings.isValid(classname)) {			
-//			try {
-//				logger.trace("loading portlet container plugin '{}'...", classname);
-//				ContainerPlugin plugin = (ContainerPlugin) Class.forName(classname).newInstance();
-//				logger.trace("portlet container plugin loaded");
-//				Probe probe = plugin.makeContainerProbe();
-//				if(probe.isAvailable()) {
-//					logger.trace("probe successfully detected runtime components and settings");
-//					return (PortletContainer)plugin.makeContainer();
-//				}
-//			} catch (InstantiationException e) {
-//				logger.error("error instantiating portlet container plugin of class '" + classname + "'", e);
-//			} catch (IllegalAccessException e) {
-//				logger.error("security restriction apply to class '" + classname + "'", e);
-//			} catch (ClassNotFoundException e) {
-//				logger.error("declared portlet container plugin class '" + classname + "' not found on class path", e);
-//			}
-//		} 
-//		logger.trace("no valid portlet container plugin declared in portlet.xml, trying to auto-detect");
-//		for(ContainerPlugin plugin : portletContainers) {
-//			logger.trace("checking if the {} plugin supports the current environment", plugin.getClass().getCanonicalName());			
-//			Probe probe = plugin.makeContainerProbe();
-//			if(probe.isAvailable()) {
-//				logger.trace("probe successfully detected runtime components and settings");
-//				return (PortletContainer)plugin.makeContainer();
-//			}
-//		}
-//		return null;
-//	}	
+	/**
+	 * Loads all the available and supporting <code>Plugin</code> found under the 
+	 * given set of paths.
+	 * 
+	 * @param type
+	 *   the type of <code>PluginFactory</code> we're looking for.
+	 * @param paths
+	 *   a set of paths on the class path.
+	 * @return
+	 */
+	public static List<Plugin> loadPluginsInPath(Class<? extends PluginFactory> type, String... paths) {
+		List<Plugin> plugins = new ArrayList<Plugin>();
+		List<PluginFactory> factories = findPluginFactoriesByType(type, paths);
+		for(PluginFactory factory : factories) {
+			Probe probe = factory.makeProbe();
+			if(probe.isSupportedEnvironment()) {
+				try {
+					Plugin plugin = factory.makePlugin();
+					if(plugin != null) {
+						logger.trace("plugin of class '{}' loaded", plugin.getClass().getCanonicalName());
+						plugins.add(plugin);
+					}
+				} catch(Exception e) {
+					logger.error("error instantiating plugin for " + factory.getClass().getSimpleName(), e);
+				}
+			}			
+		}
+		return plugins;
+	}
 	
+	/**
+	 * Finds, loads and returns all the <code>PluginFactory</code> instances of
+	 * available plug-in of the give type (or subtypes thereof) on the class path.
+	 * 
+	 * @param type
+	 *   the type of plug-in factory we're looking for.
+	 * @param paths
+	 *   a set of path on the classpath to scan for plug-in factory.
+	 * @return
+	 *   a list of instantiated <code>PluginFactory</code>s.
+	 */
+	private static List<PluginFactory> findPluginFactoriesByType(Class<? extends PluginFactory> type, String... paths) {
+		List<PluginFactory> factories = new ArrayList<PluginFactory>();
+		for(Class<? extends PluginFactory> clazz : findPluginFactories(paths)) {
+			if(Modifier.isAbstract(clazz.getModifiers()) || Modifier.isInterface(clazz.getModifiers())) {
+				logger.trace("skipping plugin factory class '{}' as it is abstract (or an interface)", clazz.getCanonicalName());
+				continue;
+			}
+			if(type.isAssignableFrom(clazz)) {
+				logger.trace("plugin factory '{}' is of type '{}'", clazz.getCanonicalName(), type.getCanonicalName());
+				try {
+					factories.add((PluginFactory)clazz.newInstance());
+					logger.trace("plugin factory of class '{}' instantiated", clazz.getCanonicalName());
+				} catch (InstantiationException e) {
+					logger.error("error instantiating class '" + clazz.getCanonicalName() + "', skipped", e);
+				} catch (IllegalAccessException e) {
+					logger.error("illegal access to class class '" + clazz.getCanonicalName() + "', skipped", e);
+				}
+			} else {
+				logger.trace("plugin factory '{}' is not of type '{}'", clazz.getCanonicalName(), type.getCanonicalName());
+			}
+		}
+		return factories;		
+	}
+	
+	/**
+	 * Returns all the plug-in factories available in the given set of class paths.
+	 * 
+	 * @return
+	 *   all the plug-in factories available in the given set of class paths.
+	 */
+	private static Set<Class<? extends PluginFactory>> findPluginFactories(String... paths) {
+		Set<Class<? extends PluginFactory>> classes = new HashSet<Class<? extends PluginFactory>>();
+		for(String path : paths) {
+			logger.trace("looking up plugin factory under '{}'...", path);		
+			Reflections reflections = 
+					new Reflections(new ConfigurationBuilder()
+						.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
+						.setUrls(ClasspathHelper.forPackage(path))
+						.setScanners(new SubTypesScanner())
+					);
+			Set<Class<? extends PluginFactory>> found = reflections.getSubTypesOf(PluginFactory.class);			
+			logger.trace("... found {} plugin factory under '{}'", found.size(), path);
+			classes.addAll(found);
+		}
+		logger.trace("found {} plugin factory under given paths", classes.size());
+		return classes;
+	}
 }
