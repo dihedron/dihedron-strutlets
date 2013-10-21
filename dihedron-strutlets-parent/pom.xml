@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>	
@@ -11,14 +10,14 @@
 	
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets-parent</artifactId>
-	<version>0.56.0-SNAPSHOT</version>
+	<version>0.56.0</version>
 	<packaging>pom</packaging>
 	<name>Strutlets Suite</name>
 
 	<developers>
 		<developer>
 			<id>Dihedron</id>
-			<name>Andrea Funt&#x00F2;</name>
+			<name>Andrea Funtò</name>
 			<email>dihedron.dev@gmail.com</email>
 			<roles>
 				<role>Lead Developer</role>
@@ -34,7 +33,7 @@
 	
 	<licenses>
 		<license>
-			<comments>Copyright (C) Andrea Funt&#x00F2; 2012-2013 - All rights reserved</comments>
+			<comments>Copyright (C) Andrea Funtò 2012-2013 - All rights reserved</comments>
 			<name>GNU Lesser General Public License ver. 3 or later</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
 		</license>
