@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.dihedron.strutlets</groupId>
 		<artifactId>strutlets-parent</artifactId>
-		<version>0.55.0</version>
+		<version>0.56.0-SNAPSHOT</version>
 		<relativePath>../dihedron-strutlets-parent</relativePath>
 	</parent>
 
@@ -66,34 +66,38 @@
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
-			<artifactId>strutlets-liferay-61x</artifactId>
+			<artifactId>strutlets-liferay</artifactId>
 			<version>${strutlets.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
-			<artifactId>strutlets-tomcat-70x</artifactId>
+			<artifactId>strutlets-tomcat</artifactId>
 			<version>${strutlets.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>portal-service</artifactId>
+			<version>${liferay.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>util-bridges</artifactId>
+			<version>${liferay.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>util-taglib</artifactId>
+			<version>${liferay.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.liferay.portal</groupId>
 			<artifactId>util-java</artifactId>
+			<version>${liferay.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

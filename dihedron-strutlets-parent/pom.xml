@@ -2,9 +2,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>	
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	
 	<groupId>org.dihedron.strutlets</groupId>
 	<artifactId>strutlets-parent</artifactId>
-	<version>0.55.0</version>
+	<version>0.56.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Strutlets Suite</name>
 
@@ -21,8 +28,8 @@
 	
 	<scm>
 		<url>http://code.google.com/p/dihedron-strutlets/</url>
-		<connection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets/</connection>
-		<developerConnection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets/</developerConnection>		
+		<connection>scm:git:https://code.google.com/p/dihedron-strutlets/</connection>
+		<developerConnection>scm:git:https://code.google.com/p/dihedron-strutlets/</developerConnection>		
 	</scm>
 	
 	<licenses>
@@ -97,23 +104,11 @@
 				<artifactId>javassist</artifactId>
 				<version>3.18.1-GA</version>
 			</dependency> 
-			<!-- 
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>15.0</version>
-			</dependency>
-			-->
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
 				<version>2.2.3</version>
 			</dependency>
-			<dependency>
-				<groupId>org.jboss</groupId>
-				<artifactId>jboss-vfs</artifactId>
-				<version>3.0.1.GA</version>
-			</dependency>									
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
@@ -133,45 +128,6 @@
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.11</version>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>portal-client</artifactId>
-				<version>${liferay.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>portal-impl</artifactId>
-				<version>${liferay.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>portal-service</artifactId>
-				<version>${liferay.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>portal-web</artifactId>
-				<version>${liferay.version}</version>
-				<type>war</type>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>util-bridges</artifactId>
-				<version>${liferay.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>util-java</artifactId>
-				<version>${liferay.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay.portal</groupId>
-				<artifactId>util-taglib</artifactId>
-				<version>${liferay.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
