@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.dihedron.strutlets</groupId>
 		<artifactId>strutlets-parent</artifactId>
-		<version>0.56.0</version>		
+		<version>0.56.0-SNAPSHOT</version>		
 		<relativePath>..</relativePath>
 	</parent>
 	
