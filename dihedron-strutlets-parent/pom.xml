@@ -43,7 +43,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<sonar.language>java</sonar.language> 	
-		<strutlets.version>${project.version}</strutlets.version>
 	</properties>
 
 	<modules>

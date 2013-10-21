@@ -95,7 +95,7 @@
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets</artifactId>
-			<version>${strutlets.version}</version>
+			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

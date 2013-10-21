@@ -61,19 +61,19 @@
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets</artifactId>
-			<version>${strutlets.version}</version>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets-liferay</artifactId>
-			<version>${strutlets.version}</version>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dihedron.strutlets</groupId>
 			<artifactId>strutlets-tomcat</artifactId>
-			<version>${strutlets.version}</version>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
