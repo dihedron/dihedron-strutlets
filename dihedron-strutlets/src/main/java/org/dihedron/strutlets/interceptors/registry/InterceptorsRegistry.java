@@ -189,7 +189,7 @@ public class InterceptorsRegistry {
 					String interceptorId = i.getAttribute("id");
 					String interceptorClass = i.getAttribute("class");
 					Interceptor interceptor = (Interceptor)Class.forName(interceptorClass).newInstance();
-					interceptor.setId(interceptorId);
+					interceptor.setId(stackId, interceptorId);
 					logger.trace(" + interceptor '{}' ", interceptorId);
 					
 					for(Element parameter : DomHelper.getChildrenByTagName(i, "parameter")) {
@@ -197,7 +197,10 @@ public class InterceptorsRegistry {
 						String value = DomHelper.getElementText(DomHelper.getFirstChildByTagName(parameter, "value"));
 						interceptor.setParameter(key, value);
 						logger.trace("   + parameter '{}' has value '{}'", key, value);
-					}					
+					}	
+					
+					interceptor.initialise();
+					
 					stack.add(interceptor);
 				}
 				stacks.put(stack.getId(), stack);

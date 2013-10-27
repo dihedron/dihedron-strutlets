@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrea Funto'
@@ -41,23 +43,27 @@ public abstract class Interceptor {
 	private Map<String, String> parameters = new HashMap<String, String>();
 		
 	/**
-	 * Sets the interceptor's unique identifier.
+	 * Sets the interceptor's unique identifier, namespaced with the stack in 
+	 * which it is employed
 	 * 
-	 * @param id
+	 * @param stackId 
+	 *   the id of the stack in which this interceptor is used.
+	 * @param interceptorId
 	 *   the interceptor's unique identifier.
 	 * @return
 	 *   the interceptor itself, for method chaining.
 	 */
-	public Interceptor setId(String id) {
-		this.id = id;
+	public Interceptor setId(String stackId, String interceptorId) {
+		this.id = stackId  + "::" + interceptorId;
 		return this;
 	}
 
 	/**
-	 * Returns the interceptor's unique identifier.
+	 * Returns the interceptor's namespaced unique identifier (with respect to 
+	 * the current stack).
 	 * 
 	 * @return
-	 *   the interceptor's unique identifier.
+	 *   the interceptor's namespaced unique identifier.
 	 */
 	public String getId() {
 		return id;
@@ -97,6 +103,19 @@ public abstract class Interceptor {
 	 */
 	public Map<String, String> getParameters() {
 		return parameters;
+	}
+	
+	/**
+	 * Initialises the interceptor; this is the place where any task that should 
+	 * be performed before the request processing starts can be accomplished. 
+	 * Extending classes may plug in their custom initialisation logic here,
+	 * otherwise the default, do-nothing implementation is used.
+	 * NOTE: if you need per-user initialisation, this is NOT the place to put it, 
+	 * since this method will be called at stack instantiation time, not when 
+	 * the user's first request comes in; thus there is no session available when 
+	 * this method fires,   
+	 */
+	public void initialise() {
 	}
 	
 	/**

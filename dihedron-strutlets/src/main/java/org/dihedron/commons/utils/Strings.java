@@ -41,6 +41,11 @@ public final class Strings {
 	public static final String DEFAULT_SEPARATOR = ",";
 	
 	/**
+	 * The default character used for padding.
+	 */
+	public static final char DEFAULT_PADDING = ' ';
+	
+	/**
 	 * A textual representation of the null string.
 	 */
 	public static final String NULL = "<null>";
@@ -171,11 +176,11 @@ public final class Strings {
 	 *   space is filled with blanks. 
 	 */
 	public static String centre(String string, int size) {
-		return centre(string, size, ' ');
+		return centre(string, size, DEFAULT_PADDING);
 	}
     
 	/**
-	 * Formats an output string by centring the given input string and padding 
+	 * Formats an output string by centering the given input string and padding 
 	 * it with the given character.
 	 * 
 	 * @param string
@@ -202,6 +207,88 @@ public final class Strings {
 		}
 		return sb.toString();
     }	
+
+	/**
+	 * Formats a string by padding it with the default character to the left, until
+	 * the given length is reached.
+	 * 
+	 * @param string
+	 *   the string to pad.
+	 * @param size
+	 *   the final length of the resulting padded string.
+	 * @return
+	 *   the original string padded to the left.
+	 */
+	public static String padLeft(String string, int size) {
+		return padLeft(string, size, DEFAULT_PADDING);
+	}
+	
+	/**
+	 * Formats a string by padding it with the given character to the left, until
+	 * the given length is reached.
+	 * 
+	 * @param string
+	 *   the string to pad.
+	 * @param size
+	 *   the final length of the resulting padded string.
+	 * @param padding
+	 *   the character to use as padding.
+	 * @return
+	 *   the original string padded to the left.
+	 */
+	public static String padLeft(String string, int size, char padding) {
+		if(string == null || size <= string.length()) {
+			return string;
+		}		
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < (size - string.length()); i++) {
+			sb.append(padding);
+		}
+		sb.append(string);
+		return sb.toString();		
+	}
+
+	/**
+	 * Formats a string by padding it with the default character to the right, until
+	 * the given length is reached.
+	 * 
+	 * @param string
+	 *   the string to pad.
+	 * @param size
+	 *   the final length of the resulting padded string.
+	 * @param padding
+	 *   the character to use as padding.
+	 * @return
+	 *   the original string padded to the right.
+	 */
+	public static String padRight(String string, int size) {
+		return padRight(string, size, DEFAULT_PADDING);
+	}
+	
+	/**
+	 * Formats a string by padding it with the given character to the right, until
+	 * the given length is reached.
+	 * 
+	 * @param string
+	 *   the string to pad.
+	 * @param size
+	 *   the final length of the resulting padded string.
+	 * @param padding
+	 *   the character to use as padding.
+	 * @return
+	 *   the original string padded to the right.
+	 */
+	public static String padRight(String string, int size, char padding) {
+		if(string == null || size <= string.length()) {
+			return string;
+		}		
+		StringBuilder sb = new StringBuilder();
+		sb.append(string);
+		while (sb.length() < size) {
+			sb.append(padding);
+		}
+		return sb.toString();		
+	}	
 	
 	/**
 	 * Private constructor to prevent utility class instantiation. 

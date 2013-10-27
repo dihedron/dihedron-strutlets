@@ -274,7 +274,7 @@ public class ActionInvocation {
 	 *   the interceptor result; if the interceptor is not intended to divert 
 	 *   control flow, it should pass through whatever results from the nested 
 	 *   interceptor call; changing this result with a different value results 
-	 *   in a    
+	 *   in a deviation of the workflow.  
 	 * @throws StrutletsException
 	 */
 	public String invoke() throws StrutletsException {

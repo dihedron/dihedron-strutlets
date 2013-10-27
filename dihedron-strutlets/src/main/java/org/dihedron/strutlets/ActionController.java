@@ -162,8 +162,8 @@ public class ActionController extends GenericPortlet {
         	logger.info(              "   |                                                            |   ");
         	logger.info(String.format("   |      %1$-48s      |   ", Strings.centre(this.getPortletName().toUpperCase(), 48)));
         	logger.info(              "   |                                                            |   ");
-        	logger.info(String.format("   |                                  strutlets ver. %1$-10s |   ", Strutlets.getVersion()));
-        	logger.info(              "   +------------------------------------------------------------+   ");
+        	logger.info("   |              {} |   ", Strings.padLeft("strutlets ver. " + Strutlets.getVersion(), 45));
+        	logger.info(              "   +------------------------------------------------------------+   ");        	
         	
         	logger.info("action controller '{}' starting up...", getPortletName());
         	        	
@@ -220,7 +220,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
+	    	ActionContext.bindContext(this, request, response, configuration, server, portal);
 	    	
 	    	// request attributes are removed upon a brand new action request 
 	    	ActionContext.clearRequestAttributes();
@@ -238,7 +238,7 @@ public class ActionController extends GenericPortlet {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
-			ActionContextImpl.unbindContext();    			
+			ActionContext.unbindContext();    			
 		}
     }
     
@@ -261,7 +261,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
+	    	ActionContext.bindContext(this, request, response, configuration, server, portal);
     		
 	    	// request attributes are removed upon a brand new event request
 	    	ActionContext.clearRequestAttributes();
@@ -280,7 +280,7 @@ public class ActionController extends GenericPortlet {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
-			ActionContextImpl.unbindContext();
+			ActionContext.unbindContext();
     	}
     }        
     
@@ -334,7 +334,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);    		
+    		ActionContext.bindContext(this, request, response, configuration, server, portal);    		
     		
 	    	TargetId targetId = null;
 	    	Renderer renderer = null;
@@ -441,7 +441,7 @@ public class ActionController extends GenericPortlet {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
-			ActionContextImpl.unbindContext();		    		
+			ActionContext.unbindContext();		    		
     	}
     }
     
@@ -457,7 +457,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContextImpl.bindContext(this, request, response, configuration, server, portal);
+    		ActionContext.bindContext(this, request, response, configuration, server, portal);
 	    	
 	    	String target = request.getResourceID();
 	    	logger.trace("serving resource '{}'...", target);
@@ -490,7 +490,7 @@ public class ActionController extends GenericPortlet {
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
-			ActionContextImpl.unbindContext();
+			ActionContext.unbindContext();
     	}
     }    
     

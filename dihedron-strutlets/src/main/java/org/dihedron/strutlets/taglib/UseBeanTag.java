@@ -32,7 +32,6 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
-import org.dihedron.strutlets.ActionContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

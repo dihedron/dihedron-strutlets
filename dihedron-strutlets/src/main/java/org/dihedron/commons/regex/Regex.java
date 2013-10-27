@@ -141,7 +141,7 @@ public class Regex {
 	public boolean matches(String string) {
 		Matcher matcher = pattern.matcher(string);
 		boolean result = matcher.matches();
-		logger.trace("input string {} pattern", (result ? "matches" : "doesn't match"));
+//		logger.trace("input string {} pattern", (result ? "matches" : "doesn't match"));
 		return result;		
 	}
 
@@ -161,9 +161,9 @@ public class Regex {
 		while(matcher.find()) {
 			int count = matcher.groupCount();
 			String [] strings = new String[count];
-			logger.trace("number of matches: {}", count);
+//			logger.trace("number of matches: {}", count);
 			for(int i = 0; i < count; ++i) {
-				logger.trace("adding match: {}", matcher.group(i+1));
+//				logger.trace("adding match: {}", matcher.group(i+1));
 				strings[i] = matcher.group(i+1);				
 			}
 			matched.add(strings);

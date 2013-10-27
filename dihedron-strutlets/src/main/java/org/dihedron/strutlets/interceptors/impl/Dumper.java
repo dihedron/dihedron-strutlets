@@ -22,9 +22,10 @@ package org.dihedron.strutlets.interceptors.impl;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.dihedron.commons.regex.Regex;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
-import org.dihedron.strutlets.ActionContextImpl.Scope;
+import org.dihedron.strutlets.ActionContext.Scope;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
@@ -37,6 +38,12 @@ import org.slf4j.LoggerFactory;
 public class Dumper extends Interceptor {
 
 	/**
+	 * The name of the parameter containing a regular expression that, if matched, 
+	 * prevents the given parameter from the being output.
+	 */
+	public static final String EXCLUDE_PARAMETER = "exclude";
+	
+	/**
 	 * The logger.
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(Dumper.class);
@@ -47,6 +54,16 @@ public class Dumper extends Interceptor {
 	
 	private static final String SECTION_FOOTER = "================================================================";
 
+	private Regex regex = null;
+	
+	@Override
+	public void initialise() {
+		String exclude = getParameter("exclude");
+		if(Strings.isValid(exclude)) {
+			regex = new Regex(exclude);
+		}
+	}
+	
 	/**
 	 * Dumps the various scopes before and after the action invocation. 
 	 * 
@@ -92,11 +109,13 @@ public class Dumper extends Interceptor {
 		if(parameters != null) {
 			builder.append(Strings.centre(" WEB FORM ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				builder.append("'").append(entry.getKey()).append("' = [ ");
-				for(String value : entry.getValue()) {
-					builder.append("'").append(value).append("', ");
+				if(regex == null || !regex.matches(entry.getKey())) {
+					builder.append("'").append(entry.getKey()).append("' = [ ");
+					for(String value : entry.getValue()) {
+						builder.append("'").append(value).append("', ");
+					}
+					builder.append("]\n");
 				}
-				builder.append("]\n");
 			}
 		}
 	}
@@ -112,11 +131,13 @@ public class Dumper extends Interceptor {
 		builder.append(Strings.centre(" RENDER PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 		if(parameters != null) {
 			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				builder.append("'").append(entry.getKey()).append("' = [ ");
-				for(String value : entry.getValue()) {
-					builder.append("'").append(value).append("', ");
+				if(regex == null || !regex.matches(entry.getKey())) {
+					builder.append("'").append(entry.getKey()).append("' = [ ");
+					for(String value : entry.getValue()) {
+						builder.append("'").append(value).append("', ");
+					}
+					builder.append("]\n");
 				}
-				builder.append("]\n");
 			}
 		}
 	}	
@@ -134,8 +155,10 @@ public class Dumper extends Interceptor {
 		builder.append(Strings.centre(" " + scope.name() + " SCOPE ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 		if(attributes != null) {			
 			for(Entry<String, Object> entry : attributes.entrySet()) {
-				String value = entry.getValue() != null ? entry.getValue().toString() : null; 
-				builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+				if(regex == null || !regex.matches(entry.getKey())) {
+					String value = entry.getValue() != null ? entry.getValue().toString() : null; 
+					builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+				}
 			}
 		}
 	}
@@ -145,11 +168,13 @@ public class Dumper extends Interceptor {
 		builder.append(Strings.centre(" HTTP PARAMETERS ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 		if(parameters != null) {
 			for(Entry<String, String[]> entry : parameters.entrySet()) {
-				builder.append("'").append(entry.getKey()).append("' = [ ");
-				for(String value : entry.getValue()) {
-					builder.append("'").append(value).append("', ");
+				if(regex == null || !regex.matches(entry.getKey())) {
+					builder.append("'").append(entry.getKey()).append("' = [ ");
+					for(String value : entry.getValue()) {
+						builder.append("'").append(value).append("', ");
+					}
+					builder.append("]\n");
 				}
-				builder.append("]\n");
 			}
 		}		
 	}
@@ -159,8 +184,10 @@ public class Dumper extends Interceptor {
 		builder.append(Strings.centre(" HTTP ATTRIBUTES ", SECTION_HEADER_LENGTH, SECTION_HEADER_PADDING)).append("\n");
 		if(attributes != null) {			
 			for(Entry<String, Object> entry : attributes.entrySet()) {
-				String value = entry.getValue() != null ? entry.getValue().toString() : null; 
-				builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+				if(regex == null || !regex.matches(entry.getKey())) {				
+					String value = entry.getValue() != null ? entry.getValue().toString() : null; 
+					builder.append("'").append(entry.getKey()).append("' = '").append(value).append("'\n");
+				}
 			}
 		}
 		
