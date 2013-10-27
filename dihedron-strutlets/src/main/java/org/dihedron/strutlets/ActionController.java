@@ -42,7 +42,6 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.StateAwareResponse;
 import javax.portlet.WindowState;
-import javax.servlet.ServletException;
 import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
@@ -620,7 +619,13 @@ public class ActionController extends GenericPortlet {
 		InterceptorStack stack = interceptors.getStackOrDefault(target.getInterceptorStackId());
     	    	
     	// create and fire the action stack invocation
-    	return new ActionInvocation(action, target, stack, request, response).invoke();
+		ActionInvocation invocation = null;
+		try {
+			invocation = new ActionInvocation(action, target, stack, request, response);
+			return invocation.invoke();
+		} finally {
+			invocation.cleanup();
+		}
     }
     
     /**

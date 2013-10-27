@@ -278,6 +278,7 @@ public class ActionInvocation {
 	 * @throws StrutletsException
 	 */
 	public String invoke() throws StrutletsException {
+		
 		// invoke the interceptors stack
 		if(iterator.get() == null) {
 			iterator.set(interceptors.iterator());
@@ -300,5 +301,16 @@ public class ActionInvocation {
 			logger.error("invocation target error calling proxy method", e);
 			throw new StrutletsException("invocation target error calling proxy method", e);
 		}
+	}
+	
+	/**
+	 * Cleans up after the invocation has completed, by unbinding data from the 
+	 * thread-local storage; this method must be called after each invocation,
+	 * no matter how it ends, whether in success or with an exception; add it to 
+	 * a "finally" block around the action invocation.
+	 */
+	public void cleanup() {
+		logger.debug("removing the interceptors iterator from the thread-local storage");
+		iterator.remove();
 	}
 }
