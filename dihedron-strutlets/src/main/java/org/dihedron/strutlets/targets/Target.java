@@ -108,6 +108,16 @@ public class Target {
 	}
 	
 	/**
+	 * Returns the id of the target.
+	 * 
+	 * @return
+	 *   the id of the target.
+	 */
+	public TargetId getId() {
+		return id;
+	}
+	
+	/**
 	 * Returns the class object containing the executable code of this target's 
 	 * business logic.
 	 * 

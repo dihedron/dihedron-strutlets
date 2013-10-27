@@ -5,7 +5,10 @@
 		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper">
 			<parameter>
 				<key>exclude</key>
+				<value>^LIFERAY.*|^javax\.portlet.*|^[A-Z_]*$|^org\.apache.*|^com\.liferay.*|^javax\.servlet.*|^j_.*|^class\scom\.liferay.*</value>
+				<!-- 
 				<value>^LIFERAY.*|^javax\.portlet.*|^[A-Z_]*$|^org\.apache.*|^org\.dihedron.*|^com\.liferay.*|^javax\.servlet.*|^j_.*|^class\scom\.liferay.*</value>
+				-->
 			</parameter>
 			<!-- 
 			<parameter>
@@ -14,7 +17,12 @@
 			</parameter>
 			-->
 		</interceptor>
-		<interceptor id="double-submit" class="org.dihedron.strutlets.interceptors.impl.DoubleSubmit"/>
+		<interceptor id="double-submit" class="org.dihedron.strutlets.interceptors.impl.DoubleSubmit">
+			<parameter>
+				<key>result</key>
+				<value>error_double_submit</value>
+			</parameter>
+		</interceptor>
  		<!-- 
 		<interceptor id="interceptor_02" class="org.dihedron.strutlets.test.MyInterceptor">
 			<parameter>

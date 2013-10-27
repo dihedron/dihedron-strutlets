@@ -2303,13 +2303,14 @@ public class ActionContext {
 	}	
 	
 	/**
-	 * This method returns a portlet-specific key for request-scoped attributes.
+	 * This method returns a portlet-specific key for request-scoped attributes
+	 * for the current portlet.
 	 * 
 	 * @return
 	 *   a portlet-specific key for request-scoped attributes.
 	 */
 	public static String getRequestScopedAttributesKey() {
-		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "['" + getPortletName().toUpperCase() + "']";
+		return getRequestScopedAttributesKey(getPortletName());
 	}
 	
 	/**
@@ -2320,10 +2321,10 @@ public class ActionContext {
 	 *   the name of the portlet whose request-scoped attributes key is being
 	 *   asked for.
 	 * @return
-	 *   te portlet-specific key for request-scoped attributes.
+	 *   the portlet-specific key for request-scoped attributes.
 	 */
-	public static String getRequestScopedAttributesKeyByPortletName(String portletName) {
-		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "['" + portletName.toUpperCase() + "']";
+	public static String getRequestScopedAttributesKey(String portletName) {
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "[" + portletName.toUpperCase() + "]";
 	}
 	
 	/**

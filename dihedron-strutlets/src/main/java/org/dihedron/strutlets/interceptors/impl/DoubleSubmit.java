@@ -19,11 +19,12 @@
 
 package org.dihedron.strutlets.interceptors.impl;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.portlet.PortletSession;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;
@@ -43,16 +44,18 @@ public class DoubleSubmit extends Interceptor {
 	 */
 	public final static String FORM_TOKEN = "formDate";
 	
-	/**
-	 * The result returned by the interceptor when a "double submit" is detected.
-	 */
-	public final static String DOUBLE_SUBMIT_ERROR = "double_submit_error";
+	private String defaultResult = null;
 	
 	/**
 	 * The logger.
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(DoubleSubmit.class);
-
+	
+	@Override
+	public void initialise() {
+		defaultResult = getParameter("result"); 
+	}
+	
 	/**
 	 * Ensures that the interceptor's per-user data are properly initialised in 
 	 * the user's session by retieving or creating a map that will store form names 
@@ -65,13 +68,13 @@ public class DoubleSubmit extends Interceptor {
 	 *   the set containing form submit timestamps.
 	 */
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	private Set<Long> ensureSubmitDataAvailable() {
-		Set<Long> submits = null;
+	private Map<Long, String> ensureSubmitDataAvailable() {
+		Map<Long, String> submits = null;
 		PortletSession session = ActionContext.getPortletSession();
 		 synchronized(session) {
-			 submits = (Set<Long>)ActionContext.getInterceptorData(getId());
+			 submits = (Map<Long, String>)ActionContext.getInterceptorData(getId());
 			 if(submits == null) {
-				 submits = new HashSet<Long>();
+				 submits = new HashMap<Long, String>();
 				 ActionContext.setInterceptorData(getId(), submits);
 			 }
 		}
@@ -105,29 +108,35 @@ public class DoubleSubmit extends Interceptor {
 		String result = null;
 
 		if(ActionContext.isActionPhase() || ActionContext.isResourcePhase()) {
-			String[] tokens = ActionContext.getParameterValues(FORM_TOKEN);			
-			if(tokens != null && tokens.length > 1) {
+			logger.trace("in action or resource phase");
+			String[] tokens = ActionContext.getParameterValues(FORM_TOKEN);
+			if(tokens != null && tokens.length > 0) {
 				long timestamp = Long.parseLong(tokens[0]);
-				Set<Long> submits = ensureSubmitDataAvailable();
+				logger.trace("form time: '{}'", timestamp);
+				Map<Long, String> submits = ensureSubmitDataAvailable();
 				synchronized(submits) {
-					if(submits.contains(timestamp)) {
-						logger.error("action execution aborted due to double-submit");
-						result = DOUBLE_SUBMIT_ERROR;
+					if(submits.containsKey(timestamp)) {
+						if(Strings.isValid(defaultResult)) {
+							logger.error("action execution aborted due to double-submit, forwarding default result for target '{}': '{}'", invocation.getTarget().getId().toString(), defaultResult);
+							result = defaultResult;
+						} else {
+							logger.error("action execution aborted due to double-submit, forwarding previous result for target '{}': '{}'", invocation.getTarget().getId().toString(), submits.get(timestamp));
+							result = submits.get(timestamp);
+						}
 					} else {
-						logger.trace("synchronised action execution forwarded");
-						submits.add(timestamp);
+						logger.trace("synchronised action execution forwarded");						
 						result = invocation.invoke();
+						submits.put(timestamp, result);
 					}
 				}				
 			} else {
-				logger.trace("unsynchronised action execution forwarded");
+				logger.trace("unsynchronised action execution forwarded: no timestamp in request");
 				result = invocation.invoke();
 			}
 		} else {
-			logger.trace("unsynchronisedaction execution forwarded");
+			logger.trace("unsynchronisedaction execution forwarded: not in action or resource phase");
 			result = invocation.invoke();
 		}
-		logger.trace("unsynchronisedaction execution forwarded");
 		return result;		
 	}
 }
