@@ -27,6 +27,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+import javax.validation.executable.ExecutableValidator;
+
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
@@ -72,6 +76,8 @@ public class ActionProxyFactory {
 
 	private static final String PROXY_METHOD_NAME_PREFIX = "_";
 	private static final String PROXY_METHOD_NAME_SUFFIX = "";
+	
+	private static final boolean DEFAULT_VALIDATE = true;
 	
 	
 	/**
@@ -390,7 +396,7 @@ public class ActionProxyFactory {
 	 * any state is kept between invocations.
 	 *  	
 	 * @param generator
-	 *   the Javassist <code>CtClass</code> used to generate newstatic methods.
+	 *   the Javassist <code>CtClass</code> used to generate new static methods.
 	 * @param action
 	 *   the action class to instrument.
 	 * @param method
@@ -400,27 +406,71 @@ public class ActionProxyFactory {
 	 * @throws DeploymentException
 	 */
 	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method) throws DeploymentException {
+		return instrumentMethod(generator, action, method, DEFAULT_VALIDATE);
+	}
+	
+	/**
+	 * Creates the Java code to proxy an action method. The code will also provide
+	 * parameter injection (for <code>@In</code> annotated parameters) and basic
+	 * profiling to measure how long it takes for the business method to execute.
+	 * Each proxy method is actually static, so there is no need to have an 
+	 * instance of the proxy class to invoke it and there's no possibility that
+	 * any state is kept between invocations.
+	 *  	
+	 * @param generator
+	 *   the Javassist <code>CtClass</code> used to generate new static methods.
+	 * @param action
+	 *   the action class to instrument.
+	 * @param method
+	 *   the specific action methpd to instrument.
+	 * @param validate
+	 *   whether JSR349-compliant validation code should be output.
+	 * @return
+	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
+	 * @throws DeploymentException
+	 */
+	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean validate) throws DeploymentException {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
 		try {
 			StringBuilder postCode = new StringBuilder("\t//\n\t// post action execution: store @Out parameters into scopes\n\t//\n\n");
 			
-			StringBuilder code = new StringBuilder("public static final java.lang.String ")
-				.append(methodName)
-				.append("( java.lang.Object action ) {\n\n");
+			StringBuilder code = new StringBuilder("public static final java.lang.String ").append(methodName).append("( java.lang.Object action ) {\n\n");
+			
+			StringBuilder validCode = null;
+			
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
 			code.append("\tjava.lang.Object value = null;\n");
-			code.append("\n");		
-			Annotation[][] annotations = method.getParameterAnnotations();
+			code.append("\tjavax.validation.executable.ExecutableValidator validator = null; // JSR349 validation\n");
+			code.append("\n");	
 			
+			Annotation[][] annotations = method.getParameterAnnotations();
 			Type[] types = method.getGenericParameterTypes();
+			
+			if(validate) {
+				validCode = new StringBuilder();
+				
+				code.append("\t//\n\t// JSR349 validation code\n\t//\n");
+				code.append("\tjavax.validation.ValidatorFactory factory = javax.validation.Validation.buildDefaultValidatorFactory();\n");
+				code.append("\tvalidator = factory.getValidator().forExecutables();\n");
+				code.append("\t//Method method = $1.getClass().getMethod(\"").append(method.getName()).append("\", ");
+				for(Type type : types) {
+					code.append(type.toString()).append(",");
+				}
+				code.append("\n");
+				
+				code.append("\n");
+			}
+			
+			
+			
 					
 			StringBuilder args = new StringBuilder();
 			
 			for(int i = 0; i < types.length; ++i) {
-				String arg = prepareArgument(i, types[i], annotations[i], code, postCode);
+				String arg = prepareArgument(i, types[i], annotations[i], code, postCode, validCode);
 				args.append(args.length() > 0 ? ", " : "").append(arg);
 			}
 			
@@ -460,7 +510,7 @@ public class ActionProxyFactory {
 		}		
 	}
 	
-	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
 				
 		In in = null;
 		Out out = null;
@@ -483,24 +533,24 @@ public class ActionProxyFactory {
 			if(out != null) {
 				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @Out: @Out will be ignored", i);
 			}			
-			return prepareInOutArgument(i, type, inout, preCode, postCode); 			
+			return prepareInOutArgument(i, type, inout, preCode, postCode, validCode); 			
 		} else if(in != null && out == null) {
 			logger.trace("preparing input argument...");
-			return prepareInputArgument(i, type, in, preCode); 
+			return prepareInputArgument(i, type, in, preCode, validCode); 
 		} else if(in == null && out != null) {
 			logger.trace("preparing output argument...");
-			return prepareOutputArgument(i, type, out, preCode, postCode);
+			return prepareOutputArgument(i, type, out, preCode, postCode, validCode);
 		} else if(in != null && out != null) {
 			logger.trace("preparing input/output argument...");
-			return prepareInputOutputArgument(i, type, in, out, preCode, postCode);
+			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, validCode);
 		} else {
 			logger.trace("preparing non-annotated argument...");
-			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode);
+			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, validCode);
 		}
 	}
 	
 	
-	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode) throws DeploymentException {		
+	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode, StringBuilder validCode) throws DeploymentException {		
 
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
 			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", in.value(), i, Types.getAsString(type));
@@ -541,7 +591,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -588,7 +638,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -655,7 +705,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 
-	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode) throws DeploymentException {
+	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -718,7 +768,7 @@ public class ActionProxyFactory {
 	}
 	
 	
-	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code) throws DeploymentException {
+	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, StringBuilder validCode) throws DeploymentException {
 		
 		code.append("\t//\n\t// preparing non-annotated argument no. ").append(i).append(" (").append(Types.getAsString(type)).append(")\n\t//\n");
 		

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-public class DoubleSubmit extends Interceptor {
+public class Resubmit extends Interceptor {
 
 	/**
 	 * The timestamp parameter in the form; if available , it will act as a 
@@ -49,7 +49,7 @@ public class DoubleSubmit extends Interceptor {
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(DoubleSubmit.class);
+	private static final Logger logger = LoggerFactory.getLogger(Resubmit.class);
 	
 	@Override
 	public void initialise() {

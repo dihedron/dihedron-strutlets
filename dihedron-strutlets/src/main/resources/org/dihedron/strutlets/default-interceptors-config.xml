@@ -17,7 +17,7 @@
 			</parameter>
 			-->
 		</interceptor>
-		<interceptor id="double-submit" class="org.dihedron.strutlets.interceptors.impl.DoubleSubmit">
+		<interceptor id="double-submit" class="org.dihedron.strutlets.interceptors.impl.Resubmit">
 			<parameter>
 				<key>result</key>
 				<value>error_double_submit</value>
