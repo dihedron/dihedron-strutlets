@@ -42,6 +42,7 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 import javax.portlet.StateAwareResponse;
 import javax.portlet.WindowState;
+import javax.servlet.ServletException;
 import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
@@ -429,13 +430,25 @@ public class ActionController extends GenericPortlet {
 	    	if(Strings.isValid(url)) {
 	    		logger.info("rendering through URL: '{}'", url);
 	    		renderer = renderers.getRenderer(JspRenderer.ID);
-	    		renderer.setData(url);
-	    		renderer.render(request, response);    		
+    			renderer.setData(url);
+    			renderer.render(request, response);
 	    	} else {
 	    		logger.error("invalid render URL");
 	    		throw new StrutletsException("No valid render URL available");
 	    	}    	
 	    	logger.trace("... output rendering done");
+    	} catch(PortletException e) {
+			logger.error("error processing render phase");
+			String errorPage = InitParameter.DEFAULT_ERROR_JSP.getValueForPortlet(this);
+			if(Strings.isValid(errorPage)) {
+				logger.trace("forwarding error to default error page");
+				Renderer renderer = renderers.getRenderer(JspRenderer.ID);
+				renderer.setData(errorPage);
+				renderer.render(request, response);
+			} else {
+				logger.trace("no last-resort error handling page, rethrowing...");
+				throw e;
+			}
     	} finally {
     		
     		// unbind the invocation context from the thread-local storage to

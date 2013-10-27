@@ -31,6 +31,10 @@
 			<name>strutlets:help-home</name>
 			<value>/html/portlet1/help.jsp</value>
 		</init-param>
+		<init-param>
+			<name>strutlets:default-error-page</name>
+			<value>/html/error.jsp</value>
+		</init-param>
 
 		<expiration-cache>0</expiration-cache>
 		<supports>

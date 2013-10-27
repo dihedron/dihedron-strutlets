@@ -92,6 +92,11 @@ public enum InitParameter {
 	RENDERERS_JAVA_PACKAGES("strutlets:renderers-packages", ""),
 	
 	/**
+	 * The default page to be shown when an internal error occurs.
+	 */
+	DEFAULT_ERROR_JSP("strutlets:default-error-page", ""),
+	
+	/**
 	 * The parameter used to specify the root directory for JSP renderers.
 	 * This is used only when dealing with annotated actions and smart defaults,
 	 * to conjure the name of renderer JSPs based on the action's result and
@@ -216,9 +221,13 @@ public enum InitParameter {
      */
     public String getValueForPortlet(GenericPortlet portlet) {
     	String value = portlet.getInitParameter(name);
-    	if(!Strings.isValid(value)) {
-    		logger.warn("using the legacy parameter name '{}', please replace it with '{}' in your portlet.xml", legacyName, name);
+    	if(!Strings.isValid(value)) {    		
     		value = portlet.getInitParameter(legacyName);
+    		if(!Strings.isValid(value)) {
+    			logger.trace("no value for parameter '{}' (or '{}') in portlet.xml", name, legacyName);
+    		} else {
+    			logger.warn("using the legacy parameter name '{}', please replace it with '{}' in your portlet.xml", legacyName, name);
+    		}
     	}
     	return value;
     }	
