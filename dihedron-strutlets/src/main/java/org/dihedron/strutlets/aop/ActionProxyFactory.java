@@ -452,15 +452,36 @@ public class ActionProxyFactory {
 			if(validate) {
 				validCode = new StringBuilder();
 				
-				code.append("\t//\n\t// JSR349 validation code\n\t//\n");
-				code.append("\tjavax.validation.ValidatorFactory factory = javax.validation.Validation.buildDefaultValidatorFactory();\n");
-				code.append("\tvalidator = factory.getValidator().forExecutables();\n");
-				code.append("\t//Method method = $1.getClass().getMethod(\"").append(method.getName()).append("\", ");
-				for(Type type : types) {
-					code.append(type.toString()).append(",");
-				}
-				code.append("\n");
+				code.append("\t//\n\t// JSR-349 validation code\n\t//\n");
+				code.append("\ttry {\n");
 				
+				code.append("\t\tjavax.validation.ValidatorFactory factory = javax.validation.Validation.buildDefaultValidatorFactory();\n");
+				code.append("\t\tvalidator = factory.getValidator().forExecutables();\n");
+				code.append("\t\tjava.lang.reflect.Method method = $1.getClass().getMethod(\"").append(method.getName()).append("\"");
+						
+				if(types.length > 0) {
+					code.append(", new Class[] {\n");
+					boolean first = true;
+					for(Type type : types) {
+						code.append(first ? "\t\t\t" : ",\n\t\t\t");
+						if(Types.isSimple(type)) {
+							code.append(Types.getAsString(type)).append(".class");
+						} else if(Types.isGeneric(type)) {
+							code.append(Types.getAsRawType(type)).append(".class");
+						}
+						first = false;
+					}
+					code.append("\n\t\t}");
+				} else {
+					code.append(", null");
+				}
+				code.append(");\n");
+				
+				
+				code.append("\t} catch(javax.validation.ValidationException e) {\n");
+				code.append("\t\tlogger.error(\"error initialising JSR-349 validator\", e);\n");
+				code.append("\t}\n");
+								
 				code.append("\n");
 			}
 			

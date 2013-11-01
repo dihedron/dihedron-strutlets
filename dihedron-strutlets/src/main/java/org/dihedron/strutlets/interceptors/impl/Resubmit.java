@@ -134,7 +134,7 @@ public class Resubmit extends Interceptor {
 				result = invocation.invoke();
 			}
 		} else {
-			logger.trace("unsynchronisedaction execution forwarded: not in action or resource phase");
+			logger.trace("unsynchronised action execution forwarded: not in action or resource phase");
 			result = invocation.invoke();
 		}
 		return result;		

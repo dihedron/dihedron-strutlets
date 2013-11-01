@@ -21,12 +21,14 @@ package org.dihedron.strutlets.aop;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import javax.annotation.RegEx;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.executable.ExecutableValidator;
 
 import org.slf4j.Logger;
@@ -36,12 +38,20 @@ import org.slf4j.LoggerFactory;
  * @author andrea
  */
 public class ValidatedBean {
+	
 	/**
 	 * The logger.
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(ValidatedBean.class);
 
+	/**
+	 * @param name
+	 * @param surname
+	 * @param age
+	 * @return
+	 */
 	@NotNull
+	@Pattern(regexp="^success$|^error$", message="not in the valid set of results")
 	public String myMethod(@NotNull String name, @NotNull String surname, @Min(20) @Max(30) int age) {
 		return "name" + " " + surname + ", aged " + age;
 	}
@@ -59,24 +69,10 @@ public class ValidatedBean {
 		for(ConstraintViolation<ValidatedBean> violation : violations) {
 			System.out.println("violation on value " + violation.getInvalidValue() + ": " + violation.getMessage());
 		}
+		violations = validator.validateReturnValue(bean, method, "succEss");
+		for(ConstraintViolation<ValidatedBean> violation : violations) {
+			System.out.println("violation on value " + violation.getInvalidValue() + ": " + violation.getMessage());
+		}
 		
-		/*
-		Car object = new Car( "Morris" );
-		Method method = Car.class.getMethod( "drive", int.class );
-		
-		Set<ConstraintViolation<Car>> violations = executableValidator.validateParameters(
-		 object,
-		 method,
-		 parameterValues
-		);
-		assertEquals( 1, violations.size() );
-		Class<? extends Annotation> constraintType = violations.iterator()
-		 .next()
-		 .getConstraintDescriptor()
-		 .getAnnotation()
-		 .annotationType();
-		assertEquals( Max.class, constraintType );
-		*/
-		 
 	}
 }

@@ -19,10 +19,14 @@
 
 package org.dihedron.strutlets.annotations;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.dihedron.strutlets.validation.Validator;
 
 /**
  * Annotation to be placed on methods that will be exposed as action, event, 
@@ -32,6 +36,8 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME) 
 @Target(ElementType.METHOD)
+@Inherited
+@Documented
 public @interface Invocable {
 	
 	/**
@@ -80,4 +86,13 @@ public @interface Invocable {
 	 *   the array of expected results.
 	 */
 	Result[] results() default {};
+	
+	/**
+	 * The optional implementation of the validator interface that will provide
+	 * the callbacks to handle JSR349 constraint violations errors on properly
+	 * annotated input parameters or on the method itself; if left to the default 
+	 * dummy class, validation errors will simply cause and exception to be 
+	 * thrown at runtime.
+	 */
+	Class<? extends Validator<?>> validator() default Validator.NONE.class;
 }
