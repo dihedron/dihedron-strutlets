@@ -477,6 +477,11 @@ public class ActionProxyFactory {
 				}
 				code.append(");\n");
 				
+				code.append("\t\tif(method != null) {\n");
+				code.append("\t\t\tlogger.trace(\"method is not null\");\n");
+				code.append("\t\t} else {\n");
+				code.append("\t\t\tlogger.warn(\"method is null\");\n");
+				code.append("\t\t}\n");
 				
 				code.append("\t} catch(javax.validation.ValidationException e) {\n");
 				code.append("\t\tlogger.error(\"error initialising JSR-349 validator\", e);\n");
