@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -116,7 +118,7 @@ public class ProxiedAction {
 			@In(value = "emailParameter", scopes = Scope.FORM) @Email String email,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
-			@In(value="ageAttribute", scopes = Scope.APPLICATION) Integer age,			
+			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(99) Integer age,			
 			@In(value="genderAttribute", scopes = Scope.APPLICATION) Boolean gender,
 			String aString,
 			double aDouble,
