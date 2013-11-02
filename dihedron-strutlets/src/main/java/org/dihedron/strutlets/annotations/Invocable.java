@@ -26,7 +26,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.dihedron.strutlets.validation.Validator;
+import org.dihedron.strutlets.validation.DefaultValidationHandler;
+import org.dihedron.strutlets.validation.ValidationHandler;
 
 /**
  * Annotation to be placed on methods that will be exposed as action, event, 
@@ -91,8 +92,9 @@ public @interface Invocable {
 	 * The optional implementation of the validator interface that will provide
 	 * the callbacks to handle JSR349 constraint violations errors on properly
 	 * annotated input parameters or on the method itself; if left to the default 
-	 * dummy class, validation errors will simply cause and exception to be 
-	 * thrown at runtime.
+	 * dummy class, validation errors will simply cause a warning message to be 
+	 * printed. For the exact contract between validator and validation handler,
+	 * see {@link ValidationHandler}.
 	 */
-	Class<? extends Validator<?>> validator() default Validator.NONE.class;
+	Class<? extends ValidationHandler> validator() default DefaultValidationHandler.class;
 }

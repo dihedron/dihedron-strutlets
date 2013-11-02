@@ -67,9 +67,12 @@ public class TargetFactory {
      *   the repository where new targets will be stored.
      * @param javaPackage
      *   the Java package to be scanned for actions. 
+     * @param doValidation
+     *   whether JSR-349 bean validation related code should be generated in the
+     *   proxies.
      * @throws StrutletsException
      */
-    public void makeFromJavaPackage(TargetRegistry registry, String javaPackage) throws StrutletsException {
+    public void makeFromJavaPackage(TargetRegistry registry, String javaPackage, boolean doValidation) throws StrutletsException {
     	
     	if(Strings.isValid(javaPackage)) {
     		logger.trace("looking for action classes in package '{}'", javaPackage);
@@ -85,7 +88,7 @@ public class TargetFactory {
 //    		Set<Class<? extends AbstractAction>> actionClasses = reflections.getSubTypesOf(AbstractAction.class);
     		Set<Class<?>> actions = reflections.getTypesAnnotatedWith(Action.class);
 	        for(Class<?> action : actions) {
-	        	makeFromJavaClass(registry, action);
+	        	makeFromJavaClass(registry, action, doValidation);
 	        }
     	}
     }
@@ -98,9 +101,12 @@ public class TargetFactory {
      *   the repository where new targets will be stored.
      * @param actionClass
      *   the action class to be scanned for annotated methods (targets).
+     * @param doValidation
+     *   whether JSR-349 bean validation related code should be generated in the
+     *   proxies.
      * @throws StrutletsException 
      */
-    public void makeFromJavaClass(TargetRegistry registry, Class<?> actionClass) throws StrutletsException {
+    public void makeFromJavaClass(TargetRegistry registry, Class<?> actionClass, boolean doValidation) throws StrutletsException {
     	logger.trace("analysing action class: '{}'...", actionClass.getName());
 
     	// only add classes that are not abstract to the target registry
@@ -113,7 +119,7 @@ public class TargetFactory {
 	    	// ans a set of proxy methods for valid @Invocable-annotated action methods 
 	    	// (possibly walking up the class hierarchy and discarding duplicates, 
 	    	// static and unannotated methods...) 
-	    	ActionProxy proxy = factory.makeActionProxy(actionClass);
+	    	ActionProxy proxy = factory.makeActionProxy(actionClass, doValidation);
 	    	
 	    	// now loop through annotated methods and add them to the registry as targets
 	    	Map<Method, Method> methods = proxy.getMethods();

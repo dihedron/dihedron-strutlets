@@ -856,12 +856,22 @@ public class ActionController extends GenericPortlet {
 		// pre-scan existing classes and methods in the default actions package
 		TargetFactory loader = new TargetFactory();
 		
+		boolean generateValidationCode = false;
+		String value = InitParameter.ACTIONS_ENABLE_VALIDATION.getValueForPortlet(this);
+		if(Strings.isValid(value) && value.equalsIgnoreCase("true")) {
+			logger.info("enabling JSR-349 bean validation code generation");
+			generateValidationCode = true;
+		} else {
+			logger.info("JSR-349 bean validation code generation will be disabled");
+			generateValidationCode = false;
+		}
+		
 		String parameter = InitParameter.ACTIONS_JAVA_PACKAGES.getValueForPortlet(this);
 		if(Strings.isValid(parameter)) {
 			logger.trace("scanning for actions in packages: '{}'", parameter);
 			String [] packages = Strings.split(parameter, ",", true);
 			for(String pkg : packages) {
-				loader.makeFromJavaPackage(registry, pkg);
+				loader.makeFromJavaPackage(registry, pkg, generateValidationCode);
 			}
 		} else {
 			String pkg = InitParameter.ACTIONS_JAVA_PACKAGE.getValueForPortlet(this);
@@ -870,7 +880,7 @@ public class ActionController extends GenericPortlet {
 						InitParameter.ACTIONS_JAVA_PACKAGE.getLegacyName(),
 						pkg,
 						InitParameter.ACTIONS_JAVA_PACKAGES.getName());
-				loader.makeFromJavaPackage(registry, pkg);
+				loader.makeFromJavaPackage(registry, pkg, generateValidationCode);
 			} else {
 				logger.error("no Java packages specified for actions: check parameter '{}'", InitParameter.ACTIONS_JAVA_PACKAGES.getName());
 				throw new DeploymentException("No Java package specified for actions: check parameter '" + InitParameter.ACTIONS_JAVA_PACKAGES.getName() + "'");

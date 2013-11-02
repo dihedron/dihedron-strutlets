@@ -44,7 +44,7 @@ public class MyExtendingAction extends MyBaseAction {
 	public static void main(String[] args) throws Exception {
 		ActionProxyFactory instrumentor = new ActionProxyFactory();
 		
-		ActionProxy proxy = instrumentor.makeActionProxy(MyExtendingAction.class);
+		ActionProxy proxy = instrumentor.makeActionProxy(MyExtendingAction.class, true);
 		Map<Method, Method> methods = proxy.getMethods();
 		for(Entry<Method, Method> entry : methods.entrySet()) {
 			Method actionMethod = entry.getKey();

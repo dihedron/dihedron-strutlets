@@ -27,10 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableValidator;
-
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
@@ -75,10 +71,7 @@ public class ActionProxyFactory {
 	private static final String PROXY_CLASS_NAME_SUFFIX = "$Proxy";
 
 	private static final String PROXY_METHOD_NAME_PREFIX = "_";
-	private static final String PROXY_METHOD_NAME_SUFFIX = "";
-	
-	private static final boolean DEFAULT_VALIDATE = true;
-	
+	private static final String PROXY_METHOD_NAME_SUFFIX = "";	
 	
 	/**
 	 * The logger.
@@ -155,24 +148,27 @@ public class ActionProxyFactory {
 	 * 
 	 * @param action
 	 *   the action class to be instrumented.
+	 * @param doValidation
+	 *   whether JSR-349 bean validation related code should be generated in the
+	 *   proxies.
 	 * @return
-	 *   the proxy object containing information about the <code>AbstractAction</code>
-	 *   factory method, its proxy class and the static methods proxying each of 
-	 *   the original <code>AbstractAction</code>'s invocable methods.
+	 *   the proxy object containing information about the Action factory method, 
+	 *   its proxy class and the static methods proxying each of the original 
+	 *   Action's {@code Invocable} methods.
 	 * @throws StrutletsException
 	 */
-	public ActionProxy makeActionProxy(Class<?> action) throws DeploymentException {		
+	public ActionProxy makeActionProxy(Class<?> action, boolean doValidation) throws DeploymentException {		
 		try {
 			ActionProxy proxy = new ActionProxy();
 			Map<Method, Method> methods = new HashMap<Method, Method>();
 			
-			CtClass generator = getClassGenerator(action);
+			CtClass generator = getClassGenerator(action, doValidation);
 			
 			// adds the static method that creates or retrieves the 
-			createFactoryMethod(generator, action);
+			createFactoryMethod(generator, action, doValidation);
 			for(Method method : enumerateInvocableMethods(action)) {
 				logger.trace("instrumenting method '{}'...", method.getName());
-				instrumentMethod(generator, action, method);
+				instrumentMethod(generator, action, method, doValidation);
 			}			
 			
 			// fill the proxy class 
@@ -228,11 +224,13 @@ public class ActionProxyFactory {
 	 * 
 	 * @param action
 	 *   the action for which a proxy must be created.
+	 * @param doValidation
+	 *   whether JSR-349 validation related code should be generated.
 	 * @return
 	 *   the <code>CtClass</code> object.
 	 * @throws StrutletsException
 	 */
-	private CtClass getClassGenerator(Class<?> action) throws DeploymentException {
+	private CtClass getClassGenerator(Class<?> action, boolean doValidation) throws DeploymentException {
 		CtClass generator = null;
 		String proxyname = makeProxyClassName(action);
 		try {
@@ -248,6 +246,12 @@ public class ActionProxyFactory {
 				// add the SLF4J logger
 				CtField log = CtField.make("private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(" + proxyname + ".class);", generator);
 				generator.addField(log);
+				
+				if(doValidation) {
+					// add the static JSR-349 validator
+					CtField validator = CtField.make("private static javax.validation.executable.ExecutableValidator validator = null;", generator);
+					generator.addField(validator);
+				}
 				
 				if(hasInstanceFields(action)) {
 					logger.trace("factory method will renew action instances at each invocation");
@@ -341,11 +345,13 @@ public class ActionProxyFactory {
 	 *   the Javassist class generator.
 	 * @param action
 	 *   the class of the action object.
+	 * @param doValidation
+	 *   whether JSR-349 validation code should be produced.
 	 * @return
 	 *   the Javassist object representing the factory method.
 	 * @throws DeploymentException
 	 */
-	private CtMethod createFactoryMethod(CtClass generator, Class<?> action) throws DeploymentException {
+	private CtMethod createFactoryMethod(CtClass generator, Class<?> action, boolean doValidation) throws DeploymentException {
 		String factoryName = makeFactoryMethodName(action);
 		logger.trace("action '{}' will be created via '{}'", action.getSimpleName(), factoryName);
 		
@@ -363,6 +369,21 @@ public class ActionProxyFactory {
 		try {						
 			StringBuilder code = new StringBuilder("public static final ").append(action.getCanonicalName()).append(" ").append(factoryName).append("() {\n");
 			code.append("\tlogger.trace(\"entering factory method...\");\n");
+			
+			if(doValidation) {
+				// try to initialise the JSR-349 validator
+				code.append("\ttry {\n");
+				code.append("\t\tif(validator == null) {\n");
+				code.append("\t\t\tvalidator = javax.validation.Validation.buildDefaultValidatorFactory().getValidator().forExecutables();\n");
+				code.append("\t\t\tlogger.info(\"JSR-349 validator successfully initialised\");\n");
+				code.append("\t\t} else {\n");
+				code.append("\t\t\tlogger.trace(\"JSR-349 validator already initialised\");\n");
+				code.append("\t\t}\n");
+				code.append("\t} catch(javax.validation.ValidationException e) {\n");
+				code.append("\t\tlogger.error(\"error initialising JSR-349 validator: validation will not be available throughout this session\", e);\n");
+				code.append("\t}\n");
+			}
+			
 			// now analyse the action class and all its parent classes, checking 
 			// if it has any non-static field, and then decide whether we can reuse
 			// the single cached instance or we need to create a brand new instance 
@@ -401,35 +422,13 @@ public class ActionProxyFactory {
 	 *   the action class to instrument.
 	 * @param method
 	 *   the specific action methpd to instrument.
-	 * @return
-	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
-	 * @throws DeploymentException
-	 */
-	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method) throws DeploymentException {
-		return instrumentMethod(generator, action, method, DEFAULT_VALIDATE);
-	}
-	
-	/**
-	 * Creates the Java code to proxy an action method. The code will also provide
-	 * parameter injection (for <code>@In</code> annotated parameters) and basic
-	 * profiling to measure how long it takes for the business method to execute.
-	 * Each proxy method is actually static, so there is no need to have an 
-	 * instance of the proxy class to invoke it and there's no possibility that
-	 * any state is kept between invocations.
-	 *  	
-	 * @param generator
-	 *   the Javassist <code>CtClass</code> used to generate new static methods.
-	 * @param action
-	 *   the action class to instrument.
-	 * @param method
-	 *   the specific action methpd to instrument.
-	 * @param validate
+	 * @param doValidation
 	 *   whether JSR349-compliant validation code should be output.
 	 * @return
-	 *   an instance of <code>CtMethod</code>, repsenting a static proxy method.
+	 *   an instance of <code>CtMethod</code>, representing a static proxy method.
 	 * @throws DeploymentException
 	 */
-	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean validate) throws DeploymentException {
+	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean doValidation) throws DeploymentException {
 		
 		String methodName = makeProxyMethodName(method);
 		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
@@ -438,28 +437,27 @@ public class ActionProxyFactory {
 			
 			StringBuilder code = new StringBuilder("public static final java.lang.String ").append(methodName).append("( java.lang.Object action ) {\n\n");
 			
-			StringBuilder validCode = null;
-			
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
-			code.append("\tjava.lang.Object value = null;\n");
-			code.append("\tjavax.validation.executable.ExecutableValidator validator = null; // JSR349 validation\n");
+			code.append("\tjava.lang.Object value = null;\n");			
+			if(doValidation) {
+				code.append("\tjava.lang.reflect.Method validationMethod = null;\n");
+				code.append("\tjava.util.List validationValues = null;\n");	
+				code.append("\torg.dihedron.strutlets.validation.ValidationHandler handler = null;\n");
+			}
 			code.append("\n");	
 			
 			Annotation[][] annotations = method.getParameterAnnotations();
 			Type[] types = method.getGenericParameterTypes();
 			
-			if(validate) {
-				validCode = new StringBuilder();
-				
+			if(doValidation) {
 				code.append("\t//\n\t// JSR-349 validation code\n\t//\n");
-				code.append("\ttry {\n");
 				
-				code.append("\t\tjavax.validation.ValidatorFactory factory = javax.validation.Validation.buildDefaultValidatorFactory();\n");
-				code.append("\t\tvalidator = factory.getValidator().forExecutables();\n");
-				code.append("\t\tjava.lang.reflect.Method method = $1.getClass().getMethod(\"").append(method.getName()).append("\"");
+				code.append("\tif(validator != null) {\n");				
+				code.append("\t\tvalidationValues = new java.util.ArrayList();\n");				
+				code.append("\t\tvalidationMethod = $1.getClass().getMethod(\"").append(method.getName()).append("\"");
 						
-				if(types.length > 0) {
+				if(types.length > 0) {					
 					code.append(", new Class[] {\n");
 					boolean first = true;
 					for(Type type : types) {
@@ -476,31 +474,61 @@ public class ActionProxyFactory {
 					code.append(", null");
 				}
 				code.append(");\n");
+				code.append("\t} else {\n");
+				code.append("\t\tlogger.trace(\"no JSR-349 validation available\");\n");
+				code.append("\t}\n\n");
+			}
+			
+			// now get the values for each parameter, including those to validate
+			StringBuilder args = new StringBuilder();
+			StringBuilder validCode = new StringBuilder();
+			StringBuilder preCode = new StringBuilder();
+			for(int i = 0; i < types.length; ++i) {
+				if(doValidation) {
+					validCode.append("\t\t\t");
+				}
+				String arg = prepareArgument(i, types[i], annotations[i], preCode, postCode, doValidation);
+				args.append(args.length() > 0 ? ", " : "").append(arg);
+			}
+						
+			code.append(preCode);
+						
+			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n\n");
+			
+			// if validation should occur, and there are both a valid JSR-349 validator and
+			// a valid set of information (method and arguments), then the validator will
+			// be invoked and its results passed on either to the registered validation
+			// handler or to the default one (which does nothing but print out a message)
+			if(doValidation) {
+				code.append("\t//\n\t// JSR-349 parameters validation\n\t//\n");
+				code.append("\tif(validationMethod != null) {\n");
+				code.append("\t\tlogger.trace(\"validating invocation parameters\");\n");
+				code.append("\t\tObject[] array = validationValues.toArray(new java.lang.Object[validationValues.size()]);\n");
+				code.append("\t\tjava.util.Set violations = validator.validateParameters((").append(action.getCanonicalName()).append(")$1, validationMethod, array, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
 				
-				code.append("\t\tif(method != null) {\n");
-				code.append("\t\t\tlogger.trace(\"method is not null\");\n");
-				code.append("\t\t} else {\n");
-				code.append("\t\t\tlogger.warn(\"method is null\");\n");
+				code.append("\t\tif(violations.size() > 0) {\n");
+				code.append("\t\t\tlogger.debug(\"{} constraint violations detected in input parameters\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+				
+				// now grab the ValidationHandler 
+				Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+				code.append("\t\t\tif(handler == null) {\n");
+				code.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+				code.append("\t\t\t}\n");
+				code.append("\t\t\tjava.lang.String result = handler.onParametersViolations(violations);\n");
+				code.append("\t\t\tif(result != null) {\n");
+				code.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
+				code.append("\t\t\t\treturn result;\n");
+				code.append("\t\t\t}\n");
 				code.append("\t\t}\n");
 				
-				code.append("\t} catch(javax.validation.ValidationException e) {\n");
-				code.append("\t\tlogger.error(\"error initialising JSR-349 validator\", e);\n");
+				code.append("\t} else if(validator != null) {\n");
+				code.append("\t\tlogger.warn(\"method is null\");\n");
 				code.append("\t}\n");
+				
 								
 				code.append("\n");
 			}
 			
-			
-			
-					
-			StringBuilder args = new StringBuilder();
-			
-			for(int i = 0; i < types.length; ++i) {
-				String arg = prepareArgument(i, types[i], annotations[i], code, postCode, validCode);
-				args.append(args.length() > 0 ? ", " : "").append(arg);
-			}
-			
-			code.append("\tif(trace.length() > 0) {\n\t\ttrace.setLength(trace.length() - 2);\n\t\tlogger.debug(trace.toString());\n\t}\n\n");
 			
 			code.append("\t//\n\t// invoking proxied method\n\t//\n");
 			code.append("\tlong millis = java.lang.System.currentTimeMillis();\n");
@@ -512,6 +540,34 @@ public class ActionProxyFactory {
 				.append("(")
 				.append(args)
 				.append(");\n");
+		
+			code.append("\n");
+			
+			if(doValidation) {
+				// now apply JSR-349 validation to result			
+				code.append("\t//\n\t// JSR-349 result validation\n\t//\n");
+				code.append("\tif(validationMethod != null) {\n");
+				code.append("\t\tlogger.trace(\"validating invocation results\");\n");
+				code.append("\t\tjava.util.Set violations = validator.validateReturnValue((").append(action.getCanonicalName()).append(")$1, validationMethod, result, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+				
+				code.append("\t\tif(violations.size() > 0) {\n");
+				code.append("\t\t\tlogger.debug(\"{} constraint violations detected in result\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+				
+				// now grab the ValidationHandler 
+				Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+				code.append("\t\t\tif(handler == null) {\n");
+				code.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+				code.append("\t\t\t}\n");
+				code.append("\t\t\tjava.lang.String forcedResult = handler.onParametersViolations(violations);\n");
+				code.append("\t\t\tif(forcedResult != null) {\n");
+				code.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", forcedResult);\n");
+				code.append("\t\t\t\tresult = forcedResult;\n");
+				code.append("\t\t\t}\n");
+				code.append("\t\t}\n");
+				code.append("\t}\n");
+				
+				code.append("\n");
+			}			
 			
 			// code executed after the action has been fired, e.g. storing [in]out parameters into scopes
 			code.append("\n");
@@ -536,7 +592,7 @@ public class ActionProxyFactory {
 		}		
 	}
 	
-	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
+	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 				
 		In in = null;
 		Out out = null;
@@ -559,24 +615,24 @@ public class ActionProxyFactory {
 			if(out != null) {
 				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @Out: @Out will be ignored", i);
 			}			
-			return prepareInOutArgument(i, type, inout, preCode, postCode, validCode); 			
+			return prepareInOutArgument(i, type, inout, preCode, postCode, doValidation); 			
 		} else if(in != null && out == null) {
 			logger.trace("preparing input argument...");
-			return prepareInputArgument(i, type, in, preCode, validCode); 
+			return prepareInputArgument(i, type, in, preCode, doValidation); 
 		} else if(in == null && out != null) {
 			logger.trace("preparing output argument...");
-			return prepareOutputArgument(i, type, out, preCode, postCode, validCode);
+			return prepareOutputArgument(i, type, out, preCode, postCode, doValidation);
 		} else if(in != null && out != null) {
 			logger.trace("preparing input/output argument...");
-			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, validCode);
+			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, doValidation);
 		} else {
 			logger.trace("preparing non-annotated argument...");
-			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, validCode);
+			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, doValidation);
 		}
 	}
 	
 	
-	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode, StringBuilder validCode) throws DeploymentException {		
+	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
 
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
 			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", in.value(), i, Types.getAsString(type));
@@ -611,13 +667,24 @@ public class ActionProxyFactory {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}					
+				
 		preCode.append("\t").append(Types.getAsRawType(type)).append(" ").append(variable).append(" = (").append(Types.getAsRawType(type)).append(") value;\n");
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
+		
+		//
+		// the value used for JSR-349 parameters validation
+		//
+		if(doValidation) {
+			preCode.append("\n");
+			preCode.append("\t// in parameter\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+		}
+		
 		preCode.append("\n");
 		return variable;
 	}
 	
-	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
+	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -639,9 +706,9 @@ public class ActionProxyFactory {
 		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("output parameter '{}' (no. {}) is of type $<{}>", parameter, i, Types.getAsString(wrapped));
-		
+				
 		//
-		// code executed BEFORE the action fires, to prepare input parameters
+		// code executed BEFORE the action fires, to prepare output parameters
 		//
 		preCode.append("\t//\n\t// preparing output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");
 		
@@ -649,6 +716,16 @@ public class ActionProxyFactory {
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> out").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
 		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
+				
+		//
+		// the value used for JSR-349 parameters validation
+		// 		
+		if(doValidation) {
+			preCode.append("\n");
+			preCode.append("\t// out parameter\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(null);\n");								
+		}
+		
 		preCode.append("\n");
 		
 		//
@@ -664,7 +741,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
+	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -710,13 +787,23 @@ public class ActionProxyFactory {
 		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
-		}					
+		}		
 
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
 		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
 		preCode.append("\t").append(variable).append(".set(value);\n");
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
+		
+		//
+		// the value used for JSR-349 parameters validation
+		//
+		if(doValidation) {
+			preCode.append("\n");
+			preCode.append("\t// in+out parameter\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+		}
+		
 		preCode.append("\n");
 		
 		//
@@ -731,7 +818,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 
-	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode, StringBuilder validCode) throws DeploymentException {
+	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -771,13 +858,23 @@ public class ActionProxyFactory {
 		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
 			// if parameter is not an array, pick the first element
 			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
-		}					
-
+		}	
+		
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
 		// code.append("\torg.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append("> inout").append(i).append(" = new org.dihedron.strutlets.aop.$<").append(gt.getCanonicalName()).append(">();\n");
 		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$();\n");
 		preCode.append("\t").append(variable).append(".set(value);\n");
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
+				
+		//
+		// the value used for JSR-349 parameters validation
+		// 
+		if(doValidation) {
+			preCode.append("\n");
+			preCode.append("\t// inout parameter\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+		}
+		
 		preCode.append("\n");
 		
 		//
@@ -794,7 +891,7 @@ public class ActionProxyFactory {
 	}
 	
 	
-	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, StringBuilder validCode) throws DeploymentException {
+	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, boolean doValidation) throws DeploymentException {
 		
 		code.append("\t//\n\t// preparing non-annotated argument no. ").append(i).append(" (").append(Types.getAsString(type)).append(")\n\t//\n");
 		
@@ -809,34 +906,66 @@ public class ActionProxyFactory {
 				logger.trace("{}-th parameter will be passed in as a boolean 'false'", i);
 				code.append("\tboolean arg").append(i).append(" = false;\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => false, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated boolean parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Boolean(false));\n");
+				}
 			} else if(type == Character.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a character ' '", i);
 				code.append("\tchar arg").append(i).append(" = ' ';\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => ' ', \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated character parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Character' ');\n");
+				}
 			} else if(type == Byte.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a byte '0'", i);
 				code.append("\tbyte arg").append(i).append(" = 0;\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated byte parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Byte(0));\n");
+				}
 			} else if(type == Short.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a short '0'", i);
 				code.append("\tshort arg").append(i).append(" = 0;\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated short parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Short(0));\n");
+				}
 			} else if(type == Integer.TYPE) {
 				logger.trace("{}-th parameter will be passed in as an integer '0'", i);
-				code.append("\tint arg").append(i).append(" = 0;\n");
+				code.append("\tint arg").append(i).append(" = 0;\n");				
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated integer parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Integer(0));\n");
+				}
 			} else if(type == Long.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a long '0'", i);
 				code.append("\tlong arg").append(i).append(" = 0;\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated long parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Long(0));\n");
+				}
 			} else if(type == Float.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
 				code.append("\tfloat arg").append(i).append(" = 0.0;\n");
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated float parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Float(0.0));\n");
+				}
 			} else if(type == Double.TYPE) {
 				logger.trace("{}-th parameter will be passed in as a float '0.0'", i);
-				code.append("\tdouble arg").append(i).append(" = 0.0;\n");
+				code.append("\tdouble arg").append(i).append(" = 0.0;\n");				
 				code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => 0.0, \");\n");
+				if(doValidation) {
+					code.append("\t// non annotated double parameter\n");
+					code.append("\tif(validationValues != null) validationValues.add(new java.lang.Double(0.0));\n");
+				}
 			}
 		}
 		code.append("\n");

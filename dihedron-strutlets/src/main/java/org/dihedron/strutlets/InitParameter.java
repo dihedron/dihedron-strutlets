@@ -64,7 +64,16 @@ public enum InitParameter {
 	 * where actions are to be located. Each of these packages will be scanned 
 	 * for <code>@Action</code>-annotated classes. 
 	 */
-	ACTIONS_JAVA_PACKAGES("strutlets:actions-packages", ""),	
+	ACTIONS_JAVA_PACKAGES("strutlets:actions-packages", ""),
+	
+	/**
+	 * The parameter used to specify if JSR-349 bean validation code should be
+	 * generated to validate input parameters and targets return values; JSR-349
+	 * support requires a valid implementation of the JavaBean Validation 1.1
+	 * specification (such as Hibernate Validator) to be available on the class
+	 * path. 
+	 */
+	ACTIONS_ENABLE_VALIDATION("strutlets:enable-validation", ""),	
 	
 	/**
 	 * The parameter used to override the name of the interceptors stack

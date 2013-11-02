@@ -21,7 +21,6 @@ package org.dihedron.strutlets.aop;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import javax.annotation.RegEx;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -30,6 +29,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.executable.ExecutableValidator;
+import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,16 +62,16 @@ public class ValidatedBean {
 	public static void main(String[] args) throws Exception {
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		ExecutableValidator validator = factory.getValidator().forExecutables();
-		ValidatedBean bean = new ValidatedBean();
+		ValidatedBean bean = new ValidatedBean();		
 		Method method = ValidatedBean.class.getMethod("myMethod", String.class, String.class, int.class);
 		Object[] values = { "Andrea", "Funtò", 18};
 		Set<ConstraintViolation<ValidatedBean>> violations = validator.validateParameters(bean, method, values);
 		for(ConstraintViolation<ValidatedBean> violation : violations) {
-			System.out.println("violation on value " + violation.getInvalidValue() + ": " + violation.getMessage());
+			logger.info("violation on value {}: {}", violation.getInvalidValue(), violation.getMessage());
 		}
-		violations = validator.validateReturnValue(bean, method, "succEss");
+		violations = validator.validateReturnValue(bean, method, "succEss", Default.class);
 		for(ConstraintViolation<ValidatedBean> violation : violations) {
-			System.out.println("violation on value " + violation.getInvalidValue() + ": " + violation.getMessage());
+			logger.info("violation on value {}: {}", violation.getInvalidValue(), violation.getMessage());
 		}
 		
 	}
