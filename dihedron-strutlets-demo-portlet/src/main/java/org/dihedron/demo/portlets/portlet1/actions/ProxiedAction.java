@@ -45,6 +45,7 @@ import org.dihedron.strutlets.annotations.Result;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.aop.$;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
+import org.hibernate.validator.constraints.Email;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,10 +110,10 @@ public class ProxiedAction {
 		}
 	)
 	public String dumpInputs(
-			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must between 3 and 20 characters in length") String name, 
-			@In(value = "surnameParameter", scopes = Scope.FORM) String surname,
-			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$") String phone,
-			@In(value = "emailParameter", scopes = Scope.FORM) String email,
+			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String name, 
+			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String surname,
+			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="phone number must be like 06-555-12345") String phone,
+			@In(value = "emailParameter", scopes = Scope.FORM) @Email String email,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
 			@In(value="ageAttribute", scopes = Scope.APPLICATION) Integer age,			
