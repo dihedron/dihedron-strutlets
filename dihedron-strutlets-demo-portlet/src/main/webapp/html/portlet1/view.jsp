@@ -32,9 +32,9 @@
 You can submit an arbitrary form to an Action; it will be bounced back by this example.
 <br>&nbsp;<br> 
 <aui:form method="post" action="${formUrl}">
-	<aui:input label="Name:" name="nameParameter" type="text" value=""/>
+	<aui:input label="Name (min 3, max 20):" name="nameParameter" type="text" value=""/>
 	<aui:input label="Surname:" name="surnameParameter" type="text" value=""/>
-	<aui:input label="Phone:" name="phoneParameter" type="text" value=""/>
+	<aui:input label="Phone (06-555-12345):" name="phoneParameter" type="text" value=""/>
 	<aui:input label="email:" name="emailParameter" type="text" value=""/>
 	<br>
 	<aui:button type="submit" value="Submit!"/> 

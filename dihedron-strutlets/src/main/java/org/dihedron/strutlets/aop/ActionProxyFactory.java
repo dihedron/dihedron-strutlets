@@ -900,6 +900,10 @@ public class ActionProxyFactory {
 			logger.trace("{}-th parameter will be passed in as a null object", i);						
 			code.append("\t").append(Types.getAsString(type)).append(" arg").append(i).append(" = null;\n");
 			code.append("\ttrace.append(\"arg").append(i).append("\").append(\" => null, \");\n");
+			if(doValidation) {
+				code.append("\t// non annotated object reference parameter\n");
+				code.append("\tif(validationValues != null) validationValues.add(null);\n");
+			}
 		} else {
 			logger.trace("{}-th parameter is a primitive type", i);
 			if(type == Boolean.TYPE) {

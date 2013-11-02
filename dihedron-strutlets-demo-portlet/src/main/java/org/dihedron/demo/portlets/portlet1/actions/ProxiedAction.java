@@ -33,6 +33,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+
 import org.dihedron.commons.utils.Types;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
@@ -106,9 +109,9 @@ public class ProxiedAction {
 		}
 	)
 	public String dumpInputs(
-			@In(value = "nameParameter", scopes = Scope.FORM) String name, 
+			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must between 3 and 20 characters in length") String name, 
 			@In(value = "surnameParameter", scopes = Scope.FORM) String surname,
-			@In(value = "phoneParameter", scopes = Scope.FORM) String phone,
+			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$") String phone,
 			@In(value = "emailParameter", scopes = Scope.FORM) String email,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
