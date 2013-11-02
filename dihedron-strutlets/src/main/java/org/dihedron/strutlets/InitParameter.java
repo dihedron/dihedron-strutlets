@@ -79,7 +79,7 @@ public enum InitParameter {
 	 * The parameter used to override the name of the interceptors stack
 	 * configuration XML file; by default it is called "interceptors-config.xml".
 	 */
-	INTERCEPTORS_CONFIGURATION("strutlets:interceptors-configuration", "interceptors.configuration.filename"),
+	INTERCEPTORS_DECLARATION("strutlets:interceptors-declaration", "interceptors.configuration.filename"),
 	
 	/**
 	 * The parameter used to override the default interceptors stack to be 

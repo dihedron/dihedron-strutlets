@@ -906,7 +906,7 @@ public class ActionController extends GenericPortlet {
 		logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
 		
 		// load the custom interceptors configuration
-		String value = InitParameter.INTERCEPTORS_CONFIGURATION.getValueForPortlet(this);
+		String value = InitParameter.INTERCEPTORS_DECLARATION.getValueForPortlet(this);
 		if(Strings.isValid(value)) {			
     		logger.debug("loading interceptors' configuration from '{}'", value);
     		InputStream stream = null;

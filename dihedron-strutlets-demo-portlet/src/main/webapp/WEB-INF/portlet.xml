@@ -15,6 +15,19 @@
 			<value>org.dihedron.demo.portlets.portlet1.actions</value>
 		</init-param>
 
+		<!--
+		  Enables JSR-349 method validation on actions: by setting this to true 
+		  and adding a valid JSR-349 Bean Validation 1.1 implementation on the
+		  classpath, you will be able to annotate input and return values of the
+		  action methods with JavaBean validation annotations or with custom ones
+		  and have the framework automatically check the constraints; moreover, 
+		  you will be able to modify the action's result based on constraint
+		  compliance. 
+		 -->
+		<init-param>
+			<name>strutlets:enable-validation</name>
+			<value>true</value>
+		</init-param>
 
 		<init-param>
 			<name>strutlets:view-home</name>
@@ -86,10 +99,24 @@
 			<name>strutlets:actions-packages</name>
 			<value>org.dihedron.demo.portlets.portlet2.actions</value>
 		</init-param>
-
+		
+		<!--
+		  Enables JSR-349 method validation on actions: by setting this to true 
+		  and adding a valid JSR-349 Bean Validation 1.1 implementation on the
+		  classpath, you will be able to annotate input and return values of the
+		  action methods with JavaBean validation annotations or with custom ones
+		  and have the framework automatically check the constraints; moreover, 
+		  you will be able to modify the action's result based on constraint
+		  compliance. 
+		 -->
+		<init-param>
+			<name>strutlets:enable-validation</name>
+			<value>true</value>
+		</init-param>
+		
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
 		<init-param>
-			<name>strutlets:interceptors-configuration</name>
+			<name>strutlets:interceptors-declaration</name>
 			<value></value>
 		</init-param>
 
@@ -116,7 +143,7 @@
 			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
 			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
 		<init-param>
-			<name>strutketws:jsp-path-pattern</name>
+			<name>strutlets:jsp-path-pattern</name>
 			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
 		</init-param>
 
@@ -170,9 +197,23 @@
 			<value>org.dihedron.demo.portlets.portlet3.actions</value>
 		</init-param>
 
+		<!--
+		  Enables JSR-349 method validation on actions: by setting this to true 
+		  and adding a valid JSR-349 Bean Validation 1.1 implementation on the
+		  classpath, you will be able to annotate input and return values of the
+		  action methods with JavaBean validation annotations or with custom ones
+		  and have the framework automatically check the constraints; moreover, 
+		  you will be able to modify the action's result based on constraint
+		  compliance. 
+		 -->
+		<init-param>
+			<name>strutlets:enable-validation</name>
+			<value>true</value>
+		</init-param>
+
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
 		<init-param>
-			<name>strutlets:interceptors-configuration</name>
+			<name>strutlets:interceptors-declaration</name>
 			<value></value>
 		</init-param>
 
@@ -259,28 +300,32 @@
 		<display-name>4. Annotations Configured Portlet</display-name>
 		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
 
-		<!-- Specify here the path to the actions' configuration file; if not given, 
-			the framework will try to locate "actions-config.xml" under the root of the 
-			class path; if no configuration file is found, the framework will try to 
-			detect information at runtime through annotations and smart defaults, provided 
-			that actions.javapackage points to the Java package where self-configuring 
-			actions can be found. -->
-		<init-param>
-			<name>actions.configuration.filename</name>
-			<value></value>
-		</init-param>
-
 		<!-- Use this parameter to set the Java package where the framework should 
 			expect to find self-configuring actions; this parameter is necessary only 
 			in this situation. -->
 		<init-param>
-			<name>actions.java.package</name>
+			<name>strutlets:actions-packages</name>
 			<value>org.dihedron.demo.portlets.portlet4.actions</value>
 		</init-param>
+		
+		<!--
+		  Enables JSR-349 method validation on actions: by setting this to true 
+		  and adding a valid JSR-349 Bean Validation 1.1 implementation on the
+		  classpath, you will be able to annotate input and return values of the
+		  action methods with JavaBean validation annotations or with custom ones
+		  and have the framework automatically check the constraints; moreover, 
+		  you will be able to modify the action's result based on constraint
+		  compliance. 
+		 -->
+		<init-param>
+			<name>strutlets:enable-validation</name>
+			<value>true</value>
+		</init-param>
+		
 
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
 		<init-param>
-			<name>interceptors.configuration.filename</name>
+			<name>strutlets:interceptors-declaration</name>
 			<value></value>
 		</init-param>
 
@@ -288,7 +333,7 @@
 			indicated otherwise, each action gets the "default" stack, as defined in 
 			the framework's internal files. -->
 		<init-param>
-			<name>interceptors.default.stack</name>
+			<name>strutlets:interceptors-default-stack</name>
 			<value>default</value>
 		</init-param>
 
@@ -297,7 +342,7 @@
 			the framework will try to locate these JSPs by names built according to the 
 			pattern expressed in the following parameter -->
 		<init-param>
-			<name>render.root.directory</name>
+			<name>strutlets:jsp-root-path</name>
 			<value>/html/portlet4/dynamic</value>
 		</init-param>
 
@@ -307,12 +352,12 @@
 			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
 			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
 		<init-param>
-			<name>render.path.pattern</name>
+			<name>strutlets:jsp-path-pattern</name>
 			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
 		</init-param>
 
 		<init-param>
-			<name>render.view.homepage</name>
+			<name>strutlets:view-home</name>
 			<value>/html/portlet4/view.jsp</value>
 		</init-param>
 
@@ -349,28 +394,15 @@
 		<display-name>5. Form Portlet</display-name>
 		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
 
-		<!-- Specify here the path to the actions' configuration file; if not given, 
-			the framework will try to locate "actions-config.xml" under the root of the 
-			class path; if no configuration file is found, the framework will try to 
-			detect information at runtime through annotations and smart defaults, provided 
-			that actions.javapackage points to the Java package where self-configuring 
-			actions can be found. -->
 		<init-param>
-			<name>actions.configuration.filename</name>
-			<value></value>
-		</init-param>
-
-		<!-- Use this parameter to set the Java package where the framework should 
-			expect to find self-configuring actions; this parameter is necessary only 
-			in this situation. -->
-		<init-param>
-			<name>actions.java.package</name>
+			<name>strutlets:actions-packages</name>
 			<value>org.dihedron.demo.portlets.portlet5.actions</value>
 		</init-param>
 
+
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
 		<init-param>
-			<name>interceptors.configuration.filename</name>
+			<name>strutlets:interceptors-declaration</name>
 			<value></value>
 		</init-param>
 
@@ -378,7 +410,7 @@
 			indicated otherwise, each action gets the "default" stack, as defined in 
 			the framework's internal files. -->
 		<init-param>
-			<name>interceptors.default.stack</name>
+			<name>strutlets:interceptors-default-stack</name>
 			<value>default</value>
 		</init-param>
 
@@ -387,7 +419,7 @@
 			the framework will try to locate these JSPs by names built according to the 
 			pattern expressed in the following parameter -->
 		<init-param>
-			<name>render.root.directory</name>
+			<name>strutlets:jsp-root-path</name>
 			<value>/html/portlet5/dynamic</value>
 		</init-param>
 
@@ -397,20 +429,20 @@
 			following pattern: <root_dir>/<action_name>/<method_name>/<result>.jsp e.g., 
 			if render.rootdirectory is "/my/root/" /my/root/MyAction/myMethod/success.jsp -->
 		<init-param>
-			<name>render.path.pattern</name>
+			<name>strutlets:jsp-path-pattern</name>
 			<value>${rootdir}/${action}/${method}/${result}.jsp</value>
 		</init-param>
 
 		<init-param>
-			<name>render.view.homepage</name>
+			<name>strutlets:view-home</name>
 			<value>/html/portlet5/view.jsp</value>
 		</init-param>
 		<init-param>
-			<name>render.edit.homepage</name>
+			<name>strutlets:edit-home</name>
 			<value></value>
 		</init-param>
 		<init-param>
-			<name>render.help.homepage</name>
+			<name>strutlets:help-home</name>
 			<value></value>
 		</init-param>
 
@@ -453,16 +485,13 @@
 		<display-name>6. TagLib Portlet</display-name>
 		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
 
-		<!-- Use this parameter to set the Java package where the framework should 
-			expect to find self-configuring actions; this parameter is necessary only 
-			in this situation. -->
 		<init-param>
-			<name>actions.java.package</name>
+			<name>strutlets:actions-packages</name>
 			<value>org.dihedron.demo.portlets.portlet6.actions</value>
 		</init-param>
 
 		<init-param>
-			<name>render.view.homepage</name>
+			<name>strutlets:view-home</name>
 			<value>ParameterFillingAction!initView</value>
 		</init-param>
 
@@ -499,16 +528,13 @@
 		<display-name>7. Ajax Portlet</display-name>
 		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
 
-		<!-- Use this parameter to set the Java package where the framework should 
-			expect to find self-configuring actions; this parameter is necessary only 
-			in this situation. -->
 		<init-param>
-			<name>actions.java.package</name>
+			<name>strutlets:actions-packages</name>
 			<value>org.dihedron.demo.portlets.portlet7.actions</value>
 		</init-param>
 
 		<init-param>
-			<name>render.view.homepage</name>
+			<name>strutlets:view-home</name>
 			<value>/html/portlet7/view.jsp</value>
 		</init-param>
 
@@ -540,8 +566,6 @@
 
 	</portlet>
 	
-	
-
 	<event-definition>
 		<qname xmlns:demo="http://www.dihedron.org/events">demo:TestEvent</qname>
 		<value-type>java.lang.String</value-type>
