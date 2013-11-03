@@ -558,7 +558,7 @@ public class ActionProxyFactory {
 				code.append("\t\t\tif(handler == null) {\n");
 				code.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
 				code.append("\t\t\t}\n");
-				code.append("\t\t\tjava.lang.String forcedResult = handler.onParametersViolations(violations);\n");
+				code.append("\t\t\tjava.lang.String forcedResult = handler.onResultViolations(violations);\n");
 				code.append("\t\t\tif(forcedResult != null) {\n");
 				code.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", forcedResult);\n");
 				code.append("\t\t\t\tresult = forcedResult;\n");

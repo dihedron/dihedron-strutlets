@@ -37,6 +37,28 @@ public class Types {
 	private static final Logger logger = LoggerFactory.getLogger(Types.class);
 	
 	/**
+	 * The textual description of a null object's type.
+	 */
+	public static final String NULL_TYPE_DESCRIPTION = "<null>";
+	
+	/**
+	 * Returns the string representation of the given object's type; all class 
+	 * names are fully qualified, and generics are properly resolved, including 
+	 * their parameter types.
+	 *  
+	 * @param object
+	 *   the object whose types will be described.
+	 * @return
+	 *   a textual description of the object's type.
+	 */
+	public static String getAsStringFor(Object object) {	
+		if(object != null) {
+			return getAsString(object.getClass());
+		}
+		return NULL_TYPE_DESCRIPTION;
+	}
+	
+	/**
 	 * Returns the string representation of a type; all class names are fully 
 	 * qualified, and generics are properly resolved, including their parameter
 	 * types.

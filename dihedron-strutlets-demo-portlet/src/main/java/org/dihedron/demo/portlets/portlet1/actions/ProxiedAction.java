@@ -108,9 +108,12 @@ public class ProxiedAction {
 	@Invocable(
 		idempotent = true,
 		results = {
-			@Result(value="success", renderer="jsp", data="/html/portlet1/result.jsp")
-		}
+			@Result(value="success", renderer="jsp", data="/html/portlet1/result.jsp"),
+			@Result(value="invalid_input", renderer="jsp", data="/html/portlet1/view_on_input_errors.jsp")
+		},
+		validator = Portlet1ValidationHandler.class
 	)
+	@Pattern(regexp="^sucCess$|^error$")
 	public String dumpInputs(
 			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String name, 
 			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String surname,
@@ -118,7 +121,7 @@ public class ProxiedAction {
 			@In(value = "emailParameter", scopes = Scope.FORM) @Email String email,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
-			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(99) Integer age,			
+			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			
 			@In(value="genderAttribute", scopes = Scope.APPLICATION) Boolean gender,
 			String aString,
 			double aDouble,
@@ -126,14 +129,14 @@ public class ProxiedAction {
 	) throws InvalidPhaseException {
 		logger.debug("dumping input parameters from session & form");
 		StringBuilder buffer = new StringBuilder("{\n");
-		buffer.append("\t'name' : '").append(name).append("' (").append(Types.getAsString(name.getClass())).append("),\n");
-		buffer.append("\t'surname' : '").append(surname).append("' (").append(Types.getAsString(surname.getClass())).append("),\n");
-		buffer.append("\t'phone' : '").append(phone).append("' (").append(Types.getAsString(phone.getClass())).append("),\n");
-		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsString(email.getClass())).append("),\n");
-		buffer.append("\t'friends' : '").append(friends).append("' (").append(friends != null ? Types.getAsString(friends.getClass()) : "<null>").append("),\n");
-		buffer.append("\t'description' : '").append(description).append("' (").append(Types.getAsString(description.getClass())).append("),\n");
-		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsString(age.getClass())).append("),\n");
-		buffer.append("\t'gender' : '").append(gender).append("' (").append(Types.getAsString(gender.getClass())).append("),\n");
+		buffer.append("\t'name' : '").append(name).append("' (").append(Types.getAsStringFor(name)).append("),\n");
+		buffer.append("\t'surname' : '").append(surname).append("' (").append(Types.getAsStringFor(surname)).append("),\n");
+		buffer.append("\t'phone' : '").append(phone).append("' (").append(Types.getAsStringFor(phone)).append("),\n");
+		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsStringFor(email)).append("),\n");
+		buffer.append("\t'friends' : '").append(friends).append("' (").append(Types.getAsStringFor(friends)).append("),\n");
+		buffer.append("\t'description' : '").append(description).append("' (").append(Types.getAsStringFor(description)).append("),\n");
+		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsStringFor(age)).append("),\n");
+		buffer.append("\t'gender' : '").append(gender).append("' (").append(Types.getAsStringFor(gender)).append("),\n");
 		buffer.append("}");
 		result.set(buffer.toString());
 		return Action.SUCCESS;
