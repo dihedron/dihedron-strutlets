@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="interceptors.xsd">
+	<stack id="default">
+		<interceptor id="profiler" class="org.dihedron.strutlets.interceptors.impl.Profiler"/>
+		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper">
+			<parameter>
+				<key>exclude</key>
+				<value>^LIFERAY.*|^javax\.portlet.*|^[A-Z_]*$|^org\.apache.*|^com\.liferay.*|^javax\.servlet.*|^j_.*|^class\scom\.liferay.*</value>
+			</parameter>
+		</interceptor>
+		<!-- 
+		<interceptor id="double-submit" class="org.dihedron.strutlets.interceptors.impl.Resubmit">
+			<parameter>
+				<key>result</key>
+				<value>error_double_submit</value>
+			</parameter>
+		</interceptor>
+		-->
+	</stack>
+</configuration>
