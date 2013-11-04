@@ -35,23 +35,23 @@ public class DefaultValidationHandler implements ValidationHandler {
 	private static final Logger logger = LoggerFactory.getLogger(DefaultValidationHandler.class);
 
 	/**
-	 * @see org.dihedron.strutlets.validation.ValidationHandler#onParametersViolations(java.util.Set)
+	 * @see org.dihedron.strutlets.validation.ValidationHandler#onParametersViolations(java.lang.String, java.lang.String, java.util.Set)
 	 */
 	@Override
-	public String onParametersViolations(Set<ConstraintViolation<?>> violations) {
+	public String onParametersViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("violation on parameter value {}: {}", violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}:violation on parameter value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}
 
 	/**
-	 * @see org.dihedron.strutlets.validation.ValidationHandler#onResultViolation(java.util.Set)
+	 * @see org.dihedron.strutlets.validation.ValidationHandler#onResultViolation(java.lang.String, java.lang.String, java.util.Set)
 	 */
 	@Override
-	public String onResultViolations(Set<ConstraintViolation<?>> violations) {
+	public String onResultViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("violation on return value {}: {}", violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation  on return value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}

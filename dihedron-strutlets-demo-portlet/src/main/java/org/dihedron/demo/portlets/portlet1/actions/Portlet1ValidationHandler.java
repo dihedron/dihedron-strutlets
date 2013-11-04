@@ -39,9 +39,9 @@ public class Portlet1ValidationHandler implements ValidationHandler {
 	 * @see org.dihedron.strutlets.validation.ValidationHandler#onParametersViolations(java.util.Set)
 	 */
 	@Override
-	public String onParametersViolations(Set<ConstraintViolation<?>> violations) {
+	public String onParametersViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("violation on parameter value {}: {}", violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation on parameter value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return "invalid_input";
 	}
@@ -50,9 +50,9 @@ public class Portlet1ValidationHandler implements ValidationHandler {
 	 * @see org.dihedron.strutlets.validation.ValidationHandler#onResultViolations(java.util.Set)
 	 */
 	@Override
-	public String onResultViolations(Set<ConstraintViolation<?>> violations) {
+	public String onResultViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("violation on return value {}: {}", violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation on return value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}

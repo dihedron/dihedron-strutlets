@@ -37,7 +37,9 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.commons.utils.Types;
+import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.InOut;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -421,7 +423,7 @@ public class ActionProxyFactory {
 	 * @param action
 	 *   the action class to instrument.
 	 * @param method
-	 *   the specific action methpd to instrument.
+	 *   the specific action method to instrument.
 	 * @param doValidation
 	 *   whether JSR349-compliant validation code should be output.
 	 * @return
@@ -431,8 +433,11 @@ public class ActionProxyFactory {
 	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean doValidation) throws DeploymentException {
 		
 		String methodName = makeProxyMethodName(method);
-		logger.trace("method '{}' will be proxied by '{}'", method.getName(), methodName);
+		String actionAlias =  getActionAlias(action);
+		logger.trace("method '{}' (action alias '{}') will be proxied by '{}'", method.getName(), actionAlias, methodName);
 		try {
+			
+			
 			StringBuilder postCode = new StringBuilder("\t//\n\t// post action execution: store @Out parameters into scopes\n\t//\n\n");
 			
 			StringBuilder code = new StringBuilder("public static final java.lang.String ").append(methodName).append("( java.lang.Object action ) {\n\n");
@@ -514,7 +519,7 @@ public class ActionProxyFactory {
 				code.append("\t\t\tif(handler == null) {\n");
 				code.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
 				code.append("\t\t\t}\n");
-				code.append("\t\t\tjava.lang.String result = handler.onParametersViolations(violations);\n");
+				code.append("\t\t\tjava.lang.String result = handler.onParametersViolations(").append("\"").append(actionAlias).append("\", \"").append(method.getName()).append("\", violations);\n");
 				code.append("\t\t\tif(result != null) {\n");
 				code.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
 				code.append("\t\t\t\treturn result;\n");
@@ -558,7 +563,7 @@ public class ActionProxyFactory {
 				code.append("\t\t\tif(handler == null) {\n");
 				code.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
 				code.append("\t\t\t}\n");
-				code.append("\t\t\tjava.lang.String forcedResult = handler.onResultViolations(violations);\n");
+				code.append("\t\t\tjava.lang.String forcedResult = handler.onResultViolations(").append("\"").append(actionAlias).append("\", \"").append(method.getName()).append("\", violations);\n");
 				code.append("\t\t\tif(forcedResult != null) {\n");
 				code.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", forcedResult);\n");
 				code.append("\t\t\t\tresult = forcedResult;\n");
@@ -974,5 +979,15 @@ public class ActionProxyFactory {
 		}
 		code.append("\n");
 		return "arg" + i;
+	}
+
+	private static String getActionAlias(Class<?> action) {
+		String alias = action.getSimpleName();
+		Action annotation = action.getAnnotation(Action.class);
+		if(annotation != null && Strings.isValid(annotation.alias())) {
+			alias = annotation.alias();
+		}
+		logger.trace("alias for class '{}' is '{}'", action.getSimpleName(), alias);
+		return alias;
 	}
 }

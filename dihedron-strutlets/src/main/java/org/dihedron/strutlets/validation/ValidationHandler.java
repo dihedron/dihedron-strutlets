@@ -49,6 +49,11 @@ public interface ValidationHandler {
 	 * Based on the return value, it can prevent the action from being executed 
 	 * at all.
 	 * 
+	 * @param action
+	 *   the name of the action class; this is the simple name of the class or 
+	 *   its alias if available.
+	 * @param method
+	 *   the name of the method having caused the violations.
 	 * @param violations
 	 *   the set of violations.
 	 * @return
@@ -56,7 +61,7 @@ public interface ValidationHandler {
 	 *   divert execution flow into a different path (this value will be assumed 
 	 *   to be the action's result, without executing it). 
 	 */
-	String onParametersViolations(Set<ConstraintViolation<?>> violations);
+	String onParametersViolations(String action, String method, Set<ConstraintViolation<?>> violations);
 	
 	/**
 	 * This method is invoked when the JSR-349 validator produces at least one 
@@ -65,6 +70,11 @@ public interface ValidationHandler {
 	 * execution, but it can route output rendering to a different path if 
 	 * necessary.
 	 * 
+	 * @param action
+	 *   the name of the action class; this is the simple name of the class or 
+	 *   its alias if available.
+	 * @param method
+	 *   the name of the method having caused the violations.
 	 * @param violations
 	 *   the set of violations.
 	 * @return
@@ -72,6 +82,6 @@ public interface ValidationHandler {
 	 *   divert execution flow into a different path (this value will replace
 	 *   the action's result). 
 	 */
-	String onResultViolations(Set<ConstraintViolation<?>> violations);
+	String onResultViolations(String action, String method, Set<ConstraintViolation<?>> violations);
 
 }

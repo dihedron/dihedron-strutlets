@@ -1,5 +1,6 @@
 #!/bin/bash
 PORTAL_DIR=/opt/liferay-6.2.b3/portal
+WAR_FILE=strutlets-demo-portlet-0.59.0-SNAPSHOT.war
 
 if [ "$1" = "--undeploy" -o "$2" = "--undeploy" ]; then
 	echo "undeploying existing portlets"
@@ -11,4 +12,4 @@ if [ "$1" = "--clean" -o "$2" = "--clean" ]; then
 	mvn clean
 fi
 
-mvn install && cp dihedron-strutlets-demo-portlet/target/strutlets-demo-portlet-0.58.0-SNAPSHOT.war $PORTAL_DIR/deploy
+mvn install && cp dihedron-strutlets-demo-portlet/target/$WAR_FILE $PORTAL_DIR/deploy
