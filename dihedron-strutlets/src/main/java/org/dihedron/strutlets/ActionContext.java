@@ -881,7 +881,10 @@ public class ActionContext {
 	 *   the portlet window ID.
 	 */
 	public static String getPortletWindowId() {
-		return getContext().request.getWindowID();
+		if(getContext().request != null) {
+			return getContext().request.getWindowID();
+		}
+		return null;
 	}
 	
 	/**
@@ -2324,7 +2327,7 @@ public class ActionContext {
 	 *   the portlet-specific key for request-scoped attributes.
 	 */
 	public static String getRequestScopedAttributesKey(String portletName) {
-		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "[" + portletName.toUpperCase() + "]";
+		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "[" + portletName.toUpperCase() + ":" + ActionContext.getPortletWindowId() + "]";
 	}
 	
 	/**
