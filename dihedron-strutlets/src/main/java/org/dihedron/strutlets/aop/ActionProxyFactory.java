@@ -432,7 +432,7 @@ public class ActionProxyFactory {
 	 */
 	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean doValidation) throws DeploymentException {
 		
-		// check that the invocable method has the String return type, otherwise 
+		// check that the @Invocable method has the String return type, otherwise 
 		// there would be no navigation info available at runtime (and a "stack 
 		// off by one exception" if the return type is void. 
 		if(method.getReturnType() != String.class) {
