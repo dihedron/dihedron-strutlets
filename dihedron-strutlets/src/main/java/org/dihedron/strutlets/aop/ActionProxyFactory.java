@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * The class that creates the proxy for a given action. The proxy creation must 
  * be performed all at once because Javassist applies several mechanisms such as
  * freezing and classloading that actually consolidate a class internal status 
- * and load its bytecode into the classloader, eventually making it unmodifieable.
+ * and load its bytecode into the classloader, eventually making it unmodifiable.
  * By inspecting and creating proxy methods in one shot, this class performs all
  * operations on the proxy class in one single shot, then converts the synthetic
  * class into bytecode when no further modifications (such as method additions) 
@@ -431,6 +431,14 @@ public class ActionProxyFactory {
 	 * @throws DeploymentException
 	 */
 	private CtMethod instrumentMethod(CtClass generator, Class<?> action, Method method, boolean doValidation) throws DeploymentException {
+		
+		// check that the invocable method has the String return type, otherwise 
+		// there would be no navigation info available at runtime (and a "stack 
+		// off by one exception" if the return type is void. 
+		if(method.getReturnType() != String.class) {
+			logger.trace("method '{}' (action class '{}') does not have the 'String' return type",  method.getName(), action.getCanonicalName());
+			throw new DeploymentException("method '" + method.getName() + "' in action '" + action.getCanonicalName() + "' does not have the String return type");
+		}
 		
 		String methodName = makeProxyMethodName(method);
 		String actionAlias =  getActionAlias(action);
