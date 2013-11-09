@@ -152,14 +152,16 @@ public final class Strings {
 	
 	public static String join(String separator, boolean trim, Object... objects) {
 		StringBuffer buffer = new StringBuffer();
-		for(Object object : objects) {			
-			if(object != null) {
-				if(buffer.length() != 0) {
-					buffer.append(separator);
+		if(objects != null) {		
+			for(Object object : objects) {			
+				if(object != null) {
+					if(buffer.length() != 0) {
+						buffer.append(separator);
+					}
+					buffer.append(trim ? object.toString().trim() : object);
 				}
-				buffer.append(trim ? object.toString().trim() : object);
 			}
-		}		
+		}
 		return buffer.toString();
 	}
 	

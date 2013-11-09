@@ -667,7 +667,7 @@ public class ActionProxyFactory {
 			throw new DeploymentException("Input parameters must not be wrapped in typed reference holders ($): check parameter no. " + i);									
 		}		
 		
-		if(in.value().trim().length() == 0) {
+		if(!Strings.isValid(in.value())) {
 			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (check parameter {}: @In's value is '{}')", i, in.value());
 			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @In annotation's value: check parameter no. " + i + " (@In's value is '" + in.value() + "')");									
 		}
@@ -688,7 +688,7 @@ public class ActionProxyFactory {
 		
 		if(Types.isSimple(type) && !((Class<?>)type).isArray()) {
 			// if parameter is not an array, pick the first element
-			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+			preCode.append("\tif(value != null && value.getClass().isArray() && ((Object[])value).length > 0) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}					
 				
 		preCode.append("\t").append(Types.getAsRawType(type)).append(" ").append(variable).append(" = (").append(Types.getAsRawType(type)).append(") value;\n");
@@ -809,7 +809,7 @@ public class ActionProxyFactory {
 		
 		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
 			// if parameter is not an array, pick the first element
-			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+			preCode.append("\tif(value != null && value.getClass().isArray() && ((Object[])value).lenght > 0) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}		
 
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
@@ -880,7 +880,7 @@ public class ActionProxyFactory {
 		
 		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
 			// if parameter is not an array, pick the first element
-			preCode.append("\tif(value != null && value.getClass().isArray()) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+			preCode.append("\tif(value != null && value.getClass().isArray() && ((Object[])value).length > 0) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}	
 		
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)

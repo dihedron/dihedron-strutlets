@@ -38,6 +38,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.dihedron.commons.utils.Strings;
 import org.dihedron.commons.utils.Types;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
@@ -110,6 +111,7 @@ public class ProxiedAction {
 			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="error-surname-key") String surname,
 			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key") String phone,
 			@In(value = "emailParameter", scopes = Scope.FORM) @Email(message="error-email-key") String email,
+			@In(value = "lovesCheckbox", scopes = Scope.FORM) String[] loves,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
 			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			
@@ -123,7 +125,8 @@ public class ProxiedAction {
 		buffer.append("\t'name' : '").append(name).append("' (").append(Types.getAsStringFor(name)).append("),\n");
 		buffer.append("\t'surname' : '").append(surname).append("' (").append(Types.getAsStringFor(surname)).append("),\n");
 		buffer.append("\t'phone' : '").append(phone).append("' (").append(Types.getAsStringFor(phone)).append("),\n");
-		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsStringFor(email)).append("),\n");
+		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsStringFor(email)).append("),\n");		
+		buffer.append("\t'loves' : [").append(Strings.join(", ", (Object[])loves)).append("] (").append(Types.getAsStringFor(loves)).append("),\n");
 		buffer.append("\t'friends' : '").append(friends).append("' (").append(Types.getAsStringFor(friends)).append("),\n");
 		buffer.append("\t'description' : '").append(description).append("' (").append(Types.getAsStringFor(description)).append("),\n");
 		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsStringFor(age)).append("),\n");

@@ -35,7 +35,15 @@ You can submit an arbitrary form to an Action; it will be bounced back by this e
 	<aui:input label="Name (min 3, max 20):" name="nameParameter" type="text" value=""/>
 	<aui:input label="Surname:" name="surnameParameter" type="text" value=""/>
 	<aui:input label="Phone (06-555-12345):" name="phoneParameter" type="text" value=""/>
-	<aui:input label="email:" name="emailParameter" type="text" value=""/>
+	<aui:input label="Email:" name="emailParameter" type="text" value=""/>
+	<aui:fieldset label="Loves:">
+		<aui:input label="Animals" name="loves" type="checkbox" value="animals"/>
+		<aui:input label="Flowers" name="loves" type="checkbox" value="flowers"/>
+		<aui:input label="Food" name="loves" type="checkbox" value="food"/>
+		<aui:input label="Music" name="loves" type="checkbox" value="music"/>
+		<aui:input label="Movies" name="loves" type="checkbox" value="movies"/>
+	</aui:fieldset>
+	
 	<br>
 	<aui:button type="submit" value="Submit!"/> 
 </aui:form> 
