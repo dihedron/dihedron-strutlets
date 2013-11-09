@@ -9,6 +9,8 @@ import javassist.Modifier;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.aop.ActionProxy;
+import org.dihedron.strutlets.aop.ActionProxyFactory;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -83,28 +83,19 @@ public class ProxiedAction {
 		return Action.SUCCESS;
 	}
 	
-	/*
-	@Invocable (
-		idempotent = true,
-		results = {
-			@Result(value = Action.SUCCESS, renderer = "jsp", data = "/html/portlet1/view.jsp")	
-		}
-	)
-	public String initView(
-			@Out(value="applAttr1", scope = Scope.APPLICATION) $<Integer> arg0,
-			@Out(value="applAttr2", scope = Scope.APPLICATION) $<Set<List<Map<String, Vector<String>>>>> arg1,
-			@Out(value="portAttr1", scope = Scope.PORTLET) $<String> arg2,
-			@Out(value="portAttr2", scope = Scope.PORTLET) $<Boolean> arg3			
-		) {
-		logger.debug("initialising view, storing parameters into session");
-		arg0.set(100);
-		arg1.set(new HashSet<List<Map<String, Vector<String>>>>());
-		arg2.set("this is a string");
-		arg3.set(true);		
-		return Action.SUCCESS;
-	}
-	*/
 	
+	//
+	// By uncommenting this method, the portlet will become undeployable because
+	// the framework will detect the method overloading, which is not admitted.
+	// You can override, but you MUST NO overload (as there would be no way to 
+	// decide which method to invoke when resolving a target such as 
+	//              MyAction!myMethod
+	// if there are two methods sharing the same name!
+//	@Invocable
+//	public String render(@In(value="test") String string) {
+//		return Action.SUCCESS;
+//	}
+		
 	@Invocable(
 		idempotent = true,
 		results = {
@@ -115,10 +106,10 @@ public class ProxiedAction {
 	)
 	@Pattern(regexp="^sucCess$|^error$")
 	public String dumpInputs(
-			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String name, 
-			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="name must be between 3 and 20 characters in length") String surname,
-			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="phone number must be like 06-555-12345") String phone,
-			@In(value = "emailParameter", scopes = Scope.FORM) @Email String email,
+			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="error-name-key") String name, 
+			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="error-surname-key") String surname,
+			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key") String phone,
+			@In(value = "emailParameter", scopes = Scope.FORM) @Email(message="error-email-key") String email,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
 			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			

@@ -1,5 +1,5 @@
 #!/bin/bash
-PORTAL_DIR=/opt/liferay-6.2.b3/portal
+PORTAL_DIR=/opt/liferay-6.2.0-ce-ga1/portal
 WAR_FILE=strutlets-demo-portlet-0.59.0-SNAPSHOT.war
 
 if [ "$1" = "--undeploy" -o "$2" = "--undeploy" ]; then

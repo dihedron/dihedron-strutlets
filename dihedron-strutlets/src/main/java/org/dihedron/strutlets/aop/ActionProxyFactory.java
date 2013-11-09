@@ -283,8 +283,12 @@ public class ActionProxyFactory {
 	 * @return
 	 *   a collection of <code>@Invocable</code>, non-static and non-overridden
 	 *   methods.
+	 * @throws DeploymentException
+	 *   if the code analysis detects an overloaded method, which is not allowed 
+	 *   for the controller would not be able to identify which method applies
+	 *   when resolving a target.  
 	 */
-	private static Collection<Method> enumerateInvocableMethods(Class<?> action) {
+	private static Collection<Method> enumerateInvocableMethods(Class<?> action) throws DeploymentException {
 		Map<String, Method> methods = new HashMap<String, Method>();
 		
 		// walk up the class hierarchy and gather methods as we go
@@ -293,7 +297,13 @@ public class ActionProxyFactory {
     		Method[] declared = clazz.getDeclaredMethods();
     		for(Method method : declared) {
     			if(methods.containsKey(method.getName())) {
-    				logger.trace("discarding duplicate method '{}' coming from class '{}'...", method.getName(), method.getDeclaringClass().getSimpleName());
+    				Method oldMethod = methods.get(method.getName());
+    				if(oldMethod.getDeclaringClass() == method.getDeclaringClass()) {
+    					logger.error("overloading of @Invocable methods is not allowed: check that only one method named '{}' be in class '{}'", method.getName(), method.getDeclaringClass().getCanonicalName());
+    					throw new DeploymentException("overloading of @Invocable methods is not allowed: check methods '" + method.getName() + "' in class '" + method.getDeclaringClass().getCanonicalName() + "'");
+    				} else {
+    					logger.trace("discarding overridden method '{}' from class '{}'...", method.getName(), method.getDeclaringClass().getSimpleName());
+    				}
     			} else if(Modifier.isStatic(method.getModifiers())) {
     				logger.trace("discarding static method '{}' coming from class '{}'...", method.getName(), method.getDeclaringClass().getSimpleName());
     			} else if(!method.isAnnotationPresent(Invocable.class)){

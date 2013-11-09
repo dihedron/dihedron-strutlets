@@ -22,12 +22,17 @@ import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 
+import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.validation.ValidationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
+import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.servlet.SessionMessages;
+
 /**
- * @author andrea
+ * @author Andrea Funto'
  */
 public class Portlet1ValidationHandler implements ValidationHandler {
 	/**
@@ -40,8 +45,11 @@ public class Portlet1ValidationHandler implements ValidationHandler {
 	 */
 	@Override
 	public String onParametersViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
+		SessionMessages.add(ActionContext.getPortletRequest(), ActionContext.getPortletName() + SessionMessages. KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE);
+		
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("{}!{}: violation on parameter value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation on parameter value '{}' will show error message with key '{}'", action, method, violation.getInvalidValue(), violation.getMessage());
+			SessionErrors.add(ActionContext.getPortletRequest(), violation.getMessage());
 		}		
 		return "invalid_input";
 	}
