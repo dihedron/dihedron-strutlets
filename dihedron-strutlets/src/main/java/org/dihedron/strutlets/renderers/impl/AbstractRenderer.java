@@ -35,37 +35,12 @@ import org.dihedron.strutlets.renderers.Renderer;
  * @author Andrea Funto'
  */
 public abstract class AbstractRenderer implements Renderer {
-
-	/**
-	 * The {@code Renderer}-specific data, the reference to the object or the 
-	 * URL to render.
-	 */
-	private String data;
 	
 	/**
 	 * A reference to the protlet that is going to be using this renderer.
 	 */
 	private GenericPortlet portlet;
-	
-	/**
-	 * @see org.dihedron.strutlets.renderers.Renderer#setData(java.lang.String)
-	 */
-	@Override
-	public void setData(String data) {
-		this.data = data;
-	}
-	
-	/**
-	 * Returns the {@code Renderer}-specific data used to perform the actual
-	 * rendering.
-	 * 
-	 * @return
-	 *   the {@code Renderer}-specific data used to perform the actual rendering.
-	 */
-	protected String getData() {
-		return this.data;
-	}
-	
+		
 	/**
 	 * Sets a reference to the portlet that is going to be using this renderer.
 	 * 

@@ -101,7 +101,10 @@ public class ProxiedAction {
 		idempotent = true,
 		results = {
 			@Result(value="success", renderer="jsp", data="/html/portlet1/result.jsp"),
-			@Result(value="invalid_input", renderer="jsp", data="/html/portlet1/view_on_input_errors.jsp")
+			@Result(value="invalid_input", renderer="jsp", data="/html/portlet1/view_on_input_errors.jsp"),
+			@Result(value="redirect_to_homepage", renderer="redirect", data="/web/guest/welcome"),
+			@Result(value="redirect_to_google", renderer="redirect", data="http://www.google.co.uk"),
+			@Result(value="redirect_to_jsp", renderer="redirect", data="${portlet-context}/html/portlet1/redirect.jsp")
 		},
 		validator = Portlet1ValidationHandler.class
 	)
@@ -112,6 +115,7 @@ public class ProxiedAction {
 			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key") String phone,
 			@In(value = "emailParameter", scopes = Scope.FORM) @Email(message="error-email-key") String email,
 			@In(value = "lovesCheckbox", scopes = Scope.FORM) String[] loves,
+			@In(value = "redirect", scopes = Scope.FORM) String redirect,
 			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
 			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
 			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			
@@ -132,7 +136,19 @@ public class ProxiedAction {
 		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsStringFor(age)).append("),\n");
 		buffer.append("\t'gender' : '").append(gender).append("' (").append(Types.getAsStringFor(gender)).append("),\n");
 		buffer.append("}");
-		result.set(buffer.toString());
+		
+		// you can decide if you want the portlet to redirect to another page 
+		// (external, internal to the portal, or another JSP in this portlet 
+		// project, or you prefer the portlet to go oin processing the input form
+		if(redirect.equalsIgnoreCase("absolute")) {
+			return "redirect_to_google";
+		} else if(redirect.equalsIgnoreCase("homepage")) {
+			return "redirect_to_homepage";
+		} else if(redirect.equalsIgnoreCase("internal")) {
+			return "redirect_to_jsp";
+		} else {
+			result.set(buffer.toString());
+		}		
 		return Action.SUCCESS;
 	}	
 }

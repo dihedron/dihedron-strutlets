@@ -21,7 +21,8 @@ package org.dihedron.strutlets.renderers.impl;
 
 import java.io.IOException;
 
-import javax.portlet.MimeResponse;
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionResponse;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -30,29 +31,36 @@ import org.dihedron.strutlets.annotations.Alias;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-
 /**
+ * The {@code}
  * @author Andrea Funto'
  */
-@Alias(JsonRenderer.ID)
-public class JsonRenderer extends BeanRenderer {
+@Alias(RedirectRenderer.ID)
+public class RedirectRenderer extends AbstractRenderer {
 	
 	/**
 	 * The renderer unique id.
 	 */
-	public static final String ID = "json";
-
+	public static final String ID = "redirect";
+	
 	/**
-	 * The MIME type returned as content type by this renderer.
+	 * The string representing the portlet context; when used in a URL, it will 
+	 * be replaced by the current portlet's web context. For instance, the
+	 * following URL: <code>${portlet-context}html/my.jsp</code> will be translated
+	 * into the URL of the <code>my.jsp</code> in the portlet's file tree.
 	 */
-	public static final String JSON_MIME_TYPE = "application/json";
+	public static final String CONTEXT = "\\$\\{portlet\\-context\\}";
+	
+	/**
+	 * The string representation of the {@code CONTEXT} regular expression, for
+	 * internal use only.
+	 */
+	private static final String CONTEXT_STRING = "${portlet-context}";
 	
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(JsonRenderer.class);
+	private static final Logger logger = LoggerFactory.getLogger(RedirectRenderer.class);
 	
 	/**
 	 * @see org.dihedron.strutlets.renderers.Renderer#getId()
@@ -61,30 +69,24 @@ public class JsonRenderer extends BeanRenderer {
 	public String getId() {
 		return ID;
 	}
-
-	/**
-	 * @see org.dihedron.strutlets.renderers.Renderer#render(javax.portlet.PortletRequest, javax.portlet.PortletResponse, java.lang.String)
-	 */
+	
 	@Override
 	public void render(PortletRequest request, PortletResponse response, String data) throws IOException, PortletException {
-		
-		String bean = data;
-		logger.trace("rendering bean '{}'", bean);
-
-		Object object = getBean(request, bean);
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		String json = mapper.writeValueAsString(object);
-		logger.trace("json object is:\n{}", json);
-		
-		if(response instanceof MimeResponse) {
-			// this works in both RENDER and RESOURCE (AJAX) phases
-			((MimeResponse)response).setContentType(JSON_MIME_TYPE);
+		if(!(request instanceof ActionRequest)) {
+			logger.error("redirect can only be issued in the action phase");
+			throw new PortletException("redirect can only be issued in the action phase");
 		}
-		getWriter(response).print(json);
-        getWriter(response).flush();
-        
+		
+		ActionResponse actionResponse = (ActionResponse)response;
+		
+		String url = data;
+		if(url.contains(CONTEXT_STRING)) {
+			logger.trace("replacing portlet context in redirect URL: '{}'", url);
+			url = url.replaceAll(CONTEXT, ((ActionRequest)request).getContextPath());
+		}
+
+		// sending redirect to the redirect JSP
+		logger.trace("redirecting to URL: '{}'", url);		
+		actionResponse.sendRedirect(url);
 	}
 }

@@ -63,6 +63,7 @@ import org.dihedron.strutlets.plugins.PluginManager;
 import org.dihedron.strutlets.renderers.Renderer;
 import org.dihedron.strutlets.renderers.impl.CachingRendererRegistry;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
+import org.dihedron.strutlets.renderers.impl.RedirectRenderer;
 import org.dihedron.strutlets.renderers.registry.RendererRegistry;
 import org.dihedron.strutlets.renderers.registry.RendererRegistryLoader;
 import org.dihedron.strutlets.targets.Target;
@@ -232,7 +233,12 @@ public class ActionController extends GenericPortlet {
 	    	    	
 	    	String result = invokeBusinessLogic(targetId, request, response);
 	    	
-	    	logger.trace("... action processing done with result '{}'", result);
+	    	if(result != null) {
+	    		logger.trace("... action processing done with result '{}'", result);
+	    	} else {
+	    		logger.trace("... action processing ended with redirection to a new page");
+	    	}
+	    	
 		} finally {
 			
     		// unbind the invocation context from the thread-local storage to
@@ -274,7 +280,11 @@ public class ActionController extends GenericPortlet {
 	    	
 	    	String result = invokeBusinessLogic(targetId, request, response);
 	    	
-	    	logger.trace("... event processing done with result '{}'", result);
+	    	if(result != null) {
+	    		logger.trace("... event processing done with result '{}'", result);
+	    	} else {
+	    		logger.error("result should never be null in the event phase: this is likely to be a bug in the framework");
+	    	}
     	} finally {
 
     		// unbind the invocation context from the thread-local storage to
@@ -429,8 +439,7 @@ public class ActionController extends GenericPortlet {
 	    	if(Strings.isValid(url)) {
 	    		logger.info("rendering through URL: '{}'", url);
 	    		renderer = renderers.getRenderer(JspRenderer.ID);
-    			renderer.setData(url);
-    			renderer.render(request, response);
+    			renderer.render(request, response, url);
 	    	} else {
 	    		logger.error("invalid render URL");
 	    		throw new StrutletsException("No valid render URL available");
@@ -442,8 +451,7 @@ public class ActionController extends GenericPortlet {
 			if(Strings.isValid(errorPage)) {
 				logger.trace("forwarding error to default error page");
 				Renderer renderer = renderers.getRenderer(JspRenderer.ID);
-				renderer.setData(errorPage);
-				renderer.render(request, response);
+				renderer.render(request, response, errorPage);
 			} else {
 				logger.trace("no last-resort error handling page, rethrowing...");
 				throw e;
@@ -488,8 +496,7 @@ public class ActionController extends GenericPortlet {
 				logger.debug("rendering via '{}', result data '{}'...", result.getRenderer(), result.getData());
 	    		
 	    		Renderer renderer = renderers.getRenderer(result.getRenderer());
-	    		renderer.setData(result.getData());
-	        	renderer.render(request, response);
+	        	renderer.render(request, response, result.getData());
 	        	
 	        	logger.trace("... output rendering done");
 	    		
@@ -516,8 +523,9 @@ public class ActionController extends GenericPortlet {
      * @param response
      *   the current action or event response object.
      * @throws PortletException
+     * @throws IOException 
      */
-    protected String invokeBusinessLogic(TargetId targetId, PortletRequest request, StateAwareResponse response) throws PortletException {
+    protected String invokeBusinessLogic(TargetId targetId, PortletRequest request, StateAwareResponse response) throws PortletException, IOException {
     	String res = null;
     	
     	try {
@@ -528,6 +536,29 @@ public class ActionController extends GenericPortlet {
 	    		
 	    		// get routing configuration for given result string
 	    		Result result = registry.getTarget(targetId).getResult(res);
+	    		
+    	    	// now, if we have a result that must be handled by a "redirect"
+    	    	// renderer, we must do it now, before we move on to the render
+    	    	// phase, so let's check
+    	    	if(result.getRenderer().equals(RedirectRenderer.ID)) {
+    	    		if(ActionContext.isActionPhase()) {
+    	    			if(ActionContext.hasChangedRenderParameters()) {
+    	    				logger.error("cannot redirect: some render parameter has been changed by the action prior to redirecting.");
+    	    				throw new StrutletsException("Trying to redirect to another page after having changed the render parameters");
+    	    			} else {
+		    	    		String url = result.getData();
+		    	    		logger.trace("redirecting to '{}' right after action execution...", url);
+		    	    		Renderer renderer = renderers.getRenderer(RedirectRenderer.ID);
+		        			renderer.render(request, response, url);
+		    	    		logger.trace("redirect complete");
+		    	    		return null;
+    	    			}
+    	    		} else {
+    	    			logger.error("trying to redirect to another page when not in action phase");
+    	    			throw new StrutletsException("Trying to redirect to another page when not in action phase");
+    	    		}
+    	    	}
+	    		
 	    		PortletMode mode = result.getPortletMode();
 	    		WindowState state = result.getWindowState();
 	    		
@@ -542,14 +573,14 @@ public class ActionController extends GenericPortlet {
 	    			response.setWindowState(state);
 	    		}
 	    		// set parameters for the following render phase
-		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, targetId.toString());
-		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
+		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, targetId.toString());
+		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
 			} else {			
 				// action not specified, check the current mode and service the
 				// default page, as specified in the initialisation parameters
 				logger.trace("target not specified, blanking target and result in render parameters and serving default page");
-		    	response.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
-		    	response.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
+		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
+		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
 			}
 		} catch(PortletException e) {
 			logger.error("portlet exception servicing action request: {}", e.getMessage());

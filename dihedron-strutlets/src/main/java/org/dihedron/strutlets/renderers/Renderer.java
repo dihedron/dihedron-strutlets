@@ -35,7 +35,7 @@ import javax.portlet.PortletResponse;
 public interface Renderer {
 	
 	/**
-	 * returns the identifier of the renderer, e.g. "jsp" for the JSP include
+	 * Returns the identifier of the renderer, e.g. "jsp" for the JSP include
 	 * renderer.
 	 * 
 	 * @return
@@ -49,17 +49,8 @@ public interface Renderer {
 	 * @param portlet
 	 *   a reference to the portlet that will be using this renderer.
 	 */
-	public void setPortlet(GenericPortlet portlet);
-	
-	/**
-	 * Sets the data that helps the {@code Renderer} perform its task.
-	 * 
-	 * @param data
-	 *   the {@code Renderer}-specific data, e.g. the URL for the JSP renderer,
-	 *   the name of a java bean for the JSON and XML renderers, etc.
-	 */
-	void setData(String data);
-	
+	void setPortlet(GenericPortlet portlet);
+
 	/**
 	 * Renders the output to the client.
 	 * 
@@ -67,10 +58,15 @@ public interface Renderer {
 	 *   the request object.
 	 * @param response
 	 *   the response object.
+	 * @param data
+	 *   the {@code Renderer}-specific data, e.g. the URL for the JSP renderer,
+	 *   the name of a java bean for the JSON and XML renderers, etc. Renderer 
+	 *   data can be a JSON string if the renderer requires more complex or
+	 *   structured data to perform its work.
 	 * @throws IOException
 	 *   if it cannot write to the output stream.
 	 * @throws PortletException
 	 *   if any portlet-specific error occurs during the processing.
 	 */
-	void render(PortletRequest request, PortletResponse response) throws IOException, PortletException; 
+	void render(PortletRequest request, PortletResponse response, String data) throws IOException, PortletException; 
 }

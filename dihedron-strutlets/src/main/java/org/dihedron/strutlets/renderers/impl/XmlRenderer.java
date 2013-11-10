@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Andrea Funto'
  */
-@Alias("xml")
+@Alias(XmlRenderer.ID)
 public class XmlRenderer extends BeanRenderer {
 	
 	/**
@@ -63,12 +63,12 @@ public class XmlRenderer extends BeanRenderer {
 	}
 
 	/**
-	 * @see org.dihedron.strutlets.renderers.Renderer#render(javax.portlet.PortletRequest, javax.portlet.PortletResponse)
+	 * @see org.dihedron.strutlets.renderers.Renderer#render(javax.portlet.PortletRequest, javax.portlet.PortletResponse, java.lang.String)
 	 */
 	@Override
-	public void render(PortletRequest request, PortletResponse response) throws IOException, PortletException {
+	public void render(PortletRequest request, PortletResponse response, String data) throws IOException, PortletException {
 		
-		String bean = getData();
+		String bean = data;
 		logger.trace("rendering bean '{}'", bean);
 
 		Object object = getBean(request, bean);

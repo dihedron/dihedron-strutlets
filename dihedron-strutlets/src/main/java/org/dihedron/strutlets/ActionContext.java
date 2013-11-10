@@ -63,7 +63,6 @@ import org.dihedron.strutlets.containers.portlet.PortalServer;
 import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
-import org.dihedron.strutlets.interceptors.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,7 +224,7 @@ public class ActionContext {
 	/**
 	 * The key under which request-scoped attributes are stored in the portlet session.
 	 */
-	protected static final String REQUEST_SCOPED_ATTRIBUTES_KEY = "org.dihedron.strutlets.request_scoped_attributes"; // STRUTLETS_REQUEST_SCOPED_ATTRIBUTES
+	protected static final String REQUEST_SCOPED_ATTRIBUTES_KEY = "org.dihedron.strutlets.request_scoped_attributes";
 	
 	protected static final String INTERCEPTOR_DATA_KEY = "org.dihedron.strutlets.interceptor_data"; 
 	
@@ -275,6 +274,14 @@ public class ActionContext {
 	 * this is useful if the portlets want to use portal-server-specific APIs.
 	 */
 	private PortalServer portal = null;
+	
+	/**
+	 * This boolean value is used to keep track of changes to the render parameters,
+	 * since a redirect can only be issued in action phase if no render parameters
+	 * were changed. This flag is updated if and only if the render parameters are
+	 * set through the <code>ActionContext</code>. 
+	 */
+	private boolean renderParametersChanged = false;
 		
 	/**
 	 * Retrieves the per-thread instance.
@@ -310,6 +317,7 @@ public class ActionContext {
 		getContext().configuration = configuration;
 		getContext().server = server;
 		getContext().portal = portal;
+		getContext().renderParametersChanged = false;
 
 		// check if a map for REQUEST-scoped attributes is already available in
 		// the PORTLET, if not instantiate it and load it into PORTLET scope
@@ -2053,6 +2061,7 @@ public class ActionContext {
 	 */
 	public static void setRenderParameter(String key, String... values) throws InvalidPhaseException {
 		if(Strings.isValid(key) && values != null && (isActionPhase() || isEventPhase()) && getContext().response instanceof StateAwareResponse) {
+			getContext().renderParametersChanged= true;
 			logger.trace("setting render parameter '{}'...", key);
 			if(values.length == 1) {
 				logger.trace(" ... value is '{}'", values[0]);
@@ -2328,6 +2337,26 @@ public class ActionContext {
 	 */
 	public static String getRequestScopedAttributesKey(String portletName) {
 		return ActionContext.REQUEST_SCOPED_ATTRIBUTES_KEY + "[" + portletName.toUpperCase() + ":" + ActionContext.getPortletWindowId() + "]";
+	}
+	
+	/**
+	 * This method checks if during the invocation the render parameters have been 
+	 * changed, e g. by setting their values. This method is reliable if and only
+	 * if the only way to set the render parameters is through the appropriate 
+	 * <code>ActionContext</code> method: if you use the portlet response method
+	 * directly the framework has no way of detecting changes to the render 
+	 * parameters.
+	 * Tracking this information is relevant because you cannot redirect to another 
+	 * page (in the action phase) if any render parameter has been changed; if 
+	 * you help the framework keep track of what you do with the parameters, it
+	 * might help you spot errors by giving a warning instead of simply letting 
+	 * the portal fail with an illegal state exception.
+	 * 
+	 * @return
+	 *   whether the render parameters have been set during this invocation.
+	 */
+	public static boolean hasChangedRenderParameters() {
+		return getContext().renderParametersChanged;
 	}
 	
 	/**

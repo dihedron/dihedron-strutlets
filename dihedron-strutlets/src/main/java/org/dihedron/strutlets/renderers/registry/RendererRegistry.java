@@ -30,7 +30,7 @@ public interface RendererRegistry {
 	/**
 	 * The Java package where the default set of renderers is located.
 	 */
-	public static final String DEFAULT_RENDERER_PACKAGE = "org.dihedron.strutlets.renderers.impl";
+	static final String DEFAULT_RENDERER_PACKAGE = "org.dihedron.strutlets.renderers.impl";
 	
 	/**
 	 * Adds information about a {@code Renderer} type.
@@ -40,7 +40,7 @@ public interface RendererRegistry {
 	 * @param clazz
 	 *   the class of the renderer.
 	 */
-	public void addRenderer(String id, Class<? extends Renderer> clazz) throws StrutletsException;
+	void addRenderer(String id, Class<? extends Renderer> clazz) throws StrutletsException;
 	
 	/**
 	 * Returns an instance of {@code Renderer} for the given input type; implementing
@@ -53,5 +53,5 @@ public interface RendererRegistry {
 	 *   the {@code Renderer} instance.
 	 * @throws StrutletsException
 	 */
-	public Renderer getRenderer(String id) throws StrutletsException;
+	Renderer getRenderer(String id) throws StrutletsException;
 }

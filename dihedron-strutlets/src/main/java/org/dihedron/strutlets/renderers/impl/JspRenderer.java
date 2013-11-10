@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * The {@code}
  * @author Andrea Funto'
  */
-@Alias("jsp")
+@Alias(JspRenderer.ID)
 public class JspRenderer extends AbstractRenderer {
 	
 	public static final String ID = "jsp";
@@ -53,11 +53,11 @@ public class JspRenderer extends AbstractRenderer {
 	}
 	
 	@Override
-	public void render(PortletRequest request, PortletResponse response) throws IOException, PortletException {
-        PortletRequestDispatcher dispatcher = getPortlet().getPortletContext().getRequestDispatcher(response.encodeURL(getData()));
+	public void render(PortletRequest request, PortletResponse response, String data) throws IOException, PortletException {
+        PortletRequestDispatcher dispatcher = getPortlet().getPortletContext().getRequestDispatcher(response.encodeURL(data));
 
         if (dispatcher == null) {
-            logger.error("'{}' is not a valid include path (jsp)", getData());
+            logger.error("'{}' is not a valid include path (jsp)", data);
         } else {
             dispatcher.include(request, response);
         }		

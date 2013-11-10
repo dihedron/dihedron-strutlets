@@ -1,10 +1,10 @@
 #!/bin/bash
-PORTAL_DIR=/opt/liferay-6.2.0-ce-ga1/portal
+PORTAL_DIR=/opt/liferay-6.2.0-ce-ga1/portal/tomcat-7.0.42
 WAR_FILE=strutlets-demo-portlet-0.59.0-SNAPSHOT.war
 
 if [ "$1" = "--undeploy" -o "$2" = "--undeploy" ]; then
 	echo "undeploying existing portlets"
-	rm -rf $PORTAL_DIR/tomcat-7.0.40/webapps/strutlets-demo-portlet/
+	rm -rf $PORTAL_DIR/webapps/strutlets-demo-portlet/
 fi
 
 if [ "$1" = "--clean" -o "$2" = "--clean" ]; then
@@ -12,4 +12,4 @@ if [ "$1" = "--clean" -o "$2" = "--clean" ]; then
 	mvn clean
 fi
 
-mvn install && cp dihedron-strutlets-demo-portlet/target/$WAR_FILE $PORTAL_DIR/deploy
+mvn install && cp dihedron-strutlets-demo-portlet/target/$WAR_FILE $PORTAL_DIR/../deploy
