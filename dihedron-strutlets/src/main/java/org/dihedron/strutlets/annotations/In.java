@@ -63,5 +63,5 @@ public @interface In {
 	 *   as of release 0.60.0, replaced by {@link #from()}
 	 */
 	@Deprecated
-	Scope[] scopes() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, /*Scope.HTTP,*/Scope.CONFIGURATION };
+	Scope[] scopes() default { };
 }

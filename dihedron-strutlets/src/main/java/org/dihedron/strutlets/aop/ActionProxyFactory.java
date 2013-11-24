@@ -251,8 +251,10 @@ public class ActionProxyFactory {
 				generator.addField(log);
 				
 				if(doValidation) {
-					// add the static JSR-349 validator
-					CtField validator = CtField.make("private static javax.validation.executable.ExecutableValidator validator = null;", generator);
+					// add the static JSR-349 method and bean validators
+					CtField validator = CtField.make("private static javax.validation.executable.ExecutableValidator methodValidator = null;", generator);
+					generator.addField(validator);
+					validator = CtField.make("private static javax.validation.Validator beanValidator = null;", generator);
 					generator.addField(validator);
 				}
 				
@@ -386,14 +388,20 @@ public class ActionProxyFactory {
 			if(doValidation) {
 				// try to initialise the JSR-349 validator
 				code.append("\ttry {\n");
-				code.append("\t\tif(validator == null) {\n");
-				code.append("\t\t\tvalidator = javax.validation.Validation.buildDefaultValidatorFactory().getValidator().forExecutables();\n");
-				code.append("\t\t\tlogger.info(\"JSR-349 validator successfully initialised\");\n");
+				code.append("\t\tif(beanValidator == null) {\n");
+				code.append("\t\t\tbeanValidator = javax.validation.Validation.buildDefaultValidatorFactory().getValidator();\n");
+				code.append("\t\t\tlogger.info(\"JSR-349 bean validator successfully initialised\");\n");
 				code.append("\t\t} else {\n");
-				code.append("\t\t\tlogger.trace(\"JSR-349 validator already initialised\");\n");
+				code.append("\t\t\tlogger.trace(\"JSR-349 bean validator already initialised\");\n");
+				code.append("\t\t}\n");
+				code.append("\t\tif(methodValidator == null) {\n");
+				code.append("\t\t\tmethodValidator = javax.validation.Validation.buildDefaultValidatorFactory().getValidator().forExecutables();\n");
+				code.append("\t\t\tlogger.info(\"JSR-349 method validator successfully initialised\");\n");
+				code.append("\t\t} else {\n");
+				code.append("\t\t\tlogger.trace(\"JSR-349 method validator already initialised\");\n");
 				code.append("\t\t}\n");
 				code.append("\t} catch(javax.validation.ValidationException e) {\n");
-				code.append("\t\tlogger.error(\"error initialising JSR-349 validator: validation will not be available throughout this session\", e);\n");
+				code.append("\t\tlogger.error(\"error initialising JSR-349 validators: validation will not be available throughout this session\", e);\n");
 				code.append("\t}\n");
 			}
 			
@@ -465,7 +473,7 @@ public class ActionProxyFactory {
 			code.append("\tjava.lang.StringBuilder trace = new java.lang.StringBuilder();\n");
 			code.append("\tjava.lang.Object value = null;\n");			
 			if(doValidation) {
-				code.append("\tjava.lang.reflect.Method validationMethod = null;\n");
+				code.append("\tjava.lang.reflect.Method methodToValidate = null;\n");
 				code.append("\tjava.util.List validationValues = null;\n");	
 				code.append("\torg.dihedron.strutlets.validation.ValidationHandler handler = null;\n");
 			}
@@ -477,9 +485,9 @@ public class ActionProxyFactory {
 			if(doValidation) {
 				code.append("\t//\n\t// JSR-349 validation code\n\t//\n");
 				
-				code.append("\tif(validator != null) {\n");				
+				code.append("\tif(methodValidator != null) {\n");				
 				code.append("\t\tvalidationValues = new java.util.ArrayList();\n");				
-				code.append("\t\tvalidationMethod = $1.getClass().getMethod(\"").append(method.getName()).append("\"");
+				code.append("\t\tmethodToValidate = $1.getClass().getMethod(\"").append(method.getName()).append("\"");
 						
 				if(types.length > 0) {					
 					code.append(", new Class[] {\n");
@@ -499,9 +507,9 @@ public class ActionProxyFactory {
 				}
 				code.append(");\n");
 				code.append("\t} else {\n");
-				code.append("\t\tlogger.trace(\"no JSR-349 validation available\");\n");
+				code.append("\t\tlogger.trace(\"no JSR-349 method validation available\");\n");
 				code.append("\t}\n\n");
-			}
+			}			
 			
 			// now get the values for each parameter, including those to validate
 			StringBuilder args = new StringBuilder();
@@ -525,10 +533,10 @@ public class ActionProxyFactory {
 			// handler or to the default one (which does nothing but print out a message)
 			if(doValidation) {
 				code.append("\t//\n\t// JSR-349 parameters validation\n\t//\n");
-				code.append("\tif(validationMethod != null) {\n");
+				code.append("\tif(methodToValidate != null) {\n");
 				code.append("\t\tlogger.trace(\"validating invocation parameters\");\n");
 				code.append("\t\tObject[] array = validationValues.toArray(new java.lang.Object[validationValues.size()]);\n");
-				code.append("\t\tjava.util.Set violations = validator.validateParameters((").append(action.getCanonicalName()).append(")$1, validationMethod, array, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+				code.append("\t\tjava.util.Set violations = methodValidator.validateParameters((").append(action.getCanonicalName()).append(")$1, methodToValidate, array, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
 				
 				code.append("\t\tif(violations.size() > 0) {\n");
 				code.append("\t\t\tlogger.debug(\"{} constraint violations detected in input parameters\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
@@ -545,7 +553,7 @@ public class ActionProxyFactory {
 				code.append("\t\t\t}\n");
 				code.append("\t\t}\n");
 				
-				code.append("\t} else if(validator != null) {\n");
+				code.append("\t} else if(methodValidator != null) {\n");
 				code.append("\t\tlogger.warn(\"method is null\");\n");
 				code.append("\t}\n");
 				
@@ -570,9 +578,9 @@ public class ActionProxyFactory {
 			if(doValidation) {
 				// now apply JSR-349 validation to result			
 				code.append("\t//\n\t// JSR-349 result validation\n\t//\n");
-				code.append("\tif(validationMethod != null) {\n");
+				code.append("\tif(methodToValidate != null) {\n");
 				code.append("\t\tlogger.trace(\"validating invocation results\");\n");
-				code.append("\t\tjava.util.Set violations = validator.validateReturnValue((").append(action.getCanonicalName()).append(")$1, validationMethod, result, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+				code.append("\t\tjava.util.Set violations = methodValidator.validateReturnValue((").append(action.getCanonicalName()).append(")$1, methodToValidate, result, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
 				
 				code.append("\t\tif(violations.size() > 0) {\n");
 				code.append("\t\t\tlogger.debug(\"{} constraint violations detected in result\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
@@ -599,7 +607,9 @@ public class ActionProxyFactory {
 			code.append("\n");
 			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, new java.lang.Long((java.lang.System.currentTimeMillis() - millis)).toString());\n");
 			code.append("\tlogger.trace(\"... leaving stub method\");\n");
-			code.append("\treturn result;\n").append("}");
+			code.append("\treturn result;\n");
+			
+			code.append("}");
 		
 			logger.trace("compiling code:\n\n{}\n", code);
 		
@@ -794,7 +804,7 @@ public class ActionProxyFactory {
 		// code executed AFTER the action has returned, to store values into scopes
 		//
 		Scope scope = null;
-		if(out.scope() != null) {
+		if(out.scope() != Scope.NONE) {
 			// TODO: remove when releasing version 1.0.0
 			logger.warn("@Out is using deprecated annotation attribute 'scope', please replace it with 'to'");
 			scope = out.scope();
@@ -888,7 +898,7 @@ public class ActionProxyFactory {
 		// code executed AFTER the action has returned, to store values into scopes
 		//
 		Scope scope = null;
-		if(out.scope() != null) {
+		if(out.scope() != Scope.NONE) {
 			// TODO: remove when releasing version 1.0.0
 			logger.warn("@Out is using deprecated annotation attribute 'scope', please replace it with 'to'");			
 			scope = out.scope();
@@ -993,54 +1003,69 @@ public class ActionProxyFactory {
 			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value: check parameter no. " + i + " (@Model's pattern is '" + model.value() + "')");									
 		}
 		
-		String pattern = model.value();
+		// double back-slashes become single in code generation!
+		String pattern = model.value().replaceAll("\\\\", "\\\\\\\\");
+		String mask = model.mask().replaceAll("\\\\", "\\\\\\\\");
 		String variable = "model_" + i;
 		
 		preCode.append("\t//\n\t// preparing input-only model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
 		
 		// retrieve the applicable parameters from the specified scopes
 		logger.trace("{}-th parameter is annotated with @Model('{}')", i, model.value());
-		preCode.append("\tjava.util.Map<java.lang.String, java.lang.Object> map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		logger.trace("pattern is '{}'", pattern);
+		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
 		for(Scope scope : model.from()) {
 			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
 			first = false;
 		} 
-		preCode.append(" });\n");
+		preCode.append(" });\n\n");
+				
 		
 		// TODO: instantiate an object of the given type before
-		// startings etting its values with OGNL!!!
+		// starting setting its values with OGNL!!!
 		
 		// instantiate a new instance of the model object
-		preCode.append("\t//\n// creating new model object instance\n\t//\n");
-		preCode.append("\t").append(variable).append(" = new ").append(Types.getAsRawType(type)).append("();\n");
+		preCode.append("\t//\n\t// creating new model object instance\n\t//\n");
+		preCode.append("\t").append(Types.getAsRawType(type)).append(" ").append(variable).append(" = new ").append(Types.getAsRawType(type)).append("();\n");
 		preCode.append("\tognl.OgnlContext context = new ognl.OgnlContext();\n");
 		
+		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
+		
+		
+		
 		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
-		preCode.append("\tfor(java.util.Map.Entry<java.lang.String, java.lang.Object> entry : map.entrySet()) {\n");
-		preCode.append("\t\tjava.lang.String key = entry.getKey();\n"); 
+		preCode.append("\twhile(entries.hasNext()) {\n");
+		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
+		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
 		
 		// if there is a mask, remove it from the key name
-		preCode.append("\t\tif(org.dihedron.commns.utils.Strings.isValid(\"").append(model.mask()).append("\")) {\n");
+		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
 		preCode.append("\t\t\t// remove the mask if specified\n");
-		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(model.mask()).append("\", \"\");\n");		
+		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
+		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
 		preCode.append("\t\t}\n");
 		
 		// create an OGNL interpreter and launch it against the model object
 		preCode.append("\t\t// create the OGNL expression\n");
 		preCode.append("\t\torg.dihedron.strutlets.ognl.OgnlExpression ognl = new org.dihedron.strutlets.ognl.OgnlExpression(key);\n");
 		preCode.append("\t\tognl.setValue(context, ").append(variable).append(", entry.getValue());\n");
-				
+		
+		// end of loop on values
+		preCode.append("\t}\n\n");		
+		
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
 		
 		//
 		// the value used for JSR-349 parameters validation
 		//
+		/*
 		if(doValidation) {
 			preCode.append("\n");
 			preCode.append("\t// in parameter\n");
 			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
 		}
+		*/
 		
 		preCode.append("\n");
 		return variable;

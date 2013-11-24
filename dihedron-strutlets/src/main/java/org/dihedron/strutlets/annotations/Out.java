@@ -63,5 +63,5 @@ public @interface Out {
 	 *   as of release 0.60.0, replaced by {@link #to()}
 	 */
 	@Deprecated
-	Scope scope() default Scope.REQUEST;	
+	Scope scope() default Scope.NONE;	
 }

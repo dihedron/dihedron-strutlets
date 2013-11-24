@@ -71,5 +71,10 @@ public enum Scope {
 	 * The parameter can be found among the HTTP request parameters, in a portlet-
 	 * container specific way.
 	 */
-	HTTP
+	HTTP,
+	
+	/**
+	 * An invalid scope to state that no valid value has been chosen. 
+	 */
+	NONE
 }

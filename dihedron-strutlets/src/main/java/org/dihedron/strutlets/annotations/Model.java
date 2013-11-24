@@ -58,7 +58,7 @@ public @interface Model {
 	 *   a regular expression identifying a set of characters to remove from the
 	 *   name in order to get a valid and applicable OGNL expression.
 	 */
-	String mask() default "^[a-zA-Z0-9_\\-]\\:";
+	String mask() default "^[a-zA-Z0-9_\\-]*\\:";
 	
 	/**
 	 * The scope in which the parameters should be looked up; by default, they
