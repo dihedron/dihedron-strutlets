@@ -43,6 +43,7 @@ import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.InOut;
 import org.dihedron.strutlets.annotations.Invocable;
+import org.dihedron.strutlets.annotations.Model;
 import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.exceptions.DeploymentException;
@@ -620,6 +621,7 @@ public class ActionProxyFactory {
 		In in = null;
 		Out out = null;
 		InOut inout = null;
+		Model model = null;;
 		for(Annotation annotation : annotations) {
 			if(annotation instanceof In) {
 				in = (In)annotation;
@@ -627,30 +629,59 @@ public class ActionProxyFactory {
 				out = (Out)annotation;
 			} else if(annotation instanceof InOut) {
 				inout = (InOut)annotation;
+			} else if(annotation instanceof Model) {
+				model = (Model)annotation;
 			}
 		}
 		if(inout != null) {
 			logger.trace("preparing input argument...");
 			// safety check: verify that no @In or @Out parameters are specified
 			if(in != null) {
-				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @In: @In will be ignored", i);
+				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @In", i);
+				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @In");
 			}
 			if(out != null) {
-				logger.warn("attention! parameter {} is annotated with incompatible annotations @InOut an @Out: @Out will be ignored", i);
-			}			
+				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @Out", i);
+				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @Out");
+			}	
+			if(model != null) {
+				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @Model", i);
+				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @Model");
+			}
 			return prepareInOutArgument(i, type, inout, preCode, postCode, doValidation); 			
+		} else if(in != null && out != null) {
+			if(model != null) {
+				logger.error("attention! parameter {} is annotated with incompatible annotations @In/@Out and @Model", i);
+				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @In&/@Out and @Model");
+			}			
+			logger.trace("preparing input/output argument...");
+			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, doValidation);
 		} else if(in != null && out == null) {
+			if(model != null) {
+				logger.error("attention! parameter {} is annotated with incompatible annotations @In and @Model", i);
+				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @In and @Model");
+			}			
 			logger.trace("preparing input argument...");
 			return prepareInputArgument(i, type, in, preCode, doValidation); 
 		} else if(in == null && out != null) {
-			logger.trace("preparing output argument...");
-			return prepareOutputArgument(i, type, out, preCode, postCode, doValidation);
-		} else if(in != null && out != null) {
-			logger.trace("preparing input/output argument...");
-			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, doValidation);
+			if(model != null) {
+				// prepare model/out
+				logger.trace("preparing model/output argument...");
+				// TODO:
+				return "";
+			} else {
+				logger.trace("preparing output argument...");
+				return prepareOutputArgument(i, type, out, preCode, postCode, doValidation);				
+			}
 		} else {
-			logger.trace("preparing non-annotated argument...");
-			return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, doValidation);
+			
+			if(model != null) {
+				logger.trace("preparing model argument...");
+				return prepareInputModelArgument(i, type, model, preCode, doValidation);
+			} else {
+				logger.trace("preparing non-annotated argument...");
+				return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, doValidation);
+			}
 		}
 	}
 	
@@ -680,10 +711,18 @@ public class ActionProxyFactory {
 		logger.trace("{}-th parameter is annotated with @In('{}')", i, in.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
-		for(Scope scope : in.scopes()) {
-			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope);
-			first = false;
+		Scope [] scopes = null;
+		if(in.scopes() != null && in.scopes().length > 0) {
+			// TODO: remove when releasing version 1.0.0
+			logger.warn("@In is using deprecated annotation attribute 'scopes', please replace it with 'from'");
+			scopes = in.scopes();			
+		} else {
+			scopes = in.from();
 		}
+		for(Scope scope : scopes) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
+			first = false;
+		} 
 		preCode.append(" });\n");
 		
 		if(Types.isSimple(type) && !((Class<?>)type).isArray()) {
@@ -754,10 +793,18 @@ public class ActionProxyFactory {
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		Scope scope = null;
+		if(out.scope() != null) {
+			// TODO: remove when releasing version 1.0.0
+			logger.warn("@Out is using deprecated annotation attribute 'scope', please replace it with 'to'");
+			scope = out.scope();
+		} else {
+			scope = out.to();
+		}
+		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(scope.name()).append("\n\t//\n");
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
-		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		
@@ -801,8 +848,16 @@ public class ActionProxyFactory {
 		logger.trace("{}-th parameter is annotated with @In('{}') and @Out('{}')", i, in.value(), out.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
-		for(Scope scope : in.scopes()) {
-			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope);
+		Scope [] scopes = null;
+		if(in.scopes() != null && in.scopes().length > 0) {
+			// TODO: remove when releasing version 1.0.0
+			logger.warn("@In is using deprecated annotation attribute 'scopes', please replace it with 'from'");			
+			scopes = in.scopes();
+		} else {
+			 scopes = in.from();
+		}
+		for(Scope scope : scopes) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
 			first = false;
 		}
 		preCode.append(" });\n");
@@ -832,10 +887,18 @@ public class ActionProxyFactory {
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(out.scope()).append("\n\t//\n");
+		Scope scope = null;
+		if(out.scope() != null) {
+			// TODO: remove when releasing version 1.0.0
+			logger.warn("@Out is using deprecated annotation attribute 'scope', please replace it with 'to'");			
+			scope = out.scope();
+		} else {
+			scope = out.to();		
+		}
+		postCode.append("\t//\n\t// storing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(scope.name()).append("\n\t//\n");
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
-		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(out.scope()).append(", value );\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		return variable;
@@ -913,6 +976,75 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
+	private String prepareInputModelArgument(int i, Type type, Model model, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
+		
+		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
+			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", model.value(), i, Types.getAsString(type));
+			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter '" + model.value() + "' ( no. " + i + ", type is '" + Types.getAsString(type) + "')");
+		}
+		
+		if(Types.isGeneric(type) && Types.isOfClass(type, $.class))	{		
+			logger.error("input-only model parameters must not be wrapped in typed reference holders ($) (check parameter no. {})", i);
+			throw new DeploymentException("Input-only model parameters must not be wrapped in typed reference holders ($): check parameter no. " + i);									
+		}		
+		
+		if(!Strings.isValid(model.value())) {
+			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (check parameter {}: @Model's pattern is '{}')", i, model.value());
+			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value: check parameter no. " + i + " (@Model's pattern is '" + model.value() + "')");									
+		}
+		
+		String pattern = model.value();
+		String variable = "model_" + i;
+		
+		preCode.append("\t//\n\t// preparing input-only model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
+		
+		// retrieve the applicable parameters from the specified scopes
+		logger.trace("{}-th parameter is annotated with @Model('{}')", i, model.value());
+		preCode.append("\tjava.util.Map<java.lang.String, java.lang.Object> map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		boolean first = true;
+		for(Scope scope : model.from()) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
+			first = false;
+		} 
+		preCode.append(" });\n");
+		
+		// TODO: instantiate an object of the given type before
+		// startings etting its values with OGNL!!!
+		
+		// instantiate a new instance of the model object
+		preCode.append("\t//\n// creating new model object instance\n\t//\n");
+		preCode.append("\t").append(variable).append(" = new ").append(Types.getAsRawType(type)).append("();\n");
+		preCode.append("\tognl.OgnlContext context = new ognl.OgnlContext();\n");
+		
+		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
+		preCode.append("\tfor(java.util.Map.Entry<java.lang.String, java.lang.Object> entry : map.entrySet()) {\n");
+		preCode.append("\t\tjava.lang.String key = entry.getKey();\n"); 
+		
+		// if there is a mask, remove it from the key name
+		preCode.append("\t\tif(org.dihedron.commns.utils.Strings.isValid(\"").append(model.mask()).append("\")) {\n");
+		preCode.append("\t\t\t// remove the mask if specified\n");
+		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(model.mask()).append("\", \"\");\n");		
+		preCode.append("\t\t}\n");
+		
+		// create an OGNL interpreter and launch it against the model object
+		preCode.append("\t\t// create the OGNL expression\n");
+		preCode.append("\t\torg.dihedron.strutlets.ognl.OgnlExpression ognl = new org.dihedron.strutlets.ognl.OgnlExpression(key);\n");
+		preCode.append("\t\tognl.setValue(context, ").append(variable).append(", entry.getValue());\n");
+				
+		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
+		
+		//
+		// the value used for JSR-349 parameters validation
+		//
+		if(doValidation) {
+			preCode.append("\n");
+			preCode.append("\t// in parameter\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+		}
+		
+		preCode.append("\n");
+		return variable;
+	}
 	
 	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, boolean doValidation) throws DeploymentException {
 		

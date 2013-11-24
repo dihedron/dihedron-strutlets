@@ -56,6 +56,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
+import org.dihedron.commons.regex.Regex;
 import org.dihedron.commons.utils.Strings;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
@@ -63,6 +64,7 @@ import org.dihedron.strutlets.containers.portlet.PortalServer;
 import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.dihedron.strutlets.interceptors.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1355,6 +1357,101 @@ public class ActionContext {
 		return value;
 	}
 
+	/**
+	 * Looks for all the parameters matching the given pattern in the given set
+	 * of scopes, one at a time in the given order.
+	 *  
+	 * @param pattern
+	 *   a pattern (regular expression) to identify the parameters or attributes 
+	 *   to pick from the given scope.
+	 * @param scopes
+	 *   the ordered list of scopes to look into.
+	 * @return
+	 *   a map of parameter or attribute names and their corresponding values. 
+	 * @throws StrutletsException
+	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
+	 *   APPLICATION, CONFIGURATION and HTTP. 
+	 */
+	public static Map<String, Object> findValuesInScopes(String pattern, org.dihedron.strutlets.annotations.Scope ... scopes) throws StrutletsException {
+		// now, depending on the scope, try to locate the parameter in the appropriate context 
+		Map<String, Object> values = new HashMap<String, Object>();
+				
+		for(org.dihedron.strutlets.annotations.Scope scope : scopes) {
+			logger.trace("scanning input scope '{}' for parameters matching '{}'...", scope.name(), pattern);
+			Map<String, Object> map = findValuesInScope(pattern, scope);
+			if(map != null && !map.isEmpty()) {
+				for(String key : map.keySet()) {
+					if(!values.containsKey(key)) {
+						Object value = map.get(key);
+						logger.trace("... adding parameter '{}' from scope {} (value '{}')", key, scope.name(), value);
+						values.put(key,  value);
+					}
+				}
+			}
+		}
+		return values;
+	}
+	
+	/**
+	 * Looks for all the parameters matching the given pattern in the given 
+	 * scope.
+	 *  
+	 * @param pattern
+	 *   a pattern (regular expression) to identify the parameters or attributes 
+	 *   to pick from the given scope.
+	 * @param scope
+	 *   the scope to look into.
+	 * @return
+	 *   a map of parameter or attribute names and their corresponding values. 
+	 * @throws StrutletsException
+	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
+	 *   APPLICATION, CONFIGURATION and HTTP. 
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> findValuesInScope(String pattern, org.dihedron.strutlets.annotations.Scope scope) throws StrutletsException {
+		Regex regex = new Regex(pattern);
+				
+		logger.trace("retrieving values from scope '{}'...", scope.name());
+		
+		Map<?, ?> map = null;
+		switch(scope) {		
+		case FORM:			
+			map = ActionContext.getParameters();
+			break;
+		case REQUEST:
+			map = ActionContext.getAttributes(Scope.REQUEST);
+			break;
+		case PORTLET:
+			map = ActionContext.getAttributes(Scope.PORTLET);
+			break;
+		case APPLICATION:
+			map = ActionContext.getAttributes(Scope.APPLICATION);
+			break;
+		case CONFIGURATION:
+			map = ActionContext.getConfigurationEntries();
+			break;
+		case HTTP:
+			map = ActionContext.getHttpParametersMap();
+			break;
+		default:
+			logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
+			throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
+		}
+		
+		Set<String> keys = (Set<String>)map.keySet();
+		Map<String, Object> values = new HashMap<String, Object>();
+		for(String key : keys) {
+			if(regex.matches(key)) {
+				Object value = map.get(key);
+				if(value != null) {
+					logger.trace("... parameter '{}' has value '{}' in scope {}", key, value, scope.name());
+					values.put(key, value);
+				}						
+			}
+		}			
+		return values;
+	}
+	
 	
 	/**
 	 * Stores a value into the given scope.
@@ -2097,8 +2194,8 @@ public class ActionContext {
 	
 	/**
 	 * Returns the value of the request attribute corresponding to the given name.
-	 * This attribute is not to be confused with those set in the varius scopes,
-	 * ad is a value provided by the portal server.
+	 * This attribute is not to be confused with those set in the variuos scopes,
+	 * and is a value provided by the portal server.
 	 * 
 	 * @param key
 	 *   the name of the request attribute.
@@ -2107,6 +2204,24 @@ public class ActionContext {
 	 */
 	public static Object getAttribute(String key) {
 		return getContext().request.getAttribute(key);
+	}
+	
+	/**
+	 * Returns the values in the actions configuration file as a map of string 
+	 * keys and values.
+	 * 
+	 * @return
+	 *   the values in the actions configuration file as a map of string keys 
+	 *   and values.
+	 */
+	public static Map<String, String> getConfigurationEntries() {
+		Map<String, String> entries = new HashMap<String, String>();
+		if(getContext().configuration != null) {
+			for(Entry<String, String> entry : getContext().configuration.entrySet()) {
+				entries.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return entries;
 	}
 	
 	/**

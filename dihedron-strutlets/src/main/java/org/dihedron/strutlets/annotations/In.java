@@ -38,11 +38,12 @@ public @interface In {
 	 * The name of the input parameter; it must be specified.
 	 * 
 	 * @return
-	 *   the name of the parameter, or the empty string if the name matches that 
-	 *   of the field.
+	 *   the name of the parameter; this must not be a null or blank string since 
+	 *   there's no way to acquire a sensible default from the information available
+	 *   at runtime (e.g. there's no name of the field available through reflection).
 	 */
 	String value();
-	
+
 	/**
 	 * The scope in which the parameter should be looked up; by default, it is
 	 * looked up in all available scopes.
@@ -50,5 +51,17 @@ public @interface In {
 	 * @return
 	 *   the scope of the parameter.
 	 */
+	Scope[] from() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, /*Scope.HTTP,*/Scope.CONFIGURATION };
+	
+	/**
+	 * The scope in which the parameter should be looked up; by default, it is
+	 * looked up in all available scopes.
+	 * 
+	 * @return
+	 *   the scope of the parameter.
+	 * @deprecated
+	 *   as of release 0.60.0, replaced by {@link #from()}
+	 */
+	@Deprecated
 	Scope[] scopes() default { Scope.FORM, Scope.REQUEST, Scope.PORTLET, Scope.APPLICATION, /*Scope.HTTP,*/Scope.CONFIGURATION };
 }

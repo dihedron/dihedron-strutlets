@@ -5,7 +5,7 @@
 		<interceptor id="dumper" class="org.dihedron.strutlets.interceptors.impl.Dumper">
 			<parameter>
 				<key>exclude</key>
-				<value>^LIFERAY.*|^javax\.portlet.*|^[A-Z_]*$|^org\.apache.*|^com\.liferay.*|^javax\.servlet.*|^j_.*|^class\scom\.liferay.*</value>
+				<value>^LIFERAY.*|^javax\.portlet.*|^[A-Z_]*$|^org\.apache.*|^com\.liferay.*|^javax\.servlet.*|^org\.dihedron\.strutlets.*|^j_.*|^class\scom\.liferay.*</value>
 			</parameter>
 		</interceptor>
 		<!-- 
