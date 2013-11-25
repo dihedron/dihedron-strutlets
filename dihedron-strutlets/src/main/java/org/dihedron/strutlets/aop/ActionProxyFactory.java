@@ -519,7 +519,7 @@ public class ActionProxyFactory {
 				if(doValidation) {
 					validCode.append("\t\t\t");
 				}
-				String arg = prepareArgument(i, types[i], annotations[i], preCode, postCode, doValidation);
+				String arg = prepareArgument(i, types[i], annotations[i], actionAlias, method, preCode, postCode, doValidation);
 				args.append(args.length() > 0 ? ", " : "").append(arg);
 			}
 						
@@ -539,7 +539,7 @@ public class ActionProxyFactory {
 				code.append("\t\tjava.util.Set violations = methodValidator.validateParameters((").append(action.getCanonicalName()).append(")$1, methodToValidate, array, new java.lang.Class[] { javax.validation.groups.Default.class });\n");
 				
 				code.append("\t\tif(violations.size() > 0) {\n");
-				code.append("\t\t\tlogger.debug(\"{} constraint violations detected in input parameters\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+				code.append("\t\t\tlogger.warn(\"{} constraint violations detected in input parameters\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
 				
 				// now grab the ValidationHandler 
 				Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
@@ -626,8 +626,7 @@ public class ActionProxyFactory {
 		}		
 	}
 	
-	private String prepareArgument(int i, Type type, Annotation[] annotations, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
-				
+	private String prepareArgument(int i, Type type, Annotation[] annotations, String action, Method method, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		In in = null;
 		Out out = null;
 		InOut inout = null;
@@ -643,6 +642,9 @@ public class ActionProxyFactory {
 				model = (Model)annotation;
 			}
 		}
+		
+		
+		
 		if(inout != null) {
 			logger.trace("preparing input argument...");
 			// safety check: verify that no @In or @Out parameters are specified
@@ -687,7 +689,7 @@ public class ActionProxyFactory {
 			
 			if(model != null) {
 				logger.trace("preparing model argument...");
-				return prepareInputModelArgument(i, type, model, preCode, doValidation);
+				return prepareInputModelArgument(i, type, model, action, method, preCode, doValidation);
 			} else {
 				logger.trace("preparing non-annotated argument...");
 				return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, doValidation);
@@ -986,7 +988,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareInputModelArgument(int i, Type type, Model model, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
+	private String prepareInputModelArgument(int i, Type type, Model model, String action, Method method, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
 		
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
 			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", model.value(), i, Types.getAsString(type));
@@ -1052,20 +1054,31 @@ public class ActionProxyFactory {
 		preCode.append("\t\tognl.setValue(context, ").append(variable).append(", entry.getValue());\n");
 		
 		// end of loop on values
-		preCode.append("\t}\n\n");		
+		preCode.append("\t}\n\n");	
+		
+		// now perform bean validation, if available
+		preCode.append("\tif(beanValidator != null) {\n");
+		preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
+		
+		preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(", new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+		
+		preCode.append("\t\tif(violations.size() > 0) {\n");
+		preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+		
+		// now grab the ValidationHandler 
+		Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+		preCode.append("\t\t\tif(handler == null) {\n");
+		preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+		preCode.append("\t\t\t}\n");
+		preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsRawType(type)).append(".class, violations);\n");
+		preCode.append("\t\t\tif(result != null) {\n");
+		preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
+		preCode.append("\t\t\t\treturn result;\n");
+		preCode.append("\t\t\t}\n");
+		preCode.append("\t\t}\n");
+		preCode.append("\t}\n\n");
 		
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
-		
-		//
-		// the value used for JSR-349 parameters validation
-		//
-		/*
-		if(doValidation) {
-			preCode.append("\n");
-			preCode.append("\t// in parameter\n");
-			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
-		}
-		*/
 		
 		preCode.append("\n");
 		return variable;

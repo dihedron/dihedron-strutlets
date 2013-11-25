@@ -16,6 +16,10 @@
 <liferay-ui:error key="error-surname-key" message="error-message-surname" />
 <liferay-ui:error key="error-phone-key" message="error-message-phone" />
 <liferay-ui:error key="error-email-key" message="error-message-email" />
+<liferay-ui:error key="error-address-street-key" message="error-message-address-street"/>
+<liferay-ui:error key="error-address-number-key" message="error-message-address-number"/>
+<liferay-ui:error key="error-address-zip-key" message="error-message-address-zip"/>
+<liferay-ui:error key="error-address-town-key" message="error-message-address-town"/>
 
  
 <strutlets:useBean var="friends" name="friendsAttribute" scopes="request" type="Set<?>" />
@@ -36,7 +40,7 @@
 
 
 <br>
-<portlet:actionURL name="ProxiedAction!dumpInputs" var="formUrl"></portlet:actionURL>
+<portlet:actionURL name="ModelAction!processUser" var="formUrl"></portlet:actionURL>
 
 
 <div class="strutlets-warning">
@@ -49,25 +53,20 @@ by implementing your own check logic inside a custom <code>ValidationHandler</co
 
 <br>
 
-<fieldset>
-	<legend>Existing attributes in various scopes</legend>
-	FRIENDS: <%= friends %><br>
-	DESCRIPTION: <%= description %><br>	
-	AGE: <%= age %><br>
-	GENDER: <%= gender %><br>
-</fieldset>
-
-<br>
-
 You can submit an arbitrary form to an Action; it will be bounced back by this example.
 <br>&nbsp;<br> 
 <aui:form method="post" action="${formUrl}">
 	<aui:fieldset label="Personal Info">
-		<aui:input label="Name (min 3, max 20):" name="nameParameter" type="text" value=""/>
-		<aui:input label="Surname:" name="surnameParameter" type="text" value=""/>
-		<aui:input label="Phone (06-555-12345):" name="phoneParameter" type="text" value=""/>
-		<aui:input label="Email:" name="emailParameter" type="text" value=""/>
+		<aui:input label="Name (min 3, max 20):" name="user:name" type="text" value=""/>
+		<aui:input label="Surname:" name="user:surname" type="text" value=""/>
+		<aui:input label="Phone (06-555-12345):" name="user:phone" type="text" value=""/>
+		<aui:input label="Email:" name="user:email" type="text" value=""/>
+		<aui:input label="Street:" name="user:address.street" type="text" value=""/>
+		<aui:input label="Street no.:" name="user:address.number" type="text" value=""/>
+		<aui:input label="ZIP Code:" name="user:address.zip" type="text" value=""/>
+		<aui:input label="Town:" name="user:address.town" type="text" value=""/>
 	</aui:fieldset>
+	<%--
 	<aui:fieldset label="Loves:">
 		<aui:input label="Animals" name="loves" type="checkbox" value="animals"/>
 		<aui:input label="Flowers" name="loves" type="checkbox" value="flowers"/>
@@ -80,7 +79,8 @@ You can submit an arbitrary form to an Action; it will be bounced back by this e
 			<aui:input inlineLabel="right" name="redirect" type="radio" value="homepage" label="Go to the homepage"/>
 			<aui:input inlineLabel="right" name="redirect" type="radio" value="absolute" label="Go to www.google.com" />			
 			<aui:input inlineLabel="right" name="redirect" type="radio" value="internal" label="Go to a demo JSP"/>
-	</aui:fieldset>	
+	</aui:fieldset>
+	--%>	
 	<br>
 	<aui:button type="submit" value="Submit!"/> 
 </aui:form> 

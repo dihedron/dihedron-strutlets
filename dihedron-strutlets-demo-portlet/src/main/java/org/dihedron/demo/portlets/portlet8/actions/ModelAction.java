@@ -27,9 +27,11 @@
 
 package org.dihedron.demo.portlets.portlet8.actions;
 
-import javax.validation.Validator;
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
-import javax.validation.executable.ExecutableValidator;
+import javax.validation.constraints.Size;
 
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -38,6 +40,7 @@ import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Result;
 import org.dihedron.strutlets.annotations.Scope;
 import org.dihedron.strutlets.aop.$;
+import org.hibernate.validator.constraints.Email;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,9 +123,17 @@ public class ModelAction {
 		public void setTown(String town) {
 			this.town = town;
 		}
+		
+		@Size(min=3, max=20, message="error-address-street-key") 
 		private String street;
+		
+		@Min(value=1, message="error-address-number-key") @Max(value=1000, message="error-address-number-key")
 		private int number;
+		
+		@Pattern(regexp="\\d{5}", message="error-address-zip-key")
 		private String zip;
+		
+		@Size(min=1, max=20, message="error-address-town-key")
 		private String town;
 	}
 	
@@ -248,26 +259,31 @@ public class ModelAction {
 		/**
 		 * The user's name.
 		 */
+		@Size(min=3, max=20, message="error-name-key") 
 		private String name;
 		
 		/**
 		 * The user's family name.
 		 */
+		@Size(min=3, max=20, message="error-surname-key")
 		private String surname;
 		
 		/**
 		 * The user's email address.
 		 */
+		@Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key")
 		private String phone;
 		
 		/**
 		 * The user's phone number.
 		 */
+		@Email(message="error-email-key")
 		private String email;
 		
 		/**
 		 * The user's address.
 		 */
+		@Valid
 		private Address address = new Address();
 	}
 
@@ -292,7 +308,11 @@ public class ModelAction {
 	@Invocable(
 		idempotent = true,
 		results = {
-			@Result(value="success", renderer="jsp", data="/html/portlet8/result.jsp")
+			@Result(value="success", renderer="jsp", data="/html/portlet8/result.jsp"),
+			@Result(value="invalid_input", renderer="jsp", data="/html/portlet8/view_on_input_errors.jsp"),
+			@Result(value="redirect_to_homepage", renderer="redirect", data="/web/guest/welcome"),
+			@Result(value="redirect_to_google", renderer="redirect", data="http://www.google.co.uk"),
+			@Result(value="redirect_to_jsp", renderer="redirect", data="${portlet-context}/html/portlet8/redirect.jsp")			
 		},
 		validator = Portlet8ValidationHandler.class
 	)

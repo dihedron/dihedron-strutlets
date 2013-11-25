@@ -64,4 +64,17 @@ public class Portlet1ValidationHandler implements ValidationHandler {
 		}		
 		return null;
 	}
+
+	/**
+	 * @see org.dihedron.strutlets.validation.ValidationHandler#onModelViolations(java.lang.String, java.lang.String, int, java.lang.Class, java.util.Set)
+	 */
+	@Override
+	public String onModelViolations(String action, String method, int index, Class<?> model, Set<ConstraintViolation<?>> violations) {
+		SessionMessages.add(ActionContext.getPortletRequest(), ActionContext.getPortletName() + SessionMessages. KEY_SUFFIX_HIDE_DEFAULT_ERROR_MESSAGE);
+		for(ConstraintViolation<?> violation : violations) {
+			logger.warn("{}!{}: violation on model bean {} (no. {}), value {}: {}", action, method, model.getSimpleName(), index, violation.getInvalidValue(), violation.getMessage());
+			SessionErrors.add(ActionContext.getPortletRequest(), violation.getMessage());
+		}		
+		return null;
+	}
 }

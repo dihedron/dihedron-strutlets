@@ -84,4 +84,30 @@ public interface ValidationHandler {
 	 */
 	String onResultViolations(String action, String method, Set<ConstraintViolation<?>> violations);
 
+
+	/**
+	 * This method is invoked when the JSR-349 validator produces at least one 
+	 * constraint violation on the given {@code &at;Model}-based method parameter.
+	 * If violations occur on multiple parameters, one call is performed for each 
+	 * invalid parameter. This method can be used to prevent method execution and 
+	 * directly diverting the execution to a different path.
+	 * 
+	 * @param action
+	 *   the name of the action class; this is the simple name of the class or 
+	 *   its alias if available.
+	 * @param method
+	 *   the name of the method having caused the violations.
+	 * @param index
+	 *   the index of the method parameter to which this violation belongs.
+	 * @param model
+	 *   the class of the model object on which the error occurred,
+	 * @param violations
+	 *   the set of violations.
+	 * @return
+	 *   @{code null} to let the processing proceed as usual; a valid string to
+	 *   divert execution flow into a different path (this value will replace
+	 *   the action's result). 
+	 */
+	String onModelViolations(String action, String method, int index, Class<?> model, Set<ConstraintViolation<?>> violations);	
+	
 }
