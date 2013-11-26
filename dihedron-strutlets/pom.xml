@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>org.dihedron.strutlets</groupId>
 		<artifactId>strutlets-parent</artifactId> 
-		<version> 0.59.1-SNAPSHOT</version>
+		<version> 0.60.0</version>
 		<relativePath>..</relativePath>		
 	</parent>
 	
 	<modelVersion>4.0.0</modelVersion>	
 	<artifactId>strutlets</artifactId>
-  <version>0.59.1-SNAPSHOT</version>
+  <version>0.60.0</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime Library</name>
 	<description>An MVC framework supporting action-based development JSR-286-compliant portal servers.</description>
