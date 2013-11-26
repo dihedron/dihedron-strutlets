@@ -91,4 +91,9 @@ public class $<T> {
 	public boolean isUnbound() {
 		return this.reference == null;
 	}
+	
+	@Override
+	public String toString() {
+		return "reference: " + (isBound() ? this.reference.toString() : "unbound");
+	}
 }

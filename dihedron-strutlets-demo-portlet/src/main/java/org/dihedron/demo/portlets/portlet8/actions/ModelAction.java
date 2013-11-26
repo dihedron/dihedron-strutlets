@@ -318,7 +318,7 @@ public class ModelAction {
 	)
 	@Pattern(regexp="^success$|^error$")
 	public String processUser(
-			@Model("^user\\:.*") User user, 
+			@Model("^user\\:.*") @Out(value = "user", to = Scope.PORTLET) $<User> user, 
 			@Out(value = "result", to = Scope.RENDER) $<String> result) {
 		logger.debug("processing user model object...");	
 		result.set(user.toString());		

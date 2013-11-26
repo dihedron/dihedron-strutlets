@@ -643,8 +643,6 @@ public class ActionProxyFactory {
 			}
 		}
 		
-		
-		
 		if(inout != null) {
 			logger.trace("preparing input argument...");
 			// safety check: verify that no @In or @Out parameters are specified
@@ -679,14 +677,12 @@ public class ActionProxyFactory {
 			if(model != null) {
 				// prepare model/out
 				logger.trace("preparing model/output argument...");
-				// TODO:
-				return "";
+				return prepareInputOutputModelArgument(i, type, model, out, action, method, preCode, postCode, doValidation);
 			} else {
 				logger.trace("preparing output argument...");
 				return prepareOutputArgument(i, type, out, preCode, postCode, doValidation);				
 			}
-		} else {
-			
+		} else {			
 			if(model != null) {
 				logger.trace("preparing model argument...");
 				return prepareInputModelArgument(i, type, model, action, method, preCode, doValidation);
@@ -899,6 +895,7 @@ public class ActionProxyFactory {
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
+		parameter = out.value();
 		Scope scope = null;
 		if(out.scope() != Scope.NONE) {
 			// TODO: remove when releasing version 1.0.0
@@ -1013,8 +1010,7 @@ public class ActionProxyFactory {
 		preCode.append("\t//\n\t// preparing input-only model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
 		
 		// retrieve the applicable parameters from the specified scopes
-		logger.trace("{}-th parameter is annotated with @Model('{}')", i, model.value());
-		logger.trace("pattern is '{}'", pattern);
+		logger.trace("{}-th parameter is annotated with @Model('{}', '{}')", i, pattern, mask);
 		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
 		for(Scope scope : model.from()) {
@@ -1083,6 +1079,132 @@ public class ActionProxyFactory {
 		preCode.append("\n");
 		return variable;
 	}
+
+	private String prepareInputOutputModelArgument(int i, Type type, Model model, Out out, String action, Method method, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {		
+		
+		//
+		// TODO: implement from here!!!!! 
+		//
+		if(!Types.isGeneric(type)) {
+			logger.error("output model parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output model parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+		}
+		
+		if(!Types.isOfClass(type, $.class))	{		
+			logger.error("output model parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output model parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
+		}
+				
+		if(!Strings.isValid(model.value())) {
+			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (check parameter {}: @Model's pattern is '{}')", i, model.value());
+			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value: check parameter no. " + i + " (@Model's pattern is '" + model.value() + "')");									
+		}
+		
+		if(out.value().trim().length() == 0) {
+			logger.error("output model parameters' storage name must be explicitly specified through the @Out annotation's value (check parameter {}: @Out's value is '{}')", i, out.value());
+			throw new DeploymentException("Output model parameters's name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
+		}		
+		
+		// double back-slashes become single in code generation!
+		String pattern = model.value().replaceAll("\\\\", "\\\\\\\\");
+		String mask = model.mask().replaceAll("\\\\", "\\\\\\\\");
+		
+		Type wrapped = Types.getParameterTypes(type)[0];
+		String variable = "model_" + i;
+		
+		preCode.append("\t//\n\t// preparing input-output model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");
+		
+		// retrieve the applicable parameters from the specified scopes
+		logger.trace("{}-th parameter is annotated with @Model('{}', '{}')", i, pattern, mask);
+		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		boolean first = true;
+		for(Scope scope : model.from()) {
+			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
+			first = false;
+		} 
+		preCode.append(" });\n\n");
+				
+		
+		// TODO: instantiate an object of the given type before
+		// starting setting its values with OGNL!!!
+		
+		// instantiate a new instance of the model object and store it in a $<?> reference
+		preCode.append("\t//\n\t// creating new model object instance (which will be stored in a $<?> reference)\n\t//\n");
+		preCode.append("\torg.dihedron.strutlets.aop.$ ").append(variable).append(" = new org.dihedron.strutlets.aop.$(new ").append(Types.getAsString(wrapped)).append("());\n");
+		preCode.append("\tognl.OgnlContext context = new ognl.OgnlContext();\n");
+		
+		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
+		
+		
+		
+		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
+		preCode.append("\twhile(entries.hasNext()) {\n");
+		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
+		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
+		
+		// if there is a mask, remove it from the key name
+		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
+		preCode.append("\t\t\t// remove the mask if specified\n");
+		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
+		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
+		preCode.append("\t\t}\n");
+		
+		// create an OGNL interpreter and launch it against the model object
+		preCode.append("\t\t// create the OGNL expression\n");
+		preCode.append("\t\torg.dihedron.strutlets.ognl.OgnlExpression ognl = new org.dihedron.strutlets.ognl.OgnlExpression(key);\n");
+		preCode.append("\t\tognl.setValue(context, ").append(variable).append(".get(), entry.getValue());\n");
+		
+		// end of loop on values
+		preCode.append("\t}\n\n");	
+		
+		// now perform bean validation, if available
+		preCode.append("\tif(beanValidator != null) {\n");
+		preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
+		
+		preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(".get(), new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+		
+		preCode.append("\t\tif(violations.size() > 0) {\n");
+		preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+		
+		// now grab the ValidationHandler 
+		Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+		preCode.append("\t\t\tif(handler == null) {\n");
+		preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+		preCode.append("\t\t\t}\n");
+		preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsString(wrapped)).append(".class, violations);\n");
+		preCode.append("\t\t\tif(result != null) {\n");
+		preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
+		preCode.append("\t\t\t\treturn result;\n");
+		preCode.append("\t\t\t}\n");
+		preCode.append("\t\t}\n");
+		preCode.append("\t}\n\n");
+		
+		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
+		
+		preCode.append("\n");
+		
+		//
+		// code executed AFTER the action has returned, to store values into scopes
+		//
+		Scope scope = null;
+		String parameter = out.value();
+		if(out.scope() != Scope.NONE) {
+			// TODO: remove when releasing version 1.0.0
+			logger.warn("@Out is using deprecated annotation attribute 'scope', please replace it with 'to'");			
+			scope = out.scope();
+		} else {
+			scope = out.to();		
+		}
+		postCode.append("\t//\n\t// storing input/output model argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(scope.name()).append("\n\t//\n");
+		postCode.append("\tvalue = ").append(variable).append(".get();\n");
+		postCode.append("\tif(value != null) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
+		postCode.append("\t}\n");
+		postCode.append("\n");
+		
+		return variable;
+	}
+	
 	
 	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, boolean doValidation) throws DeploymentException {
 		
