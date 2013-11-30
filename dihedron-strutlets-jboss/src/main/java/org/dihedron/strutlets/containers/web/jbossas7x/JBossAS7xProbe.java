@@ -27,7 +27,7 @@ import org.dihedron.strutlets.containers.web.jbossas.JBossASProbe;
 public class JBossAS7xProbe extends JBossASProbe {
 
 	/**
-	 * Constructor has package visibility to prevent construction by anyonw except 
+	 * Constructor has package visibility to prevent construction by anyone except 
 	 * its plugin.
 	 */
 	JBossAS7xProbe() {		

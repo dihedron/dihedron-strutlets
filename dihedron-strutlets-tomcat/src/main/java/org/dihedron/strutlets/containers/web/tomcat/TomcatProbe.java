@@ -51,7 +51,7 @@ public abstract class TomcatProbe implements Probe {
 			logger.trace("server info: '{}', server number: '{}'", identification, number);
 			supported = identification.startsWith(getReferenceName()) && number.startsWith(getReferenceVersion());
 		} catch (ClassNotFoundException e) {
-			logger.error("not running on Apache Tomcat", e);
+			logger.warn("not running on Apache Tomcat, please remove this plugin from your deployment to stop seeing this message");
 		} catch (IllegalAccessException e) {
 			logger.error("error accessing class for server information retrieval", e);
 		} catch (NoSuchMethodException e) {

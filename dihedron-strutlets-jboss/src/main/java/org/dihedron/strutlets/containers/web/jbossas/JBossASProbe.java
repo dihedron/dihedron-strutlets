@@ -45,7 +45,7 @@ public abstract class JBossASProbe implements Probe {
 			logger.trace("application server is JBossAS 7.x+");
 			return true;		
 		} catch (ClassNotFoundException e) {
-			logger.trace("application server is not JBossAS 7.x+");
+			logger.warn("not running on JBoss AS, please remove this plugin from your deployment to stop seeing this message");
 		}
 		return false;
 	}

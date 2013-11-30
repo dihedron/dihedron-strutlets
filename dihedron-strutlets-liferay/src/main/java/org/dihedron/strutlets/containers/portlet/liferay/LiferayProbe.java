@@ -51,7 +51,7 @@ public abstract class LiferayProbe implements Probe {
 			logger.trace("container name: '{}', version: '{}'", name, version);
 			supported = name.startsWith(getReferenceName()) && version.startsWith(getReferenceVersion());
 		} catch (ClassNotFoundException e) {
-			logger.error("not running on Liferay Portal", e);
+			logger.warn("not running on Liferay Portal, please remove this plugin from your deployment to stop seeing this message");
 		} catch (IllegalAccessException e) {
 			logger.error("error accessing class for server information retrieval", e);
 		} catch (NoSuchMethodException e) {
