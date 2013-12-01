@@ -89,7 +89,7 @@
 			actions can be found. -->
 		<init-param>
 			<name>strutlets:actions-configuration</name>
-			<value></value>
+			<value>${org.dihedron.home}/configuration.properties</value>
 		</init-param>
 
 		<!-- Use this parameter to set the Java package where the framework should 

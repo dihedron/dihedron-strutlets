@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dihedron.utils;
+package org.dihedron.commons.utils;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

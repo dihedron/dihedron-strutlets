@@ -48,6 +48,10 @@ import org.dihedron.commons.properties.Properties;
 import org.dihedron.commons.properties.PropertiesException;
 import org.dihedron.commons.url.URLFactory;
 import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.variables.EnvironmentValueProvider;
+import org.dihedron.commons.variables.MapBasedValueProvider;
+import org.dihedron.commons.variables.SystemPropertyValueProvider;
+import org.dihedron.commons.variables.Variables;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.portlet.PortalServer;
@@ -746,6 +750,11 @@ public class ActionController extends GenericPortlet {
     private void initialisePortletConfiguration() {
     	String value = InitParameter.ACTIONS_CONFIGURATION.getValueForPortlet(this);
     	if(Strings.isValid(value)) {
+    		
+    		// replace system properties or environment variables (if any)
+    		logger.trace("replacing variables in actions' configuration property: '{}'", value);
+    		value = Variables.replaceVariables(value, new SystemPropertyValueProvider(), new EnvironmentValueProvider());
+    		
     		logger.debug("loading actions' configuration from '{}'", value);
     		InputStream stream = null;
     		try {
