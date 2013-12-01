@@ -11,6 +11,8 @@
 <portlet:defineObjects />
 <strutlets:defineObjects />
 
+<strutlets:useBean name="user" scopes="portlet" var="user" type="org.dihedron.demo.portlets.portlet8.actions.ModelAction.User"/>
+
 <liferay-ui:success key="success-key" message="success-message"/>
 <liferay-ui:error key="error-name-key" message="error-message-name" />
 <liferay-ui:error key="error-surname-key" message="error-message-surname" />
@@ -57,14 +59,14 @@ You can submit an arbitrary form to an Action; it will be bounced back by this e
 <br>&nbsp;<br> 
 <aui:form method="post" action="${formUrl}">
 	<aui:fieldset label="Personal Info">
-		<aui:input label="Name (min 3, max 20):" name="user:name" type="text" value=""/>
-		<aui:input label="Surname:" name="user:surname" type="text" value=""/>
-		<aui:input label="Phone (06-555-12345):" name="user:phone" type="text" value=""/>
-		<aui:input label="Email:" name="user:email" type="text" value=""/>
-		<aui:input label="Street:" name="user:address.street" type="text" value=""/>
-		<aui:input label="Street no.:" name="user:address.number" type="text" value=""/>
-		<aui:input label="ZIP Code:" name="user:address.zip" type="text" value=""/>
-		<aui:input label="Town:" name="user:address.town" type="text" value=""/>
+		<aui:input label="Name (min 3, max 20):" name="user:name" type="text" value="${user.name}"/>
+		<aui:input label="Surname:" name="user:surname" type="text" value="${user.surname}"/>
+		<aui:input label="Phone (06-555-12345):" name="user:phone" type="text" value="${user.phone}"/>
+		<aui:input label="Email:" name="user:email" type="text" value="${user.email}"/>
+		<aui:input label="Street:" name="user:address.street" type="text" value="${user.address.street}"/>
+		<aui:input label="Street no.:" name="user:address.number" type="text" value="${user.address.number}"/>
+		<aui:input label="ZIP Code:" name="user:address.zip" type="text" value="${user.address.zip}"/>
+		<aui:input label="Town:" name="user:address.town" type="text" value="${user.address.town}"/>
 	</aui:fieldset>
 	<%--
 	<aui:fieldset label="Loves:">

@@ -33,6 +33,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Model;
@@ -301,6 +302,18 @@ public class ModelAction {
 	)
 	public String render() {
 		logger.debug("initialising view...");
+		User user = new User();
+		user.setName("please enter your name...");
+		user.setSurname("please enter your family name...");
+		user.setEmail("please enter your email address...");
+		user.setPhone("please enter your phone number...");
+		Address address = new Address();
+		address.setStreet("please enter the street where you live...");
+		address.setNumber(0);
+		address.setTown("please enter your town...");
+		address.setZip("please enter your ZIP code...");
+		user.setAddress(address);
+		ActionContext.setPortletAttribute("user", user);
 		return Action.SUCCESS;
 	}
 	

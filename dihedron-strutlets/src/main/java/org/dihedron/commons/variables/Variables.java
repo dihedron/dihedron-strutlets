@@ -100,7 +100,7 @@ public class Variables {
 				for(ValueProvider provider : providers) {
 					value = provider.onVariable(variable);
 					if(value != null) {
-						logger.trace("... replacing variable '{}' with value '{}'", value);
+						logger.trace("... replacing variable '{}' with value '{}'", variable, value);
 						text = text.replace("${" + variable +"}", value);
 						logger.trace("... text is now '{}'", text);
 						oneVariableBound = true;

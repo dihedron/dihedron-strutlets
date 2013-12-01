@@ -74,7 +74,6 @@ import org.slf4j.LoggerFactory;
  * is a superset of all available functionalities; other classes may provide a
  * restricted view base on the current phase, to help developers discover bugs at
  * compile time instead of having to catch exceptions at run time.
- * 
  * @author Andrea Funto'
  */
 public class ActionContext {
@@ -1451,20 +1450,19 @@ public class ActionContext {
 		}			
 		return values;
 	}
-	
-	
+		
 	/**
 	 * Stores a value into the given scope.
 	 *  
 	 * @param key
-	 *   the name of the parameter to store for.
+	 *   the name of the parameter to store.
 	 * @param scope
 	 *   the scope into which the value must be stored.
 	 * @param value
-	 *   the value to be sored. 
+	 *   the value to be stored. 
 	 * @throws StrutletsException
-	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
-	 *   APPLICATION and CONFIGURATION. 
+	 *   if the scope includes any other value besides RENDER, REQUEST, PORTLET,
+	 *   and APPLICATION. 
 	 */
 	public static void storeValueIntoScope(String key, org.dihedron.strutlets.annotations.Scope scope, Object value) throws StrutletsException {
 		logger.trace("storing parameter '{}' into scope '{}', value '{}'...", key, scope.name(), value);
@@ -1483,8 +1481,40 @@ public class ActionContext {
 			setApplicationAttribute(key, value);
 			break;
 		default:
-			logger.error("cannot extract an input value from the {} scope: this is probably a bug!", scope.name());
-			throw new StrutletsException("Cannot extract an input value from the " + scope.name() + " scope: this is probably a bug!");					
+			logger.error("cannot store an output value into {} scope: this is probably a bug!", scope.name());
+			throw new StrutletsException("Cannot store an output value into the " + scope.name() + " scope: this is probably a bug!");					
+		}			
+	}
+	
+	/**
+	 * Removes a value from the given scope (if the value exists).
+	 *  
+	 * @param key
+	 *   the name of the parameter to remove.
+	 * @param scope
+	 *   the scope from which the value must be removed.
+	 * @throws StrutletsException
+	 *   if the scope includes any other value besides RENDER, REQUEST, PORTLET,
+	 *   and APPLICATION. 
+	 */
+	public static void removeValueFromScope(String key, org.dihedron.strutlets.annotations.Scope scope) throws StrutletsException {
+		logger.trace("removing parameter '{}' from scope '{}'...", key, scope.name());
+		switch(scope) {
+		case RENDER:  
+			removeRenderParameter(key);
+			break;
+		case REQUEST:
+			removeRequestAttribute(key);
+			break;
+		case PORTLET:
+			removePortletAttribute(key);
+			break;
+		case APPLICATION:
+			removeApplicationAttribute(key);
+			break;
+		default:
+			logger.error("cannot remove a value from the {} scope: this is probably a bug!", scope.name());
+			throw new StrutletsException("Cannot remove a value from the " + scope.name() + " scope: this is probably a bug!");					
 		}			
 	}
 	
@@ -2149,16 +2179,46 @@ public class ActionContext {
 	}
 	
 	/**
+	 * Replaces the render parameters map with the one supplied.
+	 * 
+	 * @param parameters
+	 *   the new render parameters map.
+	 * @throws InvalidPhaseException
+	 *   if invoked out of the action or event phase.
+	 */
+	public static void setRenderParameterMap(Map<String, String[]> parameters) throws InvalidPhaseException {
+		if(getContext().response instanceof StateAwareResponse) {
+			((StateAwareResponse)getContext().response).setRenderParameters(parameters);
+			getContext().renderParametersChanged = true;
+		} else {
+			logger.error("trying to set the render parameters map in render phase");
+			throw new InvalidPhaseException("Render parameters cannot be set in the render phase");		
+		}
+	}
+
+	/**
+	 * Clears the render parameter map.
+	 * 
+	 * @throws InvalidPhaseException
+	 *   if invoked out of the action or event phase.
+	 */
+	public static void clearRenderParameterMap() throws InvalidPhaseException {
+		setRenderParameterMap(new HashMap<String, String[]>());
+	}
+	
+	/**
 	 * Sets a render parameter. The parameter value(s) must all be string(s).
 	 * 
 	 * @param key
 	 *   the name of the parameter.
 	 * @param values
 	 *   the parameter value(s).
+	 * @throws InvalidPhaseException
+	 *   if invoked outside of the action or event phase.
 	 */
 	public static void setRenderParameter(String key, String... values) throws InvalidPhaseException {
 		if(Strings.isValid(key) && values != null && (isActionPhase() || isEventPhase()) && getContext().response instanceof StateAwareResponse) {
-			getContext().renderParametersChanged= true;
+			getContext().renderParametersChanged = true;
 			logger.trace("setting render parameter '{}'...", key);
 			if(values.length == 1) {
 				logger.trace(" ... value is '{}'", values[0]);
@@ -2172,6 +2232,27 @@ public class ActionContext {
 		} else {
 			logger.error("trying to set render parameter '{}' in render phase", key);
 			throw new InvalidPhaseException("Render parameters cannot be set in the render phase");
+		}
+	}
+	
+	/**
+	 * Removes a render parameter from the render parameters map.
+	 * 
+	 * @param key
+	 *   the key of the parameter to remove.
+	 * @throws InvalidPhaseException
+	 *   if invoked outside of the action or event phase.
+	 */
+	public static void removeRenderParameter(String key) throws InvalidPhaseException {
+		if(Strings.isValid(key) && (isActionPhase() || isEventPhase()) && getContext().response instanceof StateAwareResponse) {
+			getContext().renderParametersChanged = true;
+			logger.trace("removing render parameter '{}'...", key);
+			Map<String, String[]> parameters = getRenderParameterMap();
+			parameters.remove(key);
+			setRenderParameterMap(parameters);			
+		} else {
+			logger.error("trying to remove render parameter '{}' in render phase", key);
+			throw new InvalidPhaseException("Render parameters cannot be removed in the render phase");
 		}
 	}
 	

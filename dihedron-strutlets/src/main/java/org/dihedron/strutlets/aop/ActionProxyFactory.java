@@ -464,9 +464,6 @@ public class ActionProxyFactory {
 		logger.trace("method '{}' (action alias '{}') will be proxied by '{}'", method.getName(), actionAlias, methodName);
 		try {
 			
-			
-			StringBuilder postCode = new StringBuilder("\t//\n\t// post action execution: store @Out parameters into scopes\n\t//\n\n");
-			
 			StringBuilder code = new StringBuilder("public static final java.lang.String ").append(methodName).append("( java.lang.Object action ) {\n\n");
 			
 			code.append("\tlogger.trace(\"entering stub method...\");\n");			
@@ -515,6 +512,7 @@ public class ActionProxyFactory {
 			StringBuilder args = new StringBuilder();
 			StringBuilder validCode = new StringBuilder();
 			StringBuilder preCode = new StringBuilder();
+			StringBuilder postCode = new StringBuilder();
 			for(int i = 0; i < types.length; ++i) {
 				if(doValidation) {
 					validCode.append("\t\t\t");
@@ -602,9 +600,11 @@ public class ActionProxyFactory {
 			}			
 			
 			// code executed after the action has been fired, e.g. storing [in]out parameters into scopes
-			code.append("\n");
-			code.append(postCode);
-			code.append("\n");
+			if(postCode.length() > 0) {
+				code.append("\t//\n\t// post action execution: store @Out parameters into scopes\n\t//\n\n");
+				code.append(postCode);
+			}
+						
 			code.append("\tlogger.debug(\"result is '{}' (execution took {} ms)\", result, new java.lang.Long((java.lang.System.currentTimeMillis() - millis)).toString());\n");
 			code.append("\tlogger.trace(\"... leaving stub method\");\n");
 			code.append("\treturn result;\n");
@@ -813,6 +813,8 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
+		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		
@@ -908,6 +910,8 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
+		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		return variable;
@@ -975,12 +979,15 @@ public class ActionProxyFactory {
 		//
 		// code executed AFTER the action has returned, to store values into scopes
 		//
-		postCode.append("\t//\n\t// storing input/output argument ").append(parameter).append(" (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(inout.to()).append("\n\t//\n");
+		postCode.append("\t//\n\t// storing input/output argument ").append(parameter).append(" (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(") into scope ").append(inout.to().name()).append("\n\t//\n");
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
-		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to()).append(", value );\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to().name()).append(", value );\n");
+		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to().name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
+
 		
 		return variable;
 	}
@@ -1199,6 +1206,8 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
+		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
 		
