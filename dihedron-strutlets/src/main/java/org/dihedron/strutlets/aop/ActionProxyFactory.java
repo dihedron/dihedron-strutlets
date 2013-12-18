@@ -813,7 +813,7 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
-		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t} else if(").append(variable).append(".isReset()) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
@@ -910,7 +910,7 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
-		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t} else if(").append(variable).append(".isReset()) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
@@ -983,7 +983,7 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to().name()).append(", value );\n");
-		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t} else if(").append(variable).append(".isReset()) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(inout.to().name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");
@@ -1206,7 +1206,7 @@ public class ActionProxyFactory {
 		postCode.append("\tvalue = ").append(variable).append(".get();\n");
 		postCode.append("\tif(value != null) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.storeValueIntoScope( \"").append(out.value()).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(", value );\n");
-		postCode.append("\t} else if(").append(variable).append(".isOverride()) {\n");
+		postCode.append("\t} else if(").append(variable).append(".isReset()) {\n");
 		postCode.append("\t\torg.dihedron.strutlets.ActionContext.removeValueFromScope( \"").append(parameter).append("\", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name()).append(" );\n");
 		postCode.append("\t}\n");
 		postCode.append("\n");

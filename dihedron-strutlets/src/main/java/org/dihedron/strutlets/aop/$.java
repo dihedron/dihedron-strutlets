@@ -46,7 +46,7 @@ public class $<T> {
 	 * Whether the {@code null} value should override a valid value in the
 	 * output scope; by default, it will not.
 	 */
-	private boolean override = false;
+	private boolean reset = false;
 	
 	/**
 	 * Constructor.
@@ -89,6 +89,37 @@ public class $<T> {
 	}
 	
 	/**
+	 * Sets how the framework should behave with respect to null (unbound) 
+	 * references: if the {@link #reset(boolean)} method has been called with a 
+	 * {@code true} value, the null value will be regarded as meaningful and 
+	 * will end up replacing the original value in the output scope; otherwise 
+	 * the framework will leave any pre-existing value untouched (the default 
+	 * behaviour).
+	 *  
+	 * @param reset
+	 *   whether the framework should reset any pre-existing values in the several
+	 *   scopes, thus leaving it unbound if no valid output is provided.
+	 * @return
+	 *   the object itself, to enable method chaining.
+	 */
+	public $<T> reset(boolean reset) {
+		this.reset = reset;
+		return this;
+	}
+	
+	/**
+	 * Returns whether the framework should reset a pre-existing value in one of 
+	 * the output scopes before processing an output annotation.
+	 * 
+	 * @return
+	 *   whether the output value will override the existing value in the output 
+	 *   scope, even if null.
+	 */
+	public boolean isReset() {
+		return reset;
+	}
+	
+	/**
 	 * Checks whether the reference is initialised and bound to some object or 
 	 * it is still dangling. 
 	 * 
@@ -126,10 +157,12 @@ public class $<T> {
 	 *   value be {@code null}.
 	 * @return
 	 *   the wrapper object itself, to enable method chaining.
+	 * @deprecated
+	 *   use #
 	 */
+	@Deprecated
 	public $<T> setOverride(boolean override) {
-		this.override = override;
-		return this;
+		return reset(override);
 	}
 	
 	/**
@@ -139,13 +172,16 @@ public class $<T> {
 	 * 
 	 * @return
 	 *   whether {@code null} will be considered meaningful or not.
+	 * @deprecated
+	 *   use
 	 */
+	@Deprecated
 	public boolean isOverride() {
-		return this.override;
+		return this.reset;
 	}
 	
 	@Override
 	public String toString() {
-		return (isOverride() ? "overriding " : "") + "reference: " + (isBound() ? this.reference.toString() : "unbound");
+		return (isReset() ? "overriding " : "") + "reference: " + (isBound() ? this.reference.toString() : "unbound");
 	}
 }
