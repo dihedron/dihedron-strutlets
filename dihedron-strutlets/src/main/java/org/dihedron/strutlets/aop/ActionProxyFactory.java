@@ -37,8 +37,8 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-import org.dihedron.commons.utils.Strings;
-import org.dihedron.commons.utils.Types;
+import org.dihedron.commons.strings.Strings;
+import org.dihedron.commons.reflection.Types;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.InOut;

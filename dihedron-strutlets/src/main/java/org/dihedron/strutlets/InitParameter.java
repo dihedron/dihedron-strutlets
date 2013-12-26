@@ -21,7 +21,7 @@ package org.dihedron.strutlets;
 
 import javax.portlet.GenericPortlet;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -33,7 +33,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.SchemaFactory;
 
-import org.dihedron.commons.utils.Resource;
+import org.dihedron.commons.streams.Resource;
 import org.dihedron.commons.xml.DomHelper;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;

@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
 import javax.portlet.PortletRequest;
 
 import org.dihedron.commons.regex.Regex;
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.Strutlets;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.exceptions.StrutletsException;

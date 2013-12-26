@@ -21,7 +21,7 @@ package org.dihedron.strutlets.renderers.registry;
 
 import java.util.Set;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.annotations.Alias;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.renderers.Renderer;

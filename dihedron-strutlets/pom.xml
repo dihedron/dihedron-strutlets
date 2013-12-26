@@ -53,6 +53,11 @@
 		</plugins> </reporting> -->
 	<dependencies>
 		<dependency>
+			<groupId>org.dihedron.commons</groupId>
+			<artifactId>commons</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>javax.portlet</groupId>
 			<artifactId>portlet-api</artifactId>
 			<scope>provided</scope>

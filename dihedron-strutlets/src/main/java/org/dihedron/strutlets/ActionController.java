@@ -46,10 +46,9 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
 import org.dihedron.commons.properties.PropertiesException;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.commons.url.URLFactory;
-import org.dihedron.commons.utils.Strings;
 import org.dihedron.commons.variables.EnvironmentValueProvider;
-import org.dihedron.commons.variables.MapBasedValueProvider;
 import org.dihedron.commons.variables.SystemPropertyValueProvider;
 import org.dihedron.commons.variables.Variables;
 import org.dihedron.strutlets.actions.Result;

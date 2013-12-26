@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.dihedron.commons.regex.Regex;
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContext.Scope;
 import org.dihedron.strutlets.ActionInvocation;

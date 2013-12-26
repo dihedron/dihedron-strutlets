@@ -26,7 +26,7 @@ import java.util.Map.Entry;
 
 import javax.xml.namespace.QName;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Event;
 import org.dihedron.strutlets.annotations.Invocable;

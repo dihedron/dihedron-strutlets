@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletSession;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

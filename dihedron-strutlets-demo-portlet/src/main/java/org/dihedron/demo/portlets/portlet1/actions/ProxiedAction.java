@@ -38,8 +38,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import org.dihedron.commons.utils.Strings;
-import org.dihedron.commons.utils.Types;
+import org.dihedron.commons.strings.Strings;
+import org.dihedron.commons.reflection.Types;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;

@@ -57,7 +57,7 @@ import javax.xml.namespace.QName;
 
 import org.dihedron.commons.properties.Properties;
 import org.dihedron.commons.regex.Regex;
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.actions.PortletMode;
 import org.dihedron.strutlets.actions.WindowState;
 import org.dihedron.strutlets.containers.portlet.PortalServer;

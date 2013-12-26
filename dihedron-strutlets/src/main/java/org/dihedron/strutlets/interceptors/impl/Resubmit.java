@@ -24,7 +24,7 @@ import java.util.Map;
 
 import javax.portlet.PortletSession;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionInvocation;
 import org.dihedron.strutlets.exceptions.StrutletsException;

@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
-import org.dihedron.commons.utils.Strings;
+import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.aop.ActionProxy;
