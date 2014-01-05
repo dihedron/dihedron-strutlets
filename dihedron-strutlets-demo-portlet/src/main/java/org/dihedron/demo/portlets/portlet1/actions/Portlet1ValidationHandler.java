@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012, 2013, Andrea Funto'. All rights reserved.
+ * Copyright (c) 2012-2014, Andrea Funto'. All rights reserved.
  * 
  * This file is part of the Strutlets framework ("Strutlets").
  *
@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License 
  * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.dihedron.demo.portlets.portlet1.actions;
 
 import java.util.Set;

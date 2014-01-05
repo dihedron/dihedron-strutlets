@@ -1,28 +1,20 @@
 /**
- * Copyright (c) 2012, Andrea Funto'
- * All rights reserved.
+ * Copyright (c) 2012-2014, Andrea Funto'. All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Andrea Funto' nor the names of its contributors 
- *       may be used to endorse or promote products derived from this software 
- *       without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL ANDREA FUNTO' BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * This file is part of the Strutlets framework ("Strutlets").
+ *
+ * Strutlets is free software: you can redistribute it and/or modify it under 
+ * the terms of the GNU Lesser General Public License as published by the Free 
+ * Software Foundation, either version 3 of the License, or (at your option) 
+ * any later version.
+ *
+ * Strutlets is distributed in the hope that it will be useful, but WITHOUT ANY 
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR 
+ * A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License 
+ * along with Strutlets. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package org.dihedron.demo.portlets.portlet1.actions;
@@ -39,7 +31,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.dihedron.commons.strings.Strings;
-import org.dihedron.commons.reflection.Types;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -126,15 +117,15 @@ public class ProxiedAction {
 	) throws InvalidPhaseException {
 		logger.debug("dumping input parameters from session & form");
 		StringBuilder buffer = new StringBuilder("{\n");
-		buffer.append("\t'name' : '").append(name).append("' (").append(Types.getAsStringFor(name)).append("),\n");
-		buffer.append("\t'surname' : '").append(surname).append("' (").append(Types.getAsStringFor(surname)).append("),\n");
-		buffer.append("\t'phone' : '").append(phone).append("' (").append(Types.getAsStringFor(phone)).append("),\n");
-		buffer.append("\t'email' : '").append(email).append("' (").append(Types.getAsStringFor(email)).append("),\n");		
-		buffer.append("\t'loves' : [").append(Strings.join(", ", (Object[])loves)).append("] (").append(Types.getAsStringFor(loves)).append("),\n");
-		buffer.append("\t'friends' : '").append(friends).append("' (").append(Types.getAsStringFor(friends)).append("),\n");
-		buffer.append("\t'description' : '").append(description).append("' (").append(Types.getAsStringFor(description)).append("),\n");
-		buffer.append("\t'age' : '").append(age).append("' (").append(Types.getAsStringFor(age)).append("),\n");
-		buffer.append("\t'gender' : '").append(gender).append("' (").append(Types.getAsStringFor(gender)).append("),\n");
+		buffer.append("\t'name' : '").append(name).append("' (").append(name.getClass().getName()).append("),\n");
+		buffer.append("\t'surname' : '").append(surname).append("' (").append(surname.getClass().getName()).append("),\n");
+		buffer.append("\t'phone' : '").append(phone).append("' (").append(phone.getClass().getName()).append("),\n");
+		buffer.append("\t'email' : '").append(email).append("' (").append(email.getClass().getName()).append("),\n");		
+		buffer.append("\t'loves' : [").append(Strings.join(", ", (Object[])loves)).append("] (").append(loves.getClass().getName()).append("),\n");
+		buffer.append("\t'friends' : '").append(friends).append("' (").append(friends.getClass().getName()).append("),\n");
+		buffer.append("\t'description' : '").append(description).append("' (").append(description.getClass().getName()).append("),\n");
+		buffer.append("\t'age' : '").append(age).append("' (").append(age.getClass().getName()).append("),\n");
+		buffer.append("\t'gender' : '").append(gender).append("' (").append(gender.getClass().getName()).append("),\n");
 		buffer.append("}");
 		
 		// you can decide if you want the portlet to redirect to another page 
