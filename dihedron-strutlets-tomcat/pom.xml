@@ -12,79 +12,8 @@
 	<packaging>jar</packaging>
 	<name>Strutlets - Plug-in for Tomcat 7+</name>
 	<description>A plugin to provide access to Tomcat-specific functionalities through Strutlets.</description>
-	<url>http://www.dihedron.org/strutlets</url>
 	
-	<developers>
-		<developer>
-			<id>Dihedron</id>
-			<name>Andrea Funtò</name>
-			<email>dihedron.dev@gmail.com</email>
-			<roles>
-				<role>Lead Developer</role>
-			</roles>
-		</developer>
-	</developers>
-	
-	<licenses>
-		<license>
-			<comments>Copyright (C) Andrea Funtò 2012-2013 - All rights reserved</comments>
-			<name>GNU Lesser General Public License ver. 3 or later</name>
-			<url>http://www.gnu.org/licenses/lgpl.html</url>
-		</license>
-	</licenses>
-	
-	<scm>
-		<url>http://code.google.com/p/dihedron-strutlets-tomcat/</url>
-		<connection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-tomcat/</connection>
-		<developerConnection>scm:git:https://dihedron.dev@code.google.com/p/dihedron-strutlets-tomcat/</developerConnection>		
-	</scm>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<sonar.language>java</sonar.language>
-	</properties>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-					<bottom>
-            <![CDATA[
-              Copyright &copy; 2012-2013 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
-            ]]>
-					</bottom>
-				</configuration>
-			</plugin>
-		</plugins>
-
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-	</build>
-	<!-- <reporting> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-		<artifactId>maven-javadoc-plugin</artifactId> <version>2.9</version> </plugin> 
-		</plugins> </reporting> -->
 	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<scope>compile</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-catalina</artifactId>
@@ -97,15 +26,5 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>		
 	</dependencies>
 </project>

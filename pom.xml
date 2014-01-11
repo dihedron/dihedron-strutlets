@@ -33,7 +33,7 @@
 	
 	<licenses>
 		<license>
-			<comments>Copyright (C) Andrea Funtò 2012-2013 - All rights reserved</comments>
+			<comments>Copyright (C) Andrea Funtò 2012-2014 - All rights reserved</comments>
 			<name>GNU Lesser General Public License ver. 3 or later</name>
 			<url>http://www.gnu.org/licenses/lgpl.html</url>
 		</license>
@@ -51,6 +51,50 @@
 		<module>./dihedron-strutlets-liferay</module>
 		<module>./dihedron-strutlets-demo-portlet</module>
 	</modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+				<!--
+					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+				-->
+					<bottom>
+            <![CDATA[
+              Copyright &copy; 2012-2014 Andrea Funt&ograve;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.
+            ]]>
+					</bottom>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
 			
 	<dependencies>
 		<dependency>
@@ -80,7 +124,7 @@
 			<dependency>
 				<groupId>org.dihedron.commons</groupId>
 				<artifactId>commons</artifactId>
-				<version>0.0.3</version>
+				<version>0.0.5</version>
 			</dependency>
 			<dependency>
 				<groupId>javax.portlet</groupId>

@@ -10,47 +10,11 @@
 	
 	<modelVersion>4.0.0</modelVersion>	
 	<artifactId>strutlets</artifactId>
-  <version>0.61.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Strutlets - Runtime Library</name>
 	<description>An MVC framework supporting action-based development JSR-286-compliant portal servers.</description>
 	<url>http://www.dihedron.org/strutlets</url>
 		
-	<build>
-	 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-					<bottom>
-            			<![CDATA[Copyright &copy; 2012-2013 Andrea Funt&#x00F2;. See <a href="{@docRoot}/doc-files/license.html">here</a> for terms and conditions.]]>
-					</bottom>
-				</configuration>
-			</plugin>
-		</plugins>
-
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-			</resource>
-		</resources>
-	</build>
-	<!-- <reporting> <plugins> <plugin> <groupId>org.apache.maven.plugins</groupId> 
-		<artifactId>maven-javadoc-plugin</artifactId> <version>2.9</version> </plugin> 
-		</plugins> </reporting> -->
 	<dependencies>
 		<dependency>
 			<groupId>org.dihedron.commons</groupId>
