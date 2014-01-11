@@ -1371,13 +1371,13 @@ public class ActionContext {
 	 *   if the scopes include any other value besides FORM, REQUEST, PORTLET,
 	 *   APPLICATION, CONFIGURATION and HTTP. 
 	 */
-	public static Map<String, Object> findValuesInScopes(String pattern, org.dihedron.strutlets.annotations.Scope ... scopes) throws StrutletsException {
+	public static Map<String, Object> matchValuesInScopes(String pattern, org.dihedron.strutlets.annotations.Scope ... scopes) throws StrutletsException {
 		// now, depending on the scope, try to locate the parameter in the appropriate context 
 		Map<String, Object> values = new HashMap<String, Object>();
 				
 		for(org.dihedron.strutlets.annotations.Scope scope : scopes) {
 			logger.trace("scanning input scope '{}' for parameters matching '{}'...", scope.name(), pattern);
-			Map<String, Object> map = findValuesInScope(pattern, scope);
+			Map<String, Object> map = matchValuesInScope(pattern, scope);
 			if(map != null && !map.isEmpty()) {
 				for(String key : map.keySet()) {
 					if(!values.containsKey(key)) {
@@ -1407,7 +1407,7 @@ public class ActionContext {
 	 *   APPLICATION, CONFIGURATION and HTTP. 
 	 */
 	@SuppressWarnings("unchecked")
-	public static Map<String, Object> findValuesInScope(String pattern, org.dihedron.strutlets.annotations.Scope scope) throws StrutletsException {
+	public static Map<String, Object> matchValuesInScope(String pattern, org.dihedron.strutlets.annotations.Scope scope) throws StrutletsException {
 		Regex regex = new Regex(pattern);
 				
 		logger.trace("retrieving values from scope '{}'...", scope.name());

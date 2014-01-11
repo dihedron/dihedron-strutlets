@@ -27,12 +27,15 @@
 
 package org.dihedron.demo.portlets.portlet8.actions;
 
+import java.util.List;
+
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import org.dihedron.commons.regex.Regex;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -303,16 +306,16 @@ public class ModelAction {
 	public String render() {
 		logger.debug("initialising view...");
 		User user = new User();
-		user.setName("please enter your name...");
-		user.setSurname("please enter your family name...");
-		user.setEmail("please enter your email address...");
-		user.setPhone("please enter your phone number...");
-		Address address = new Address();
-		address.setStreet("please enter the street where you live...");
-		address.setNumber(0);
-		address.setTown("please enter your town...");
-		address.setZip("please enter your ZIP code...");
-		user.setAddress(address);
+//		user.setName("please enter your name...");
+//		user.setSurname("please enter your family name...");
+//		user.setEmail("please enter your email address...");
+//		user.setPhone("please enter your phone number...");
+//		Address address = new Address();
+//		address.setStreet("please enter the street where you live...");
+//		address.setNumber(0);
+//		address.setTown("please enter your town...");
+//		address.setZip("please enter your ZIP code...");
+//		user.setAddress(address);
 		ActionContext.setPortletAttribute("user", user);
 		return Action.SUCCESS;
 	}
@@ -331,11 +334,38 @@ public class ModelAction {
 	)
 	@Pattern(regexp="^success$|^error$")
 	public String processUser(
-			@Model("^user\\:.*") @Out(value = "user", to = Scope.PORTLET) $<User> user, 
+//			@Model(value = "^user\\:(.*)$") @Out(value = "user", to = Scope.PORTLET) $<User> user, 
+			@Model @Out(value = "user", to = Scope.PORTLET) $<User> user,
 			@Out(value = "result", to = Scope.RENDER) $<String> result) {
 		logger.debug("processing user model object...");	
 		result.set(user.toString());		
 		logger.debug("user model object: \n{}", user.toString());
 		return Action.SUCCESS;
+	}
+
+	private static void test(Regex regex, String string) {
+		regex.matches(string);
+		List<String[]> groups = regex.getAllMatches(string);
+		for(String[] matches : groups) {
+			logger.trace("-----------------------------------------------------");
+			for(String match : matches) {
+				logger.trace("match: '{}'", match);
+			}
+		}
+		logger.trace("-----------------------------------------------------");		
+		
+	}
+	
+	public static void main(String [] args) {		
+	
+//		Regex regex = new Regex("^(?:user)\\:(.*)$");
+//		Regex regex = new Regex("(?:user)\\:(.*)");
+//		Regex regex = new Regex("user\\:(.*)");
+		Regex regex = new Regex("^(?:[^\\:]*)\\:(.+)$");
+		test(regex, "user:name");
+		test(regex, "user:surname");
+		test(regex, "user:address.street");
+		test(regex, "user:address.street.number");
+		test(regex, "users:name");
 	}
 }

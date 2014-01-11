@@ -36,29 +36,22 @@ public @interface Model {
 	
 	/**
 	 * The pattern (regular expression) of the names of the input parameters; it 
-	 * must be specified.
+	 * must be specified, and must contain exactly one (no more, no less) capturing
+	 * group; whatever is captured by the group is taken as the OGNL expression used 
+	 * to store the request parameter value into the model object. You may use
+	 * this characteristic to filter out any unwanted parts in the name of the
+	 * parameter. As an example, you may specify a regular expression such as
+	 * <code>user\\:(.*)</code>, which will only capture the second part of
+	 * any string in the form "user:address.street" ("address.street" will be
+	 * captured) or "user:name" ("name" will be captured). In these examples,
+	 * this will result in <code>&lt;model-object&gt;.getAddress().setStreet()</code>
+	 * and <code>&lt;model-object&gt;.setName()</code> being called. 
 	 * 
 	 * @return
 	 *   the pattern of the regular expression used to select the parameters
 	 *   whose values will be stored inside the field.
 	 */
-	String value();
-	
-	/**
-	 * A regular expression used to identify the part of the name of the parameter 
-	 * that must be dropped in order to get the OGNL expression of the destination
-	 * field for each value in the matching input parameters: for instance, if the 
-	 * parameters are named "user:name", "user:surname" and "user:address.street", 
-	 * the default mask will remove the "user:" prefix, and "name", "surname" 
-	 * and "address.street" will be considered OGNL expressions, which will result
-	 * in <code>setName()</code>, <code>setSurname()</code> and <code>getAddress().
-	 * setStreet()</code> being called on the field.   
-	 * 
-	 * @return
-	 *   a regular expression identifying a set of characters to remove from the
-	 *   name in order to get a valid and applicable OGNL expression.
-	 */
-	String mask() default "^[a-zA-Z0-9_\\-]*\\:";
+	String value() default "^(?:[^\\:\\[\\]]+)\\:(.+)$";
 	
 	/**
 	 * The scope in which the parameters should be looked up; by default, they

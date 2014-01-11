@@ -1011,14 +1011,13 @@ public class ActionProxyFactory {
 		
 		// double back-slashes become single in code generation!
 		String pattern = model.value().replaceAll("\\\\", "\\\\\\\\");
-		String mask = model.mask().replaceAll("\\\\", "\\\\\\\\");
 		String variable = "model_" + i;
 		
 		preCode.append("\t//\n\t// preparing input-only model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
 		
 		// retrieve the applicable parameters from the specified scopes
-		logger.trace("{}-th parameter is annotated with @Model('{}', '{}')", i, pattern, mask);
-		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		logger.trace("{}-th parameter is annotated with @Model('{}')", i, pattern);
+		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.matchValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
 		for(Scope scope : model.from()) {
 			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
@@ -1037,17 +1036,16 @@ public class ActionProxyFactory {
 		
 		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
 		
-		
-		
 		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
+		preCode.append("\torg.dihedron.commons.regex.Regex regex = new org.dihedron.commons.regex.Regex(\"").append(pattern).append("\");\n");
 		preCode.append("\twhile(entries.hasNext()) {\n");
 		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
 		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
 		
-		// if there is a mask, remove it from the key name
-		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
-		preCode.append("\t\t\t// remove the mask if specified\n");
-		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
+		// get the contents of the capturing group from the regular expression
+		preCode.append("\t\tif(regex.matches(key)) {\n");
+		preCode.append("\t\t\tString[] matches = (String[])regex.getAllMatches(key).get(0);\n"); 
+		preCode.append("\t\t\tkey = matches[0];\n");
 		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
 		preCode.append("\t\t}\n");
 		
@@ -1114,7 +1112,6 @@ public class ActionProxyFactory {
 		
 		// double back-slashes become single in code generation!
 		String pattern = model.value().replaceAll("\\\\", "\\\\\\\\");
-		String mask = model.mask().replaceAll("\\\\", "\\\\\\\\");
 		
 		Type wrapped = Types.getParameterTypes(type)[0];
 		String variable = "model_" + i;
@@ -1122,8 +1119,8 @@ public class ActionProxyFactory {
 		preCode.append("\t//\n\t// preparing input-output model argument with pattern '").append(pattern).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");
 		
 		// retrieve the applicable parameters from the specified scopes
-		logger.trace("{}-th parameter is annotated with @Model('{}', '{}')", i, pattern, mask);
-		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.findValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
+		logger.trace("{}-th parameter is annotated with @Model('{}')", i, pattern);
+		preCode.append("\tjava.util.Map map = org.dihedron.strutlets.ActionContext.matchValuesInScopes(\"").append(pattern).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
 		for(Scope scope : model.from()) {
 			preCode.append(first ? "" : ", ").append("org.dihedron.strutlets.annotations.Scope.").append(scope.name());
@@ -1142,19 +1139,25 @@ public class ActionProxyFactory {
 		
 		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
 		
-		
-		
 		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
+		preCode.append("\torg.dihedron.commons.regex.Regex regex = new org.dihedron.commons.regex.Regex(\"").append(pattern).append("\");\n");
 		preCode.append("\twhile(entries.hasNext()) {\n");
 		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
 		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
-		
-		// if there is a mask, remove it from the key name
-		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
-		preCode.append("\t\t\t// remove the mask if specified\n");
-		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
+
+		// get the contents of the capturing group from the regular expression
+		preCode.append("\t\tif(regex.matches(key)) {\n");
+		preCode.append("\t\t\tString[] matches = (String[])regex.getAllMatches(key).get(0);\n"); 
+		preCode.append("\t\t\tkey = matches[0];\n");
 		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
-		preCode.append("\t\t}\n");
+		preCode.append("\t\t}\n");		
+		
+//		// if there is a mask, remove it from the key name
+//		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
+//		preCode.append("\t\t\t// remove the mask if specified\n");
+//		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
+//		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
+//		preCode.append("\t\t}\n");
 		
 		// create an OGNL interpreter and launch it against the model object
 		preCode.append("\t\t// create the OGNL expression\n");

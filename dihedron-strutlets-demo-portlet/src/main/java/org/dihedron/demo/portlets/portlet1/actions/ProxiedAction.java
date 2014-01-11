@@ -62,10 +62,10 @@ public class ProxiedAction {
 		}
 	)
 	public String render(
-			@Out(value="friendsAttribute", scope = Scope.REQUEST) $<Set<List<Map<String, Vector<String>>>>> friends,
-			@Out(value="descriptionAttribute", scope = Scope.PORTLET) $<String> description,
-			@Out(value="ageAttribute", scope = Scope.APPLICATION) $<Integer> age,			
-			@Out(value="genderAttribute", scope = Scope.APPLICATION) $<Boolean> gender
+			@Out(value="friendsAttribute", to = Scope.REQUEST) $<Set<List<Map<String, Vector<String>>>>> friends,
+			@Out(value="descriptionAttribute", to = Scope.PORTLET) $<String> description,
+			@Out(value="ageAttribute", to = Scope.APPLICATION) $<Integer> age,			
+			@Out(value="genderAttribute", to = Scope.APPLICATION) $<Boolean> gender
 		) {
 		logger.debug("initialising view, storing parameters into session");
 		friends.set(new HashSet<List<Map<String, Vector<String>>>>());
@@ -101,19 +101,19 @@ public class ProxiedAction {
 	)
 	@Pattern(regexp="^sucCess$|^error$")
 	public String dumpInputs(
-			@In(value = "nameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="error-name-key") String name, 
-			@In(value = "surnameParameter", scopes = Scope.FORM) @Size(min=3, max=20, message="error-surname-key") String surname,
-			@In(value = "phoneParameter", scopes = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key") String phone,
-			@In(value = "emailParameter", scopes = Scope.FORM) @Email(message="error-email-key") String email,
-			@In(value = "lovesCheckbox", scopes = Scope.FORM) String[] loves,
-			@In(value = "redirect", scopes = Scope.FORM) String redirect,
-			@In(value="friendsAttribute", scopes = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
-			@In(value="descriptionAttribute", scopes = Scope.PORTLET) String description,
-			@In(value="ageAttribute", scopes = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			
-			@In(value="genderAttribute", scopes = Scope.APPLICATION) Boolean gender,
+			@In(value = "nameParameter", from = Scope.FORM) @Size(min=3, max=20, message="error-name-key") String name, 
+			@In(value = "surnameParameter", from = Scope.FORM) @Size(min=3, max=20, message="error-surname-key") String surname,
+			@In(value = "phoneParameter", from = Scope.FORM) @Pattern(regexp="^\\d{2}-\\d{3}-\\d{5}$", message="error-phone-key") String phone,
+			@In(value = "emailParameter", from = Scope.FORM) @Email(message="error-email-key") String email,
+			@In(value = "lovesCheckbox", from = Scope.FORM) String[] loves,
+			@In(value = "redirect", from = Scope.FORM) String redirect,
+			@In(value="friendsAttribute", from = Scope.REQUEST) Set<List<Map<String, Vector<String>>>> friends,
+			@In(value="descriptionAttribute", from = Scope.PORTLET) String description,
+			@In(value="ageAttribute", from = Scope.APPLICATION) @Min(10) @Max(120) Integer age,			
+			@In(value="genderAttribute", from = Scope.APPLICATION) Boolean gender,
 			String aString,
 			double aDouble,
-			@Out(value = "result", scope = Scope.RENDER) $<String> result   
+			@Out(value = "result", to = Scope.RENDER) $<String> result   
 	) throws InvalidPhaseException {
 		logger.debug("dumping input parameters from session & form");
 		StringBuilder buffer = new StringBuilder("{\n");
@@ -122,7 +122,12 @@ public class ProxiedAction {
 		buffer.append("\t'phone' : '").append(phone).append("' (").append(phone.getClass().getName()).append("),\n");
 		buffer.append("\t'email' : '").append(email).append("' (").append(email.getClass().getName()).append("),\n");		
 		buffer.append("\t'loves' : [").append(Strings.join(", ", (Object[])loves)).append("] (").append(loves.getClass().getName()).append("),\n");
-		buffer.append("\t'friends' : '").append(friends).append("' (").append(friends.getClass().getName()).append("),\n");
+		if(friends != null) {
+			// "friends" will be null because it was set in a REQUEST-scoped parameter 
+			// by the "render()" method, yet this method is being invoked in the action-phase
+			// and all REQUEST-scoped parameters are erased when a new action phase fires!
+			buffer.append("\t'friends' : '").append(friends).append("' (").append(friends.getClass().getName()).append("),\n");
+		}
 		buffer.append("\t'description' : '").append(description).append("' (").append(description.getClass().getName()).append("),\n");
 		buffer.append("\t'age' : '").append(age).append("' (").append(age.getClass().getName()).append("),\n");
 		buffer.append("\t'gender' : '").append(gender).append("' (").append(gender.getClass().getName()).append("),\n");
