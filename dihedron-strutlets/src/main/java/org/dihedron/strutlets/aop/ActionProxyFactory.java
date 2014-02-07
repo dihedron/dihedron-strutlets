@@ -874,7 +874,7 @@ public class ActionProxyFactory {
 		
 		if(Types.isSimple(wrapped) && !((Class<?>)wrapped).isArray()) {
 			// if parameter is not an array, pick the first element
-			preCode.append("\tif(value != null && value.getClass().isArray() && ((Object[])value).lenght > 0) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
+			preCode.append("\tif(value != null && value.getClass().isArray() && ((Object[])value).length > 0) {\n\t\tvalue = ((Object[])value)[0];\n\t}\n");
 		}		
 
 		// NOTE: no support for generics in Javassist: drop types (which would be dropped by type erasure anyway...)
