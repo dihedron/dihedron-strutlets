@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012, 2013, Andrea Funto'. All rights reserved.
+ * Copyright (c) 2012-2014, Andrea Funto'. All rights reserved.
  * 
  * This file is part of the Strutlets framework ("Strutlets").
  *
@@ -18,7 +18,7 @@
  */
 
 /**
- * A package containiner JBossAS-specifiec classes.
+ * A package containing JBossAS version 7.x+ specific classes.
  * 
  * @author Andrea Funto'
  */
