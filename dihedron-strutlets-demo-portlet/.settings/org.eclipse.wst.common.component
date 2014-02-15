@@ -5,13 +5,13 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/webapp"/>
-        <dependent-module archiveName="strutlets-1.0.0.RC3-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets/dihedron-strutlets">
+        <dependent-module archiveName="strutlets-1.0.0.RC2-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets/dihedron-strutlets">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="strutlets-liferay-1.0.0.RC3-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-liferay/dihedron-strutlets-liferay">
+        <dependent-module archiveName="strutlets-liferay-1.0.0.RC2-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-liferay/dihedron-strutlets-liferay">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="strutlets-tomcat-1.0.0.RC3-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-tomcat/dihedron-strutlets-tomcat">
+        <dependent-module archiveName="strutlets-tomcat-1.0.0.RC2-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-tomcat/dihedron-strutlets-tomcat">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="context-root" value="strutlets-demo-portlet"/>
