@@ -40,7 +40,7 @@ public class DefaultValidationHandler implements ValidationHandler {
 	@Override
 	public String onParametersViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("{}!{}:violation on parameter value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}:violation on parameter value '{}': {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}
@@ -51,7 +51,7 @@ public class DefaultValidationHandler implements ValidationHandler {
 	@Override
 	public String onResultViolations(String action, String method, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("{}!{}: violation on return value {}: {}", action, method, violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation on return value '{}': {}", action, method, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}
@@ -62,7 +62,7 @@ public class DefaultValidationHandler implements ValidationHandler {
 	@Override
 	public String onModelViolations(String action, String method, int index, Class<?> model, Set<ConstraintViolation<?>> violations) {
 		for(ConstraintViolation<?> violation : violations) {
-			logger.warn("{}!{}: violation on model bean {} (no. {}), value {}: {}", action, method, model.getSimpleName(), index, violation.getInvalidValue(), violation.getMessage());
+			logger.warn("{}!{}: violation on model bean {} (no. {}), value '{}': {}", action, method, model.getSimpleName(), index, violation.getInvalidValue(), violation.getMessage());
 		}		
 		return null;
 	}

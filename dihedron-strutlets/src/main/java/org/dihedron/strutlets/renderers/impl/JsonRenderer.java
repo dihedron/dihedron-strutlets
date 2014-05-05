@@ -77,7 +77,7 @@ public class JsonRenderer extends BeanRenderer {
 		mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
 		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		String json = mapper.writeValueAsString(object);
-		logger.trace("json object is:\n{}", json);
+		logger.trace("JSON object is:\n{}", json);
 		
 		if(response instanceof MimeResponse) {
 			// this works in both RENDER and RESOURCE (AJAX) phases
