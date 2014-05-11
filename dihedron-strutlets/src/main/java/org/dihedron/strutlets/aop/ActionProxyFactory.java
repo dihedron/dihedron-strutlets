@@ -630,7 +630,7 @@ public class ActionProxyFactory {
 		In in = null;
 		Out out = null;
 		InOut inout = null;
-		Model model = null;;
+		Model model = null;
 		for(Annotation annotation : annotations) {
 			if(annotation instanceof In) {
 				in = (In)annotation;
@@ -712,7 +712,7 @@ public class ActionProxyFactory {
 		}
 		
 		String parameter = in.value();
-		String variable = parameter + "_" + i;
+		String variable = "in_" + i;
 		
 		preCode.append("\t//\n\t// preparing input argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(type)).append(")\n\t//\n");
 		
@@ -772,7 +772,7 @@ public class ActionProxyFactory {
 		}		
 		
 		String parameter = out.value();
-		String variable = parameter + "_" + i;
+		String variable = "out_" + i;
 		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("output parameter '{}' (no. {}) is of type $<{}>", parameter, i, Types.getAsString(wrapped));
@@ -844,7 +844,7 @@ public class ActionProxyFactory {
 		}		
 		
 		String parameter = in.value();
-		String variable = parameter + "_" + i;
+		String variable = "inout_" + i;
 		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
@@ -935,7 +935,7 @@ public class ActionProxyFactory {
 		}
 		
 		String parameter = inout.value();
-		String variable = parameter + "_" + i;
+		String variable = "inout_" + i;
 		
 		Type wrapped = Types.getParameterTypes(type)[0]; 
 		logger.trace("input/output parameter no. {} is of type $<{}>", i, Types.getAsString(wrapped));
@@ -1150,7 +1150,6 @@ public class ActionProxyFactory {
 		preCode.append("\t\t\tString[] matches = (String[])regex.getAllMatches(key).get(0);\n"); 
 		preCode.append("\t\t\tkey = matches[0];\n");
 		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
-		preCode.append("\t\t}\n");		
 		
 //		// if there is a mask, remove it from the key name
 //		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
@@ -1160,10 +1159,12 @@ public class ActionProxyFactory {
 //		preCode.append("\t\t}\n");
 		
 		// create an OGNL interpreter and launch it against the model object
-		preCode.append("\t\t// create the OGNL expression\n");
-		preCode.append("\t\torg.dihedron.strutlets.ognl.OgnlExpression ognl = new org.dihedron.strutlets.ognl.OgnlExpression(key);\n");
-		preCode.append("\t\tognl.setValue(context, ").append(variable).append(".get(), entry.getValue());\n");
-		
+		preCode.append("\t\t\t// create the OGNL expression\n");
+		preCode.append("\t\t\torg.dihedron.strutlets.ognl.OgnlExpression ognl = new org.dihedron.strutlets.ognl.OgnlExpression(key);\n");
+		preCode.append("\t\t\tognl.setValue(context, ").append(variable).append(".get(), entry.getValue());\n");
+			
+		preCode.append("\t\t}\n");
+
 		// end of loop on values
 		preCode.append("\t}\n\n");	
 		

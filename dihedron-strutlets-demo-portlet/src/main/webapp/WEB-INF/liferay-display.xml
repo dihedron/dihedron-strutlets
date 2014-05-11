@@ -11,5 +11,6 @@
 		<portlet id="portlet6">6. TagLib Portlet</portlet>
 		<portlet id="portlet7">7. Ajax Portlet</portlet>
 		<portlet id="portlet8">8. Model Portlet</portlet>
+		<portlet id="portlet9">9. File Upload Portlet</portlet>
 	</category>
 </display>

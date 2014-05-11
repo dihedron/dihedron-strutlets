@@ -636,6 +636,77 @@
 		</security-role-ref>
 
 	</portlet>
+
+		<portlet>
+		<portlet-name>portlet9</portlet-name>
+		<display-name>9. File Upload Portlet</display-name>
+		<portlet-class>org.dihedron.strutlets.ActionController</portlet-class>
+
+		<init-param>
+			<name>strutlets:actions-packages</name>
+			<value>org.dihedron.demo.portlets.portlet9.actions</value>
+		</init-param>
+
+		<!--
+		  Enables JSR-349 method validation on actions: by setting this to true 
+		  and adding a valid JSR-349 Bean Validation 1.1 implementation on the
+		  classpath, you will be able to annotate input and return values of the
+		  action methods with JavaBean validation annotations or with custom ones
+		  and have the framework automatically check the constraints; moreover, 
+		  you will be able to modify the action's result based on constraint
+		  compliance. 
+		 -->
+		<init-param>
+			<name>strutlets:enable-validation</name>
+			<value>false</value>
+		</init-param>
+
+		<init-param>
+			<name>strutlets:view-home</name>
+			<!-- by specifying an action method, you are instructing the framework 
+				to dispatch control to the given method; the method will decide (based on 
+				some business logic), which view will be used to render the homepage -->
+			<value>FileUploadAction!render</value>
+		</init-param>
+		<init-param>
+			<name>strutlets:edit-home</name>
+			<value>/html/portlet9/edit.jsp</value>
+		</init-param>
+		<init-param>
+			<name>strutlets:help-home</name>
+			<value>/html/portlet9/help.jsp</value>
+		</init-param>
+		<init-param>
+			<name>strutlets:default-error-page</name>
+			<value>/html/error.jsp</value>
+		</init-param>
+
+		<expiration-cache>0</expiration-cache>
+		<supports>
+			<mime-type>text/html</mime-type>
+			<portlet-mode>view</portlet-mode>
+		</supports>
+		<resource-bundle>content/Language</resource-bundle>
+		<portlet-info>
+			<title>9. File Upload Portlet</title>
+			<short-title>9. File Upload Portlet</short-title>
+			<keywords></keywords>
+		</portlet-info>
+
+		<security-role-ref>
+			<role-name>administrator</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>guest</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>power-user</role-name>
+		</security-role-ref>
+		<security-role-ref>
+			<role-name>user</role-name>
+		</security-role-ref>
+
+	</portlet>
 	
 	
 	<event-definition>

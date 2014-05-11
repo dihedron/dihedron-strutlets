@@ -14,7 +14,7 @@
         <dependent-module archiveName="strutlets-tomcat-1.0.0.RC3-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-tomcat/dihedron-strutlets-tomcat">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <property name="context-root" value="strutlets-demo-portlet"/>
         <property name="java-output-path" value="/dihedron-strutlets-demo-portlet/target/classes"/>
+        <property name="context-root" value="dihedron-strutlets-demo-portlet-1.0.0.RC3-SNAPSHOT"/>
     </wb-module>
 </project-modules>

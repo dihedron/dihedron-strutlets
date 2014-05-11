@@ -19,8 +19,10 @@
 
 package org.dihedron.strutlets;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +36,9 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.ClientDataRequest;
 import javax.portlet.Event;
 import javax.portlet.EventRequest;
 import javax.portlet.GenericPortlet;
@@ -55,6 +59,12 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.namespace.QName;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.RequestContext;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.portlet.PortletFileUpload;
 import org.dihedron.commons.properties.Properties;
 import org.dihedron.commons.regex.Regex;
 import org.dihedron.commons.strings.Strings;
@@ -65,6 +75,8 @@ import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.dihedron.strutlets.exceptions.InvalidPhaseException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.Interceptor;
+import org.dihedron.strutlets.upload.FileUploadConfiguration;
+import org.dihedron.strutlets.upload.UploadedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +94,11 @@ public class ActionContext {
 	 * The logger.
 	 */
 	private static final Logger logger = LoggerFactory.getLogger(ActionContext.class);
+
+	/**
+	 * The default encoding for file names in multipart/form-data requests.
+	 */
+	private static final String DEFAULT_ENCODING = "UTF-8";
 	
 	/**
 	 * The number of milliseconds in a second.
@@ -277,6 +294,24 @@ public class ActionContext {
 	private PortalServer portal = null;
 	
 	/**
+	 * The encoding of uploaded file names.
+	 */
+	private String encoding = DEFAULT_ENCODING;
+	
+	/**
+	 * A map containing names and information about all the form fields in a 
+	 * multipart/form-data request; if the form is not multipart, the form values 
+	 * can be retrieved directly from the request in the ordinary way (see 
+	 * {@link HttpServletRequest#getParameter(String)} for details); if the 
+	 * request is multipart, then the standard says that parameters will all be 
+	 * mixed up in the request, and the context will extract them and place them 
+	 * in this map. Thus, when this map is null, the request is not multipart 
+	 * and values will be picked from the request, when not null, all parameters
+	 * (be they form fields or uploaded files) will be available inside this map.
+	 */
+	private Map<String, FileItem> parts = null;
+	
+	/**
 	 * This boolean value is used to keep track of changes to the render parameters,
 	 * since a redirect can only be issued in action phase if no render parameters
 	 * were changed. This flag is updated if and only if the render parameters are
@@ -307,8 +342,10 @@ public class ActionContext {
 	 * @param invocation
 	 *   the optional <code>ActionInvocation</code> object, only available in the
 	 *   context of an action or event processing, not in the render phase.
+	 * @throws StrutletsException 
 	 */
-	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration, ApplicationServer server, PortalServer portal) {
+	static void bindContext(GenericPortlet portlet, PortletRequest request, PortletResponse response, Properties configuration, 
+			ApplicationServer server, PortalServer portal, FileUploadConfiguration uploadInfo) throws StrutletsException {
 		
 		logger.debug("initialising the action context for thread {}", Thread.currentThread().getId());
 		
@@ -329,8 +366,69 @@ public class ActionContext {
 			logger.trace("installing REQUEST scoped attributes map into PORTLET scope");
 			session.setAttribute(getRequestScopedAttributesKey(), new HashMap<String, Object>(), PortletSession.PORTLET_SCOPE);			
 		}
+
+		// this might be a multipart/form-data request, in which case we enable
+		// support for file uploads and read them from the input stream using
+		// a tweaked version of Apache Commons FileUpload facilities (in order 
+		// to support file uploads in AJAX requests too!).
+    	if(request instanceof ClientDataRequest) {
+    		
+    		// this is where we try to retrieve all files (if there are any that were 
+    		// uploaded) and store them as temporary files on disk; these objects will
+    		// be accessible as ordinary values under the "FORM" scope through a 
+    		// custom "filename-to-file" map, which will be clened up when the context
+    		// is unbound
+    		String encoding = ((ActionRequest)request).getCharacterEncoding();
+            getContext().encoding = Strings.isValid(encoding)? encoding : DEFAULT_ENCODING;
+            logger.trace("request encoding is: '{}'", getContext().encoding);
+
+            try {
+            	RequestContext context = new ClientDataRequestContext((ClientDataRequest)request);
+            	
+		        // check that we have a file upload request
+		        if(PortletFileUpload.isMultipartContent(context)) {  
+	        	
+		        	getContext().parts = new HashMap<String, FileItem>();
+		        	
+		        	logger.trace("handling multipart/form-data request");
+		        	
+			        // create a factory for disk-based file items
+			        DiskFileItemFactory factory = new DiskFileItemFactory();
+			        
+			        // register a tracker to perform automatic file cleanup
+//			        FileCleaningTracker tracker = FileCleanerCleanup.getFileCleaningTracker(getContext().filter.getServletContext());
+//			        factory.setFileCleaningTracker(tracker);
+			
+			        // configure the repository (to ensure a secure temporary location 
+			        // is used and the size of the )
+			        factory.setRepository(uploadInfo.getRepository());
+			        factory.setSizeThreshold(uploadInfo.getInMemorySizeThreshold());
+			        
+			        // create a new file upload handler
+			        PortletFileUpload upload = new PortletFileUpload(factory);
+			        upload.setSizeMax(uploadInfo.getMaxUploadableTotalSize());
+			        upload.setFileSizeMax(uploadInfo.getMaxUploadableFileSize());
+			
+			        // parse the request & process the uploaded items
+			        List<FileItem> items = upload.parseRequest(context);
+			        logger.trace("{} items in the multipart/form-data request", items.size());
+			        for(FileItem item : items) {
+			        	// parameters would be stored with their fully-qualified 
+			        	// name if we didn't remove the portlet namespace
+			        	String fieldName = item.getFieldName().replaceFirst(getPortletNamespace(), "");
+			        	logger.trace("storing field '{}' (type: '{}') into parts map", fieldName, item.isFormField() ? "field" : "file"); 
+			        	getContext().parts.put(fieldName, item);
+			        }		        
+		        } else {
+		        	logger.trace("handling plain form request");
+		        }
+        	} catch(FileUploadException e) {
+        		logger.warn("error handling uploaded file", e);
+        		throw new StrutletsException("Error handling uploaded file", e);
+        	}		        
+    	}
 	}
-	
+
 	/**
 	 * Cleans up the internal status of the <code>ActionContextImpl</code> in order to
 	 * avoid memory leaks due to persisting portal objects stored in the per-thread
@@ -346,6 +444,33 @@ public class ActionContext {
 		getContext().configuration = null;
 		getContext().server = null;
 		getContext().portal = null;
+		// remove all files if this is a multipart/form-data request, because
+		// the file tracker does not seem to work as expected
+		if(isMultiPartRequest()) {
+			for(Entry<String, FileItem> entry : getContext().parts.entrySet()) {
+				if(!entry.getValue().isFormField() && !entry.getValue().isInMemory()) {
+					File file = ((DiskFileItem)entry.getValue()).getStoreLocation();
+					try {
+						logger.trace("removing uploaded file '{}' from disk...", file.getAbsolutePath());
+						Files.delete(file.toPath());
+						logger.trace("... file deleted");
+					} catch(IOException e) {
+						logger.trace("... error deleting file", e);
+					}
+				}
+			}
+		}		
+		getContext().parts = null;
+		
+//		if(getContext().parts != null) {
+//			for(Entry<String, FileItem> entry : getContext().parts.entrySet()) {
+//				FileItem part = entry.getValue();
+//				if(!part.isFormField() && !part.isInMemory()) {
+//					logger.trace("releasing on-disk uploaded file '{}'", part.getFieldName());
+//					
+//				}
+//			}
+//		}
 		context.remove();
 	}
 	
@@ -983,6 +1108,16 @@ public class ActionContext {
 	}
 	
 	/**
+	 * Returns whether the request is a multipart/form-data request.
+	 * 
+	 * @return
+	 *   whether the request is a multipart/form-data request.
+	 */
+	public static boolean isMultiPartRequest() {
+		return getContext().parts != null;
+	}
+	
+	/**
 	 * Sets the title of the portlet; this method can only be invoked in the render 
 	 * phase.
 	 * 
@@ -1098,7 +1233,7 @@ public class ActionContext {
 	public static PortletPreferences getPortletPreferences() {
 		return getContext().request.getPreferences();
 	}
-	
+
 	/**
 	 * Returns the names of all portlet preference values stored for the current
 	 * portlet.
@@ -2009,9 +2144,20 @@ public class ActionContext {
 	 * @return
 	 *   the array of parameter values.
 	 */
-	public static String[] getParameterValues(String key) {
-		if(getContext().request != null) {
-			return getContext().request.getParameterValues(key);
+	public static Object getParameterValues(String key) {		
+		if(isMultiPartRequest()) {
+			logger.trace("looking for parameter named '{}' in multipart/form-data", key);
+			FileItem item = getContext().parts.get(key);
+			if(item != null) {
+				if(item.isFormField()) {
+					return new String[] {item.getString()};
+				} else {
+					return new UploadedFile(item); 
+				}
+			}
+		} else {
+			logger.trace("looking for parameter named '{}' in plain form", key);
+			return getContext().request.getParameterValues(key);			
 		}
 		return null;
 	}
@@ -2025,11 +2171,25 @@ public class ActionContext {
 	 * @return
 	 *   the first value of the array, or null if not found.
 	 */
-	public static String getFirstParameterValue(String key) {
-		if(getContext().request != null) {
-			return getContext().request.getParameter(key);
+	public static Object getFirstParameterValue(String key) {
+		if(isMultiPartRequest()) {
+			FileItem item = getContext().parts.get(key);
+			if(item != null) {
+				if(item.isFormField()) {
+					return item.getString();
+				} else {
+					return new UploadedFile(item); 
+				}
+			}
+		} else {
+			return getContext().request.getParameterValues(key);			
 		}
 		return null;
+		
+//		if(getContext().request != null) {
+//			return getContext().request.getParameter(key);
+//		}
+//		return null;
 	}
 
 	/**

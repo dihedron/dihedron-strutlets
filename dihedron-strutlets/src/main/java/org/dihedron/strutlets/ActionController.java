@@ -20,10 +20,14 @@
 package org.dihedron.strutlets;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +77,7 @@ import org.dihedron.strutlets.targets.Target;
 import org.dihedron.strutlets.targets.TargetId;
 import org.dihedron.strutlets.targets.registry.TargetFactory;
 import org.dihedron.strutlets.targets.registry.TargetRegistry;
+import org.dihedron.strutlets.upload.FileUploadConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,6 +138,11 @@ public class ActionController extends GenericPortlet {
 	private PortalServer portal;
 	
 	/**
+	 * The configuration for file upload handling.
+	 */
+	private FileUploadConfiguration uploadInfo = null;
+
+	/**
 	 * The default package for stock portal- and application-server plugins.
 	 */
 	public static final String DEFAULT_CONTAINERS_CLASSPATH = "org.dihedron.strutlets.containers";	
@@ -183,6 +193,8 @@ public class ActionController extends GenericPortlet {
         	
         	initialiseRenderersRegistry();
 			
+			initialiseFileUploadConfiguration();
+			
 			logger.info("action controller for portlet '{}' open for business", getPortletName());
 			
 		} catch (StrutletsException e) {
@@ -224,7 +236,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContext.bindContext(this, request, response, configuration, server, portal);
+	    	ActionContext.bindContext(this, request, response, configuration, server, portal, uploadInfo);
 	    	
 	    	// request attributes are removed upon a brand new action request 
 	    	ActionContext.clearRequestAttributes();
@@ -270,7 +282,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-	    	ActionContext.bindContext(this, request, response, configuration, server, portal);
+	    	ActionContext.bindContext(this, request, response, configuration, server, portal, uploadInfo);
     		
 	    	// request attributes are removed upon a brand new event request
 	    	ActionContext.clearRequestAttributes();
@@ -347,7 +359,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-    		ActionContext.bindContext(this, request, response, configuration, server, portal);    		
+    		ActionContext.bindContext(this, request, response, configuration, server, portal, uploadInfo);    		
     		
 	    	TargetId targetId = null;
 	    	Renderer renderer = null;
@@ -480,7 +492,7 @@ public class ActionController extends GenericPortlet {
 	    	// bind the per-thread invocation context to the current request,
 	    	// response and invocation objects
     		logger.trace("binding context to thread-local storage");
-    		ActionContext.bindContext(this, request, response, configuration, server, portal);
+    		ActionContext.bindContext(this, request, response, configuration, server, portal, uploadInfo);
 	    	
 	    	String target = request.getResourceID();
 	    	logger.trace("serving resource '{}'...", target);
@@ -1005,6 +1017,98 @@ public class ActionController extends GenericPortlet {
 		logger.trace("renderers configuration:\n{}", renderers.toString());    	
     }
 
+	/**
+	 * Initialises support for file uploads.
+	 * 
+	 * @throws ZephyrException
+	 *   if it cannot create or access the uploaded files repository.
+	 */
+	private void initialiseFileUploadConfiguration() throws StrutletsException {
+			
+		this.uploadInfo = new FileUploadConfiguration();
+		
+		// initialise uploaded files repository		
+		File repository = null;
+		String value = InitParameter.UPLOADED_FILES_DIRECTORY.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.info("using user-provided upload directory: '{}'", value);
+			repository  = new File(value);
+			if(!repository.exists()) {
+				if(repository.mkdirs()) {
+					logger.info("directory tree created under '{}'", repository.getAbsolutePath());
+				} else {
+					logger.error("cannot create directory tree for uploaded files: '{}'", repository.getAbsolutePath());
+					throw new DeploymentException("Error creating file upload directory under path '" + repository.getAbsolutePath() + "'");
+				}
+			}
+			
+			if(!repository.isDirectory()) {
+				logger.error("filesystem object {} is not a directory", repository.getAbsolutePath());
+				throw new DeploymentException("Filesystem object at path '" + repository.getAbsolutePath() + "' is not a directory");
+			}			
+		} else {
+			// section PLT.10.3 of the portlet 2.0 specification (on page 67) specifies 
+			// that portlet should have an exact correspondence with servlets with respect
+			// to the way one obtains the path to the server temporary directory, only 
+			// through the PortletContext insetad of the servlet context
+			repository = (File)this.getPortletContext().getAttribute(Constants.PORTLETS_TEMP_DIR_ATTRIBUTE);
+			logger.info("using application-server upload directory: '{}'", repository.getAbsolutePath());			
+		}
+				
+		// check if directory is writable
+		if(!repository.canWrite()) {
+			logger.error("upload directory {} is not writable", repository.getAbsolutePath());
+			throw new DeploymentException("Directory at path '" + repository.getAbsolutePath() + "' is not a writable");			
+		}
+		
+		// remove all pre-existing files
+		try {
+			logger.trace("removing all existing files from directory '{}'...", repository.getAbsolutePath());
+			DirectoryStream<Path> files = Files.newDirectoryStream(repository.toPath());
+			for(Path file : files) {
+				logger.trace("...removing '{}'", file);
+				file.toFile().delete();
+			}
+		} catch(IOException e) {
+			logger.warn("error deleting all files from upload directory", e);
+		}
+		
+		logger.info("upload directory '{}' ready", repository.getAbsolutePath());
+		
+		this.uploadInfo.setRepository(repository);
+		
+		// initialise maximum uploadable file size per single file
+		value = InitParameter.UPLOADED_FILES_MAX_FILE_SIZE.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.trace("setting maximum uploadable size to {}", value);
+			this.uploadInfo.setMaxUploadFileSize(Long.parseLong(value));
+		} else {
+			logger.trace("using default value for maximum uploadable file size: {}", FileUploadConfiguration.DEFAULT_MAX_UPLOADABLE_FILE_SIZE_SINGLE);
+			this.uploadInfo.setMaxUploadFileSize(FileUploadConfiguration.DEFAULT_MAX_UPLOADABLE_FILE_SIZE_SINGLE);
+		}
+		
+		// initialise maximum total uploadable file size
+		value = InitParameter.UPLOADED_FILES_MAX_REQUEST_SIZE.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.trace("setting maximum total uploadable size to {}", value);
+			this.uploadInfo.setMaxUploadTotalSize(Long.parseLong(value));
+		} else {
+			logger.trace("using default value for maximum total uploadable size: {}", FileUploadConfiguration.DEFAULT_MAX_UPLOADABLE_FILE_SIZE_TOTAL);
+			this.uploadInfo.setMaxUploadTotalSize(FileUploadConfiguration.DEFAULT_MAX_UPLOADABLE_FILE_SIZE_TOTAL);
+		}
+
+		// initialise small file threshold
+		value = InitParameter.UPLOADED_SMALL_FILE_SIZE_THRESHOLD.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			logger.trace("setting small files size threshold to {}", value);
+			this.uploadInfo.setInMemorySizeThreshold(Integer.parseInt(value));
+		} else {
+			logger.trace("using default value for small files size threshold: {}", FileUploadConfiguration.DEFAULT_SMALL_FILE_SIZE_THRESHOLD);
+			this.uploadInfo.setInMemorySizeThreshold(FileUploadConfiguration.DEFAULT_SMALL_FILE_SIZE_THRESHOLD);
+		}
+		logger.trace("done configuring file upload support");
+	}
+	
 	/**
 	 * The parameter used to specify the home page to be used by the framework
 	 * in custom XXXX (whatever) mode. This page is the starting point of the custom 

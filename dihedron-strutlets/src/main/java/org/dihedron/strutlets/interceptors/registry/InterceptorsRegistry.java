@@ -27,10 +27,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.dihedron.commons.streams.Resource;
@@ -161,7 +163,8 @@ public class InterceptorsRegistry {
 		try {
 		
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			factory.setValidating(VALIDATE_XML);
+//			factory.setValidating(VALIDATE_XML);
+			factory.setIgnoringElementContentWhitespace(true);
 			factory.setNamespaceAware(true);
 
 			xsd = Resource.getAsStreamFromClassPath(INTERCEPTORS_CONFIG_XSD);
@@ -169,8 +172,9 @@ public class InterceptorsRegistry {
 				logger.warn("error loading XSD for interceptors configuration");
 			} else {
 				logger.trace("XSD for interceptors configuration loaded");
-				SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-				factory.setSchema(schemaFactory.newSchema(new Source[] {new StreamSource(xsd)}));
+				SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+				Schema schema = schemaFactory.newSchema(new StreamSource(xsd));
+				factory.setSchema(schema);
 			}
 
 			DocumentBuilder builder = factory.newDocumentBuilder();

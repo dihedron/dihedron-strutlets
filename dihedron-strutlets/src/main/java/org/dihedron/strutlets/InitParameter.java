@@ -171,7 +171,29 @@ public enum InitParameter {
 	 * The parameter used to specify an optional portlet-container-specific plugin,
 	 * which will be used by the framework to retrieve platform-specific data.
 	 */
-	PORTLET_CONTAINER_PLUGIN("strutlets:portlet-container-plugin", "portlet.container.plugin");
+	PORTLET_CONTAINER_PLUGIN("strutlets:portlet-container-plugin", "portlet.container.plugin"),
+	
+	/**
+	 * The parameter used to specify the directory into which all uploaded files 
+	 * will be stored; if not provided, the server will provide a default.
+	 */
+	UPLOADED_FILES_DIRECTORY("strutlets:uploaded-files-repository", ""),
+	
+	/**
+	 * The maximum size of each individual uploaded file.
+	 */
+	UPLOADED_FILES_MAX_FILE_SIZE("strutlets:uploaded-files-max-size-per-file", ""),
+	
+	/**
+	 * The maximum uploadable size per request (as the sum of all uploaded files).
+	 */
+	UPLOADED_FILES_MAX_REQUEST_SIZE("strutlets:uploaded-files-max-size-total", ""),
+	
+	/**
+	 * The maximum size for a file to be considered small and kept in memory instead 
+	 * of being written to a temporary file on disk.
+	 */
+	UPLOADED_SMALL_FILE_SIZE_THRESHOLD("strutlets:uploaded-files-small-file-threshold", "");
 			
 	/**
 	 * Constructor.

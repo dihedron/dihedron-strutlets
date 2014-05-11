@@ -109,29 +109,32 @@ public class Resubmit extends Interceptor {
 
 		if(ActionContext.isActionPhase() || ActionContext.isResourcePhase()) {
 			logger.trace("in action or resource phase");
-			String[] tokens = ActionContext.getParameterValues(FORM_TOKEN);
-			if(tokens != null && tokens.length > 0) {
-				long timestamp = Long.parseLong(tokens[0]);
-				logger.trace("form time: '{}'", timestamp);
-				Map<Long, String> submits = ensureSubmitDataAvailable();
-				synchronized(submits) {
-					if(submits.containsKey(timestamp)) {
-						if(Strings.isValid(defaultResult)) {
-							logger.error("action execution aborted due to double-submit, forwarding default result for target '{}': '{}'", invocation.getTarget().getId().toString(), defaultResult);
-							result = defaultResult;
+			Object form = ActionContext.getParameterValues(FORM_TOKEN);
+			if(form instanceof String[] && form != null) {
+				String[] tokens = (String[])form;
+				if(tokens != null && tokens.length > 0) {
+					long timestamp = Long.parseLong(tokens[0]);
+					logger.trace("form time: '{}'", timestamp);
+					Map<Long, String> submits = ensureSubmitDataAvailable();
+					synchronized(submits) {
+						if(submits.containsKey(timestamp)) {
+							if(Strings.isValid(defaultResult)) {
+								logger.error("action execution aborted due to double-submit, forwarding default result for target '{}': '{}'", invocation.getTarget().getId().toString(), defaultResult);
+								result = defaultResult;
+							} else {
+								logger.error("action execution aborted due to double-submit, forwarding previous result for target '{}': '{}'", invocation.getTarget().getId().toString(), submits.get(timestamp));
+								result = submits.get(timestamp);
+							}
 						} else {
-							logger.error("action execution aborted due to double-submit, forwarding previous result for target '{}': '{}'", invocation.getTarget().getId().toString(), submits.get(timestamp));
-							result = submits.get(timestamp);
+							logger.trace("synchronised action execution forwarded");						
+							result = invocation.invoke();
+							submits.put(timestamp, result);
 						}
-					} else {
-						logger.trace("synchronised action execution forwarded");						
-						result = invocation.invoke();
-						submits.put(timestamp, result);
-					}
-				}				
-			} else {
-				logger.trace("unsynchronised action execution forwarded: no timestamp in request");
-				result = invocation.invoke();
+					}				
+				} else {
+					logger.trace("unsynchronised action execution forwarded: no timestamp in request");
+					result = invocation.invoke();
+				}
 			}
 		} else {
 			logger.trace("unsynchronised action execution forwarded: not in action or resource phase");

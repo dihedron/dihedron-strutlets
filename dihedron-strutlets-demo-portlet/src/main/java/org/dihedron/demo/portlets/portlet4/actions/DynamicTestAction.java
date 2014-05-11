@@ -50,7 +50,7 @@ public class DynamicTestAction {
 
 	@Invocable
 	public String execute() {
-		String result = ActionContext.getFirstParameterValue("result");
+		String result = (String)ActionContext.getFirstParameterValue("result");
 		logger.debug("default method is requested to return '{}'", result);
 		if(result.equalsIgnoreCase("success")) {
 			return Action.SUCCESS;
@@ -63,7 +63,7 @@ public class DynamicTestAction {
 	
 	@Invocable
 	public String myMethod() {
-		String result = ActionContext.getFirstParameterValue("result");
+		String result = (String)ActionContext.getFirstParameterValue("result");
 		logger.debug("test method is requested to return '{}'", result);
 		if(result.equalsIgnoreCase("success")) {
 			return Action.SUCCESS;

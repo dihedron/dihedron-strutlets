@@ -20,6 +20,7 @@
 package org.dihedron.strutlets.actions;
 
 import org.dihedron.commons.strings.Strings;
+import org.dihedron.strutlets.renderers.impl.JspRenderer;
 
 
 
@@ -27,22 +28,22 @@ import org.dihedron.commons.strings.Strings;
  * @author Andrea Funto'
  */
 public class Result {
-	
+
 	/**
-	 * The default renderer to be used for results ythat do not have a renderer 
-	 * type specified explicitly in the XML or in the annotations.
+	 * The default renderer to be used for results that do not have a renderer
+	 * type specified explicitly in the annotations.
 	 */
-	public static final String DEFAULT_RENDERER = "jsp";
-	
+	public static final String DEFAULT_RENDERER_ID = JspRenderer.ID;
+
 	/**
 	 * The result identifier (e.g. "error", "success").
 	 */
 	private String id;
 	
 	/**
-	 * the type of result; if not overridden the default is assumed to be JSP.
+	 * The type of result; if not overridden the default is assumed to be JSP.
 	 */
-	private String renderer = DEFAULT_RENDERER;
+	private String renderer = DEFAULT_RENDERER_ID;
 	
 	/**
 	 * The data used by the renderer; this can be a URL, the name of a field
@@ -83,7 +84,7 @@ public class Result {
 	@Deprecated
 	public Result(String id, String renderer, String data, String mode, String state) {
 		this.id = id;
-		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER;
+		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER_ID;
 		this.data = data;
 		this.mode = PortletMode.fromString(mode);
 		this.state = WindowState.fromString(state);		
@@ -109,7 +110,7 @@ public class Result {
 	 */
 	public Result(String id, String renderer, String data, PortletMode mode, WindowState state) {
 		this.id = id;
-		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER;;
+		this.renderer = Strings.isValid(renderer) ? renderer : DEFAULT_RENDERER_ID;;
 		this.data = data;
 		this.state = state;
 		this.mode = mode;		

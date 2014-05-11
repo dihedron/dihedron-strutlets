@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class acts as a factory for actions.
+ *  
  * @author Andrea Funto'
  */
 public final class ActionFactory {
@@ -35,10 +37,12 @@ public final class ActionFactory {
 	private static final Logger logger = LoggerFactory.getLogger(ActionFactory.class);
 	
 	/**
-	 * 
+	 * Creates a new Action object, given the information about the request target.
+	 *  
 	 * @param target
+	 *   information about the requested target (the business service).
 	 * @return
-	 * @throws StrutletsException 
+	 *   an object that implements the requested chunk of business logic.
 	 * @throws Exception
 	 */
 	public static Object makeAction(Target target) throws StrutletsException {
