@@ -378,7 +378,7 @@ public class ActionContext {
     		// be accessible as ordinary values under the "FORM" scope through a 
     		// custom "filename-to-file" map, which will be clened up when the context
     		// is unbound
-    		String encoding = ((ActionRequest)request).getCharacterEncoding();
+    		String encoding = ((ClientDataRequest)request).getCharacterEncoding();
             getContext().encoding = Strings.isValid(encoding)? encoding : DEFAULT_ENCODING;
             logger.trace("request encoding is: '{}'", getContext().encoding);
 

@@ -80,7 +80,7 @@ public class FileUploadAction {
 			@In(value="file1", from = Scope.FORM) UploadedFile file1,
 			@In(value="file2", from = Scope.FORM) UploadedFile file2,
 			@In(value="file3", from = Scope.FORM) UploadedFile file3,
-			@Out(value = "result", to = Scope.RENDER) $<String> result) {
+			@Out(value = "result", to = Scope.REQUEST) $<String> result) {
 		
 		StringBuilder buffer = new StringBuilder("{\n");
 		InputStream stream = null;
