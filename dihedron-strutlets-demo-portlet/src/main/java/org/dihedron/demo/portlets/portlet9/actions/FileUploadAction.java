@@ -36,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.dihedron.commons.streams.Streams;
+import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.Invocable;
@@ -73,7 +74,8 @@ public class FileUploadAction {
 	@Invocable(
 		idempotent = true,
 		results = {
-			@Result(value="success", renderer="jsp", data="/html/portlet9/result.jsp")
+			@Result(value="success_synch", renderer="jsp", data="/html/portlet9/result.jsp"),
+			@Result(value="success_asynch", renderer="string", data="result")
 		}
 	)
 	public String onFileUpload( 
@@ -114,7 +116,11 @@ public class FileUploadAction {
 		buffer.append("}");
 		result.set(buffer.toString());		
 		logger.debug("result of upload: \n{}", buffer);
-		return Action.SUCCESS;
+		if(ActionContext.isActionPhase()) {
+			return "success_synch";
+		} else {
+			return "success_asynch";
+		}
 	}
 
 	private void safeClose(InputStream stream) {
