@@ -69,7 +69,7 @@ public class FileUploadAction {
 		logger.debug("initialising view...");
 		return Action.SUCCESS;
 	}
-	
+
 	
 	@Invocable(
 		idempotent = true,
@@ -78,7 +78,32 @@ public class FileUploadAction {
 			@Result(value="success_asynch", renderer="string", data="result")
 		}
 	)
-	public String onFileUpload( 
+	public String onFileUploadSync( 
+			@In(value="file1", from = Scope.FORM) UploadedFile file1,
+			@In(value="file2", from = Scope.FORM) UploadedFile file2,
+			@In(value="file3", from = Scope.FORM) UploadedFile file3,
+			@Out(value = "result", to = Scope.REQUEST) $<String> result) {
+		
+		return onFileUploadImpl(file1, file2, file3, result);
+	}
+	
+	@Invocable(
+		idempotent = true,
+		results = {
+			@Result(value="success_synch", renderer="jsp", data="/html/portlet9/result.jsp"),
+			@Result(value="success_asynch", renderer="string", data="result")
+		}
+	)
+	public String onFileUploadAsync( 
+			@In(value="file1", from = Scope.FORM) UploadedFile file1,
+			@In(value="file2", from = Scope.FORM) UploadedFile file2,
+			@In(value="file3", from = Scope.FORM) UploadedFile file3,
+			@Out(value = "result", to = Scope.REQUEST) $<String> result) {
+		
+		return onFileUploadImpl(file1, file2, file3, result);
+	}
+	
+	private String onFileUploadImpl( 
 			@In(value="file1", from = Scope.FORM) UploadedFile file1,
 			@In(value="file2", from = Scope.FORM) UploadedFile file2,
 			@In(value="file3", from = Scope.FORM) UploadedFile file3,

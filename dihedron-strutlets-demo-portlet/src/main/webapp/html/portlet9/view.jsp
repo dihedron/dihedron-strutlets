@@ -14,8 +14,8 @@
 
  
 <br>
-<portlet:actionURL name="FileUploadAction!onFileUpload" var="actionUrl"></portlet:actionURL>
-<portlet:resourceURL id="FileUploadAction!onFileUpload" var="resourceUrl"></portlet:resourceURL>
+<portlet:actionURL name="FileUploadAction!onFileUploadSync" var="actionUrl"></portlet:actionURL>
+<portlet:resourceURL id="FileUploadAction!onFileUploadAsync" var="resourceUrl"></portlet:resourceURL>
 
 <br>
 
@@ -44,7 +44,7 @@ You can submit multiple files to an Action; their MD5 checksum will be bounced b
 
 <script type="text/javascript">
 
-AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe'/*, 'aui-json-parse'*/, function(A) {
+AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe', 'aui-io-queue', function(A) {
 	/**
 	 * Replace ActionURL with ResourceURL, then let event bubble up.
 	 */
@@ -59,13 +59,17 @@ AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe'/*, 'aui-json-parse
                 upload: true
             },
             on: {
-                complete: function(id, response) {
+                success: function() {
                     /*
                     var file = A.JSON.parse(response.responseText), msg = 'Uploaded: ' + file.name + ' (' + file.size + ' bytes)';
                     Y.one('#<portlet:namespace />result').setHTML(msg);
                     */
-                    var data = /*this.get('responseData');*/ response.responseText;						
+                    var data = this.get('responseData');
+                    alert(data);
+                    /*
+                    var data = response.responseText;						
 					A.one('#<portlet:namespace/>result').setContent('<pre>'+ data + '</pre>');
+					*/
                 }
             }
         });
