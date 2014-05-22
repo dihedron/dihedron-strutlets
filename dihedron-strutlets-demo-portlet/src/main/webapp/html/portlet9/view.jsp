@@ -14,14 +14,14 @@
 
  
 <br>
-<portlet:actionURL name="FileUploadAction!onFileUploadSync" var="actionUrl"></portlet:actionURL>
-<portlet:resourceURL id="FileUploadAction!onFileUploadAsync" var="resourceUrl"></portlet:resourceURL>
+<portlet:actionURL name="FileUploadAction!onFileUpload" var="actionUrl"></portlet:actionURL>
+<portlet:resourceURL id="FileUploadAction!onFileUpload" var="resourceUrl"></portlet:resourceURL>
 
 <br>
 
 You can submit multiple files to an Action; their MD5 checksum will be bounced back by this example.
 <br>&nbsp;<br> 
-<aui:form name="<portlet:namespace />uploadForm" method="post" enctype="multipart/form-data" action="${actionUrl}">
+<aui:form name="uploadForm" method="post" enctype="multipart/form-data" action="${actionUrl}">
 	<aui:fieldset label="Files to Upload">
 		<aui:input label="First:" name="file1" type="file" value="${file1}" placeholder="please choose the first file to upload..."/>
 		<aui:input label="Second:" name="file2" type="file" value="${file2}" placeholder="please choose the second file to upload..."/>
@@ -49,7 +49,7 @@ AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe', 'aui-io-queue', f
 	 * Replace ActionURL with ResourceURL, then let event bubble up.
 	 */
 	A.one("#<portlet:namespace/>asyncSubmit").on('click', function(e) {
-		console.log("replacing URL in form");
+		A.one('#<portlet:namespace/>result').setContent('<pre>submitting asynchronously...</pre>');
 		A.one("#<portlet:namespace/>uploadForm").set('action', '<%=resourceUrl%>');
 		e.preventDefault();
         A.io('<%=resourceUrl%>', {
@@ -59,17 +59,9 @@ AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe', 'aui-io-queue', f
                 upload: true
             },
             on: {
-                success: function() {
-                    /*
-                    var file = A.JSON.parse(response.responseText), msg = 'Uploaded: ' + file.name + ' (' + file.size + ' bytes)';
-                    Y.one('#<portlet:namespace />result').setHTML(msg);
-                    */
-                    var data = this.get('responseData');
-                    alert(data);
-                    /*
+                complete: function(id, response) {
                     var data = response.responseText;						
-					A.one('#<portlet:namespace/>result').setContent('<pre>'+ data + '</pre>');
-					*/
+					A.one('#<portlet:namespace/>result').setContent('<pre>'+ data + '</pre>');					
                 }
             }
         });
@@ -79,8 +71,8 @@ AUI().ready('aui-base', 'aui-io-form', 'aui-io-upload-iframe', 'aui-io-queue', f
 	/**
 	 * Replace ResourceURL with ActionURL, then let event bubble up.
 	 */
-	A.one("#<portlet:namespace/>syncSubmit").on('click', function(e) {		
-		console.log("replacing URL in form");
+	A.one("#<portlet:namespace/>syncSubmit").on('click', function(e) {	
+		A.one('#<portlet:namespace/>result').setContent('<pre>submitting synchronously...</pre>');	
 		A.one("#<portlet:namespace/>uploadForm").set('action', '<%=actionUrl%>');
 		/* let the event bubble... */		
 	});	
