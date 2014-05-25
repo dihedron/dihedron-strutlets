@@ -87,6 +87,21 @@ public final class Strutlets {
 	public static final String STRUTLETS_RESULT = "org.dihedron.strutlets.result";
 	
 	/**
+	 * The name of the render parameter under which the last-resort error JSP will
+	 * be stored; this mechanism enables an error handler for the Action phase to
+	 * prepare any information needed by this JSP to show an error message to the 
+	 * user an then pass over the rendering responsibility to the JSP without 
+	 * further intervention by the framework. 
+	 */
+	public static final String STRUTLETS_ERROR_JSP = "org.dihedron.strutlets.errorjsp";
+	
+	/**
+	 * The name of the request scope attribute under which exception information
+	 * is made available to the error JSP.
+	 */
+	public static final String STRUTLETS_ERROR_INFO = "org.dihedron.strutlets.errorinfo";
+	
+	/**
 	 * Returns the framework's version (as per the project's POM).
 	 * 
 	 * @return

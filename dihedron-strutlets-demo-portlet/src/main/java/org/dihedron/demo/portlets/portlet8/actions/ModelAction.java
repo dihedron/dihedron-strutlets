@@ -317,6 +317,7 @@ public class ModelAction {
 //		address.setZip("please enter your ZIP code...");
 //		user.setAddress(address);
 		ActionContext.setPortletAttribute("user", user);
+		
 		return Action.SUCCESS;
 	}
 	
@@ -337,9 +338,15 @@ public class ModelAction {
 //			@Model(value = "^user\\:(.*)$") @Out(value = "user", to = Scope.PORTLET) $<User> user, 
 			@Model @Out(value = "user", to = Scope.PORTLET) $<User> user,
 			@Out(value = "result", to = Scope.RENDER) $<String> result) {
+		
+//		// this fires a null pointer exception!
+//		Object boom = null;
+//		boom.toString();
+		
 		logger.debug("processing user model object...");	
 		result.set(user.toString());		
 		logger.debug("user model object: \n{}", user.toString());
+				
 		return Action.SUCCESS;
 	}
 

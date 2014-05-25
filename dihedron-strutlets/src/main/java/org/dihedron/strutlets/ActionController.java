@@ -23,6 +23,8 @@ package org.dihedron.strutlets;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
@@ -61,6 +63,8 @@ import org.dihedron.strutlets.containers.portlet.PortalServer;
 import org.dihedron.strutlets.containers.portlet.PortalServerPluginFactory;
 import org.dihedron.strutlets.containers.web.ApplicationServer;
 import org.dihedron.strutlets.containers.web.ApplicationServerPluginFactory;
+import org.dihedron.strutlets.diagnostics.DefaultErrorHandler;
+import org.dihedron.strutlets.diagnostics.ErrorHandler;
 import org.dihedron.strutlets.exceptions.DeploymentException;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.dihedron.strutlets.interceptors.InterceptorStack;
@@ -141,6 +145,11 @@ public class ActionController extends GenericPortlet {
 	 * The configuration for file upload handling.
 	 */
 	private FileUploadConfiguration uploadInfo = null;
+	
+	/**
+	 * The last-resort error handler.
+	 */
+	private ErrorHandler errorHandler = null;
 
 	/**
 	 * The default package for stock portal- and application-server plugins.
@@ -186,15 +195,17 @@ public class ActionController extends GenericPortlet {
         	initialisePortletConfiguration();
         	
         	initialiseRuntimeEnvironment();
+        	
+        	initialiseFileUploadConfiguration();
+        	
+        	initialiseErrorHandler();
 
         	initialiseTargetsRegistry();
 			
         	initialiseInterceptorsRegistry();
         	
         	initialiseRenderersRegistry();
-			
-			initialiseFileUploadConfiguration();
-			
+        	
 			logger.info("action controller for portlet '{}' open for business", getPortletName());
 			
 		} catch (StrutletsException e) {
@@ -213,6 +224,10 @@ public class ActionController extends GenericPortlet {
     	if(server != null) {
     		logger.trace("... cleaning up application server");
     		server.cleanup();
+    	}
+    	if(errorHandler != null) {
+    		logger.trace("... cleaning up error handler");
+    		errorHandler.cleanup();
     	}
     }
 
@@ -253,9 +268,14 @@ public class ActionController extends GenericPortlet {
 	    	} else {
 	    		logger.trace("... action processing ended with redirection to a new page");
 	    	}
-	    	
-		} finally {
-			
+    	} catch(Throwable e) {
+    		logger.error("error caught in the action phase, invoking the error handler...");
+    		// handle error and then register the JSP that will render information
+    		// into the render parameters, for the following render phase
+    		String jsp = errorHandler.onActionPhaseError(request, response, e);
+    		ActionContext.setRenderParameter(Strutlets.STRUTLETS_ERROR_JSP, jsp);
+    		logger.error("... done with error handling, rendering error page '{}'", jsp);
+		} finally {			
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
@@ -300,8 +320,11 @@ public class ActionController extends GenericPortlet {
 	    	} else {
 	    		logger.error("result should never be null in the event phase: this is likely to be a bug in the framework");
 	    	}
+    	} catch(Throwable e) {
+    		logger.error("error caught in the event phase, invoking the error handler...");
+    		errorHandler.onEventPhaseError(request, response, e);
+    		logger.error("... done with error handling");    		    		
     	} finally {
-
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
@@ -363,6 +386,16 @@ public class ActionController extends GenericPortlet {
     		
 	    	TargetId targetId = null;
 	    	Renderer renderer = null;
+	    	
+	    	// first check if there was an error in the previous Action phase, and 
+	    	// if so (the STRUTLETS_ERROR_JSP render parameter is set), forward to
+	    	// the indicated JSP.
+	    	String jsp = request.getParameter(Strutlets.STRUTLETS_ERROR_JSP);
+	    	if(Strings.isValid(jsp)) {
+				logger.trace("there was an error in the previous Action phase, forwarding error to error page '{}'", jsp);
+				renderers.getRenderer(JspRenderer.ID).render(request, response, jsp);
+				return;
+	    	}
 	    	
     		String target = request.getParameter(Strutlets.STRUTLETS_TARGET);
     		String result = request.getParameter(Strutlets.STRUTLETS_RESULT);
@@ -460,17 +493,35 @@ public class ActionController extends GenericPortlet {
 	    		throw new StrutletsException("No valid render URL available");
 	    	}    	
 	    	logger.trace("... output rendering done");
-    	} catch(PortletException e) {
-			logger.error("error processing render phase");
-			String errorPage = InitParameter.DEFAULT_ERROR_JSP.getValueForPortlet(this);
-			if(Strings.isValid(errorPage)) {
+    	} catch(Throwable e) {
+    		logger.error("error caught in the render phase, invoking the error handler...");
+    		String jsp = errorHandler.onRenderPhaseError(request, response, e);
+    		logger.error("... done with error handling, rendering error page '{}'", jsp);
+			if(Strings.isValid(jsp)) {
 				logger.trace("forwarding error to default error page");
 				Renderer renderer = renderers.getRenderer(JspRenderer.ID);
-				renderer.render(request, response, errorPage);
+				renderer.render(request, response, jsp);
 			} else {
 				logger.trace("no last-resort error handling page, rethrowing...");
-				throw e;
+				if(e instanceof RuntimeException) {
+					throw (RuntimeException)e;
+				} else if(e instanceof PortletException) {
+					throw (PortletException) e;
+				} else if(e instanceof IOException) {
+					throw (IOException)e;
+				}
 			}
+//    	} catch(PortletException e) {
+//			logger.error("error processing render phase");
+//			String errorPage = InitParameter.DEFAULT_ERROR_JSP.getValueForPortlet(this);
+//			if(Strings.isValid(errorPage)) {
+//				logger.trace("forwarding error to default error page");
+//				Renderer renderer = renderers.getRenderer(JspRenderer.ID);
+//				renderer.render(request, response, errorPage);
+//			} else {
+//				logger.trace("no last-resort error handling page, rethrowing...");
+//				throw e;
+//			}
     	} finally {
     		
     		// unbind the invocation context from the thread-local storage to
@@ -519,8 +570,11 @@ public class ActionController extends GenericPortlet {
 	    		logger.trace("... leaving the resource request to the portlet container");
 	    		super.serveResource(request, response);
 	    	}
-    	} finally {
-    		
+    	} catch(Throwable e) {
+    		logger.error("error caught in the resource phase, invoking the error handler...");
+    		errorHandler.onResourcePhaseError(request, response, e);
+    		logger.error("... done with error handling");
+    	} finally {    		
     		// unbind the invocation context from the thread-local storage to
     		// prevent memory leaks and complaints by the application server
 			logger.trace("unbinding context from thread-local storage");
@@ -543,64 +597,64 @@ public class ActionController extends GenericPortlet {
     protected String invokeBusinessLogic(TargetId targetId, PortletRequest request, StateAwareResponse response) throws PortletException, IOException {
     	String res = null;
     	
-    	try {
-			if(targetId != null) {
-				// invoke method
-				logger.debug("invoking target '{}'...", targetId);    			
-	    		res = invokeTarget(targetId, request, response);
-	    		
-	    		// get routing configuration for given result string
-	    		Result result = registry.getTarget(targetId).getResult(res);
-	    		
-    	    	// now, if we have a result that must be handled by a "redirect"
-    	    	// renderer, we must do it now, before we move on to the render
-    	    	// phase, so let's check
-    	    	if(result.getRenderer().equals(RedirectRenderer.ID)) {
-    	    		if(ActionContext.isActionPhase()) {
-    	    			if(ActionContext.hasChangedRenderParameters()) {
-    	    				logger.error("cannot redirect: some render parameter has been changed by the action prior to redirecting.");
-    	    				throw new StrutletsException("Trying to redirect to another page after having changed the render parameters");
-    	    			} else {
-		    	    		String url = result.getData();
-		    	    		logger.trace("redirecting to '{}' right after action execution...", url);
-		    	    		Renderer renderer = renderers.getRenderer(RedirectRenderer.ID);
-		        			renderer.render(request, response, url);
-		    	    		logger.trace("redirect complete");
-		    	    		return null;
-    	    			}
-    	    		} else {
-    	    			logger.error("trying to redirect to another page when not in action phase");
-    	    			throw new StrutletsException("Trying to redirect to another page when not in action phase");
-    	    		}
-    	    	}
-	    		
-	    		PortletMode mode = result.getPortletMode();
-	    		WindowState state = result.getWindowState();
-	    		
-	    		logger.debug("... target '{}' returned result: '{}', mode: '{}', state: '{}'", targetId, result.getId(), mode, state);
-	
-	    		// change portlet mode	    		
-	    		if(Strings.isValid(mode.toString()) && request.isPortletModeAllowed(mode)) {
-	    			response.setPortletMode(mode);
+//    	try {
+		if(targetId != null) {
+			// invoke method
+			logger.debug("invoking target '{}'...", targetId);    			
+    		res = invokeTarget(targetId, request, response);
+    		
+    		// get routing configuration for given result string
+    		Result result = registry.getTarget(targetId).getResult(res);
+    		
+	    	// now, if we have a result that must be handled by a "redirect"
+	    	// renderer, we must do it now, before we move on to the render
+	    	// phase, so let's check
+	    	if(result.getRenderer().equals(RedirectRenderer.ID)) {
+	    		if(ActionContext.isActionPhase()) {
+	    			if(ActionContext.hasChangedRenderParameters()) {
+	    				logger.error("cannot redirect: some render parameter has been changed by the action prior to redirecting.");
+	    				throw new StrutletsException("Trying to redirect to another page after having changed the render parameters");
+	    			} else {
+	    	    		String url = result.getData();
+	    	    		logger.trace("redirecting to '{}' right after action execution...", url);
+	    	    		Renderer renderer = renderers.getRenderer(RedirectRenderer.ID);
+	        			renderer.render(request, response, url);
+	    	    		logger.trace("redirect complete");
+	    	    		return null;
+	    			}
+	    		} else {
+	    			logger.error("trying to redirect to another page when not in action phase");
+	    			throw new StrutletsException("Trying to redirect to another page when not in action phase");
 	    		}
-	    		// change window state	    		
-	    		if(Strings.isValid(state.toString()) && request.isWindowStateAllowed(state)) {
-	    			response.setWindowState(state);
-	    		}
-	    		// set parameters for the following render phase
-		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, targetId.toString());
-		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
-			} else {			
-				// action not specified, check the current mode and service the
-				// default page, as specified in the initialisation parameters
-				logger.trace("target not specified, blanking target and result in render parameters and serving default page");
-		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
-		    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
-			}
-		} catch(PortletException e) {
-			logger.error("portlet exception servicing action request: {}", e.getMessage());
-			throw e;
-		}    	
+	    	}
+    		
+    		PortletMode mode = result.getPortletMode();
+    		WindowState state = result.getWindowState();
+    		
+    		logger.debug("... target '{}' returned result: '{}', mode: '{}', state: '{}'", targetId, result.getId(), mode, state);
+
+    		// change portlet mode	    		
+    		if(Strings.isValid(mode.toString()) && request.isPortletModeAllowed(mode)) {
+    			response.setPortletMode(mode);
+    		}
+    		// change window state	    		
+    		if(Strings.isValid(state.toString()) && request.isWindowStateAllowed(state)) {
+    			response.setWindowState(state);
+    		}
+    		// set parameters for the following render phase
+	    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, targetId.toString());
+	    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, result.getId());	    		
+		} else {			
+			// action not specified, check the current mode and service the
+			// default page, as specified in the initialisation parameters
+			logger.trace("target not specified, blanking target and result in render parameters and serving default page");
+	    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_TARGET, (String)null);
+	    	ActionContext.setRenderParameter(Strutlets.STRUTLETS_RESULT, (String)null);    			
+		}
+//		} catch(PortletException e) {
+//			logger.error("portlet exception servicing action request: {}", e.getMessage());
+//			throw e;
+//		}    	
 		return res;
     }
     
@@ -1107,6 +1161,46 @@ public class ActionController extends GenericPortlet {
 			this.uploadInfo.setInMemorySizeThreshold(FileUploadConfiguration.DEFAULT_SMALL_FILE_SIZE_THRESHOLD);
 		}
 		logger.trace("done configuring file upload support");
+	}
+	
+	/**
+	 * Initialises the error handler with the user-provided class or the default
+	 * error handler class if none provided.
+	 */
+	private void initialiseErrorHandler() {
+		String value = InitParameter.ERROR_HANDLER_CLASS.getValueForPortlet(this);
+		if(Strings.isValid(value)) {
+			try {
+				logger.info("initialising error handler of class '{}'...", value);
+				Class<?> clazz = Class.forName(value.trim());
+				@SuppressWarnings("unchecked")
+				Constructor<ErrorHandler> constructor = (Constructor<ErrorHandler>) clazz.getConstructor(GenericPortlet.class);
+				this.errorHandler = constructor.newInstance(this);
+				logger.info("... error handler of class '{}' ready", value);
+			} catch (ClassNotFoundException e) {
+				logger.error("class '" + value + "' not found on classpath", e);
+			} catch (InstantiationException e) {
+				logger.error("error instantiating error handler of class '" + value + "'", e);
+			} catch (IllegalAccessException e) {
+				logger.error("illegal access to error handler class '" + value + "'", e);
+			} catch (NoSuchMethodException e) {
+				logger.error("no proper constructor with single GenericPortlet parameter found on class '" + value + "'", e);
+			} catch (SecurityException e) {
+				logger.error("security error accessing constructor of class '" + value + "'", e);
+			} catch (IllegalArgumentException e) {
+				logger.error("invalid parameter to error handler constructor of class '" + value + "'", e);
+			} catch (InvocationTargetException e) {
+				logger.error("error invoking constructor of class '" + value + "'", e);
+			} finally {
+				if(this.errorHandler == null) {
+					logger.info("using default error handler");
+					this.errorHandler = new DefaultErrorHandler(this);
+				}
+			}
+		} else {
+			logger.info("using default error handler");
+			this.errorHandler = new DefaultErrorHandler(this);
+		}
 	}
 	
 	/**

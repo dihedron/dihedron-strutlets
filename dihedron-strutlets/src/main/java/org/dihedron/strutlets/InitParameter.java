@@ -99,12 +99,7 @@ public enum InitParameter {
 	 * are looked for, if non null.
 	 */
 	RENDERERS_JAVA_PACKAGES("strutlets:renderers-packages", ""),
-	
-	/**
-	 * The default page to be shown when an internal error occurs.
-	 */
-	DEFAULT_ERROR_JSP("strutlets:default-error-page", ""),
-	
+		
 	/**
 	 * The parameter used to specify the root directory for JSP renderers.
 	 * This is used only when dealing with annotated actions and smart defaults,
@@ -193,7 +188,18 @@ public enum InitParameter {
 	 * The maximum size for a file to be considered small and kept in memory instead 
 	 * of being written to a temporary file on disk.
 	 */
-	UPLOADED_SMALL_FILE_SIZE_THRESHOLD("strutlets:uploaded-files-small-file-threshold", "");
+	UPLOADED_SMALL_FILE_SIZE_THRESHOLD("strutlets:uploaded-files-small-file-threshold", ""),
+	
+	/**
+	 * The class of the last-resort error handler; if not provided, the default 
+	 * error handler will be used.
+	 */
+	ERROR_HANDLER_CLASS("strutlets:error-handler-class", ""),
+	
+	/**
+	 * The default page to be shown when an internal error occurs.
+	 */
+	ERROR_JSP_PATH("strutlets:error-default-page", "");	
 			
 	/**
 	 * Constructor.

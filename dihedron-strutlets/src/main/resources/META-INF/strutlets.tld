@@ -61,6 +61,24 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>	
 	</tag>
+	
+	<tag>
+		<name>errorInfo</name>
+		<description>
+			Picks the diagnostic context from the request scope, if present, and
+			makes it available to the page context for use in the JSP and through 
+			the EL.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.ErrorInfoTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.ErrorInfoTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
 
 	<tag>
 		<name>version</name>

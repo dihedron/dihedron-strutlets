@@ -199,13 +199,13 @@ public class ActionProxyFactory {
 			return proxy;
 		} catch(CannotCompileException e) {
 			logger.error("error sealing the proxy class for '{}'", action.getSimpleName());
-			throw new DeploymentException("error sealing proxy class for action '" + action.getSimpleName() + "'", e);
+			throw new DeploymentException("Error sealing proxy class for action '" + action.getSimpleName() + "'", e);
 		} catch (SecurityException e) {
 			logger.error("error accessing the factory method for class '{}'", action.getSimpleName());
-			throw new DeploymentException("error accessing the factory method for class '" + action.getSimpleName() + "'", e);
+			throw new DeploymentException("Error accessing the factory method for class '" + action.getSimpleName() + "'", e);
 		} catch (NoSuchMethodException e) {
 			logger.error("factory method for class '{}' not found", action.getSimpleName());
-			throw new DeploymentException("factory method for class '" + action.getSimpleName() + "' not found", e);
+			throw new DeploymentException("Factory method for class '" + action.getSimpleName() + "' not found", e);
 		}
 	}
 	
@@ -270,7 +270,7 @@ public class ActionProxyFactory {
 				logger.trace("... generator added");
 			} catch (CannotCompileException e2) {
 				logger.error("error compiling SLF4J logger expression", e2);
-				throw new DeploymentException("error compiling AOP code in class creation", e2);
+				throw new DeploymentException("Error compiling AOP code in class creation", e2);
 			}			
 		}
 		return generator;
@@ -303,7 +303,7 @@ public class ActionProxyFactory {
     				Method oldMethod = methods.get(method.getName());
     				if(oldMethod.getDeclaringClass() == method.getDeclaringClass()) {
     					logger.error("overloading of @Invocable methods is not allowed: check that only one method named '{}' be in class '{}'", method.getName(), method.getDeclaringClass().getCanonicalName());
-    					throw new DeploymentException("overloading of @Invocable methods is not allowed: check methods '" + method.getName() + "' in class '" + method.getDeclaringClass().getCanonicalName() + "'");
+    					throw new DeploymentException("Overloading of @Invocable methods is not allowed: check methods '" + method.getName() + "' in class '" + method.getDeclaringClass().getCanonicalName() + "'");
     				} else {
     					logger.trace("discarding overridden method '{}' from class '{}'...", method.getName(), method.getDeclaringClass().getSimpleName());
     				}
@@ -456,7 +456,7 @@ public class ActionProxyFactory {
 		// off by one exception" if the return type is void. 
 		if(method.getReturnType() != String.class) {
 			logger.trace("method '{}' (action class '{}') does not have the 'String' return type",  method.getName(), action.getCanonicalName());
-			throw new DeploymentException("method '" + method.getName() + "' in action '" + action.getCanonicalName() + "' does not have the String return type");
+			throw new DeploymentException("Method '" + method.getName() + "' in action '" + action.getCanonicalName() + "' does not have the String return type");
 		}
 		
 		String methodName = makeProxyMethodName(method);
@@ -555,7 +555,6 @@ public class ActionProxyFactory {
 				code.append("\t\tlogger.warn(\"method is null\");\n");
 				code.append("\t}\n");
 				
-								
 				code.append("\n");
 			}
 			
@@ -619,10 +618,10 @@ public class ActionProxyFactory {
 			
 		} catch (CannotCompileException e) {
 			logger.error("error compiling AOP code in method creation", e);
-			throw new DeploymentException("error compiling AOP code in method creation", e);
+			throw new DeploymentException("Error compiling AOP code in method creation", e);
 		} catch (SecurityException e) {
 			logger.error("security violation getting declared method '" + methodName + "'", e);
-			throw new DeploymentException("security violation getting declared method '" + methodName + "'", e);
+			throw new DeploymentException("Security violation getting declared method '" + methodName + "'", e);
 		}		
 	}
 	
@@ -648,28 +647,28 @@ public class ActionProxyFactory {
 			// safety check: verify that no @In or @Out parameters are specified
 			if(in != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @In", i);
-				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @In");
+				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @InOut and @In");
 			}
 			if(out != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @Out", i);
-				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @Out");
+				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @InOut and @Out");
 			}	
 			if(model != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @Model", i);
-				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @InOut and @Model");
+				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @InOut and @Model");
 			}
 			return prepareInOutArgument(i, type, inout, preCode, postCode, doValidation); 			
 		} else if(in != null && out != null) {
 			if(model != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @In/@Out and @Model", i);
-				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @In&/@Out and @Model");
+				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @In&/@Out and @Model");
 			}			
 			logger.trace("preparing input/output argument...");
 			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, doValidation);
 		} else if(in != null && out == null) {
 			if(model != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @In and @Model", i);
-				throw new DeploymentException("parameter " + i + " is annotated with incompatible annotations @In and @Model");
+				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @In and @Model");
 			}			
 			logger.trace("preparing input argument...");
 			return prepareInputArgument(i, type, in, preCode, doValidation); 
