@@ -36,12 +36,12 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.ClientDataRequest;
 import javax.portlet.Event;
 import javax.portlet.EventRequest;
 import javax.portlet.GenericPortlet;
+import javax.portlet.MimeResponse;
 import javax.portlet.PortalContext;
 import javax.portlet.PortletModeException;
 import javax.portlet.PortletPreferences;
@@ -51,6 +51,7 @@ import javax.portlet.PortletSession;
 import javax.portlet.PortletURL;
 import javax.portlet.ReadOnlyException;
 import javax.portlet.RenderResponse;
+import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 import javax.portlet.StateAwareResponse;
 import javax.portlet.ValidatorException;
@@ -590,8 +591,8 @@ public class ActionContext {
 	 *   otherwise.
 	 */
 	public static PortletURL createActionURL() {
-		if(getContext().response instanceof RenderResponse) {
-			return ((RenderResponse)getContext().response).createActionURL();
+		if(getContext().response instanceof MimeResponse) {
+			return ((MimeResponse)getContext().response).createActionURL();
 		}
 		return null;
 	}
@@ -606,8 +607,8 @@ public class ActionContext {
 	 *   otherwise.
 	 */
 	public static PortletURL createRenderURL() {
-		if(getContext().response instanceof RenderResponse) {
-			return ((RenderResponse)getContext().response).createRenderURL();
+		if(getContext().response instanceof MimeResponse) {
+			return ((MimeResponse)getContext().response).createRenderURL();
 		}
 		return null;
 	}
@@ -622,8 +623,8 @@ public class ActionContext {
 	 *   otherwise.
 	 */
 	public static ResourceURL createResourceURL() {
-		if(getContext().response instanceof RenderResponse) {
-			return ((RenderResponse)getContext().response).createResourceURL();
+		if(getContext().response instanceof MimeResponse) {
+			return ((MimeResponse)getContext().response).createResourceURL();
 		}
 		return null;
 	}
