@@ -51,7 +51,6 @@ import javax.portlet.PortletSession;
 import javax.portlet.PortletURL;
 import javax.portlet.ReadOnlyException;
 import javax.portlet.RenderResponse;
-import javax.portlet.ResourceResponse;
 import javax.portlet.ResourceURL;
 import javax.portlet.StateAwareResponse;
 import javax.portlet.ValidatorException;
@@ -583,12 +582,12 @@ public class ActionContext {
 	
 	/**
 	 * Factory method: creates a new Action URL. NOTE: this method returns a 
-	 * valid result only when called in the render phase, otherwise it returns 
-	 * null.
+	 * valid result only when called in the action and render phases, otherwise 
+	 * it returns null.
 	 *  
 	 * @return
-	 *   returns a new Action URL if invoked in the render phase, returns null 
-	 *   otherwise.
+	 *   returns a new Action URL if invoked in the action or render phase, returns 
+	 *   null otherwise.
 	 */
 	public static PortletURL createActionURL() {
 		if(getContext().response instanceof MimeResponse) {
@@ -599,12 +598,12 @@ public class ActionContext {
 	
 	/**
 	 * Factory method: creates a new Render URL. NOTE: this method returns a 
-	 * valid result only when called in the render phase, otherwise it returns 
-	 * null.
+	 * valid result only when called in the action and render phases, otherwise 
+	 * it returns null.
 	 *  
 	 * @return
-	 *   returns a new Render URL if invoked in the render phase, returns null 
-	 *   otherwise.
+	 *   returns a new Render URL if invoked in the action or render phase, returns 
+	 *   null otherwise.
 	 */
 	public static PortletURL createRenderURL() {
 		if(getContext().response instanceof MimeResponse) {
@@ -615,12 +614,12 @@ public class ActionContext {
 	
 	/**
 	 * Factory method: creates a new Resource URL. NOTE: this method returns a 
-	 * valid result only when called in the render phase, otherwise it returns 
-	 * null.
+	 * valid result only when called in the action and render phases, otherwise 
+	 * it returns null.
 	 *  
 	 * @return
-	 *   returns a new Resource URL if invoked in the render phase, returns null 
-	 *   otherwise.
+	 *   returns a new Resource URL if invoked in the action or render phase, 
+	 *   returns null otherwise.
 	 */
 	public static ResourceURL createResourceURL() {
 		if(getContext().response instanceof MimeResponse) {
@@ -2183,14 +2182,9 @@ public class ActionContext {
 				}
 			}
 		} else {
-			return getContext().request.getParameterValues(key);			
+			return getContext().request.getParameter(key);			
 		}
 		return null;
-		
-//		if(getContext().request != null) {
-//			return getContext().request.getParameter(key);
-//		}
-//		return null;
 	}
 
 	/**

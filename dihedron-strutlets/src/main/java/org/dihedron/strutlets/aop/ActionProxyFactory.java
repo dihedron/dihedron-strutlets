@@ -657,43 +657,43 @@ public class ActionProxyFactory {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @InOut and @Model", i);
 				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @InOut and @Model");
 			}
-			return prepareInOutArgument(i, type, inout, preCode, postCode, doValidation); 			
+			return prepareInOutArgument(action, method, i, type, inout, preCode, postCode, doValidation); 			
 		} else if(in != null && out != null) {
 			if(model != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @In/@Out and @Model", i);
 				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @In&/@Out and @Model");
 			}			
 			logger.trace("preparing input/output argument...");
-			return prepareInputOutputArgument(i, type, in, out, preCode, postCode, doValidation);
+			return prepareInputOutputArgument(action, method, i, type, in, out, preCode, postCode, doValidation);
 		} else if(in != null && out == null) {
 			if(model != null) {
 				logger.error("attention! parameter {} is annotated with incompatible annotations @In and @Model", i);
 				throw new DeploymentException("Parameter " + i + " is annotated with incompatible annotations @In and @Model");
 			}			
 			logger.trace("preparing input argument...");
-			return prepareInputArgument(i, type, in, preCode, doValidation); 
+			return prepareInputArgument(action, method, i, type, in, preCode, doValidation); 
 		} else if(in == null && out != null) {
 			if(model != null) {
 				// prepare model/out
 				logger.trace("preparing model/output argument...");
-				return prepareInputOutputModelArgument(i, type, model, out, action, method, preCode, postCode, doValidation);
+				return prepareInputOutputModelArgument(action, method, i, type, model, out, preCode, postCode, doValidation);
 			} else {
 				logger.trace("preparing output argument...");
-				return prepareOutputArgument(i, type, out, preCode, postCode, doValidation);				
+				return prepareOutputArgument(action, method, i, type, out, preCode, postCode, doValidation);				
 			}
 		} else {			
 			if(model != null) {
 				logger.trace("preparing model argument...");
-				return prepareInputModelArgument(i, type, model, action, method, preCode, doValidation);
+				return prepareInputModelArgument(action, method, i, type, model, preCode, doValidation);
 			} else {
 				logger.trace("preparing non-annotated argument...");
-				return prepareNonAnnotatedArgument(i, (Class<?>)type, preCode, doValidation);
+				return prepareNonAnnotatedArgument(action, method, i, (Class<?>)type, preCode, doValidation);
 			}
 		}
 	}
 	
 	
-	private String prepareInputArgument(int i, Type type, In in, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
+	private String prepareInputArgument(String action, Method method, int i, Type type, In in, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
 
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
 			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", in.value(), i, Types.getAsString(type));
@@ -701,7 +701,7 @@ public class ActionProxyFactory {
 		}
 		
 		if(Types.isGeneric(type) && Types.isOfClass(type, $.class))	{		
-			logger.error("input parameters must not be wrapped in typed reference holders ($) (check parameter no. {})", i);
+			logger.error("input parameters must not be wrapped in typed reference holders ($) (check parameter no. {} )", i);
 			throw new DeploymentException("Input parameters must not be wrapped in typed reference holders ($): check parameter no. " + i);									
 		}		
 		
@@ -753,7 +753,7 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareOutputArgument(int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
+	private String prepareOutputArgument(String action, Method method, int i, Type type, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
 			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
@@ -820,26 +820,26 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareInputOutputArgument(int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
+	private String prepareInputOutputArgument(String action, Method method, int i, Type type, In in, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
-			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+			logger.error("output parameters must be generic, and of reference type $<?> (action {}, method {}: check parameter no. {}: type is '{}')", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + "')");
 		}
 		
 		if(!Types.isOfClass(type, $.class))	{		
-			logger.error("output parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
+			logger.error("output parameters must be wrapped in typed reference holders ($) (action {}, method {}: check parameter {}: type is '{}')", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($) (action " + action + ", method " + method.getName() + ": check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
 		}
 
 		if(in.value().trim().length() == 0) {
-			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (check parameter {}: @In's value is '{}')", i, in.value());
-			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @In annotation's value: check parameter no. " + i + " (@In's value is '" + in.value() + "')");									
+			logger.error("input parameters' storage name must be explicitly specified through the @In annotation's value (action {}, method {}: check parameter {}: @In's value is '{}')", action, method.getName(), i, in.value());
+			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @In annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + " (@In's value is '" + in.value() + "')");									
 		}
 		
 		if(out.value().trim().length() == 0) {
-			logger.error("output parameters' storage name must be explicitly specified through the @Out annotation's value (check parameter {}: @Out's value is '{}')", i, out.value());
-			throw new DeploymentException("Output parameters's name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
+			logger.error("output parameters' storage name must be explicitly specified through the @Out annotation's value (action {}, method {}: check parameter {}: @Out's value is '{}')", action, method.getName(), i, out.value());
+			throw new DeploymentException("Output parameters's name must be explicitly specified through the @Out annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
 		}		
 		
 		String parameter = in.value();
@@ -916,21 +916,21 @@ public class ActionProxyFactory {
 		return variable;
 	}
 
-	private String prepareInOutArgument(int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
+	private String prepareInOutArgument(String action, Method method, int i, Type type, InOut inout, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {
 		
 		if(!Types.isGeneric(type)) {
-			logger.error("output parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+			logger.error("output parameters must be generic, and of reference type $<?> (action {}, method {}: check parameter no. {}: type is '{}'", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must generic, and of reference type $<?> (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
 		}
 		
 		if(!Types.isOfClass(type, $.class))	{		
-			logger.error("output parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
+			logger.error("output parameters must be wrapped in typed reference holders ($) (action {}, method {}: check parameter {}: type is '{}')", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output parameters must be wrapped in typed reference holders ($) (action " + action + ", method " + method.getName() + ": check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
 		}
 
 		if(inout.value().trim().length() == 0) {
-			logger.error("input/output parameters' storage name must be explicitly specified through the @InOut annotation's value (check parameter {}: @InOut's value is '{}')", i, inout.value());
-			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @InOut annotation's value: check parameter no. " + i + " (@InOut's value is '" + inout.value() + "')");									
+			logger.error("input/output parameters' storage name must be explicitly specified through the @InOut annotation's value (action {}, method {}: check parameter {}: @InOut's value is '{}')", action, method.getName(), i, inout.value());
+			throw new DeploymentException("Input parameters's storage name must be explicitly specified through the @InOut annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + " (@InOut's value is '" + inout.value() + "')");									
 		}
 		
 		String parameter = inout.value();
@@ -991,21 +991,21 @@ public class ActionProxyFactory {
 		return variable;
 	}
 	
-	private String prepareInputModelArgument(int i, Type type, Model model, String action, Method method, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
+	private String prepareInputModelArgument(String action, Method method, int i, Type type, Model model, StringBuilder preCode, boolean doValidation) throws DeploymentException {		
 		
 		if(Types.isSimple(type) && ((Class<?>)type).isPrimitive()) {
-			logger.error("primitive types are not supported on annotated parameters (check parameter '{}', no. {}, type is '{}')", model.value(), i, Types.getAsString(type));
-			throw new DeploymentException("Primitive types are not supported as @In parameters: check parameter '" + model.value() + "' ( no. " + i + ", type is '" + Types.getAsString(type) + "')");
+			logger.error("primitive types are not supported on annotated parameters (action {}, method {}: check parameter '{}', no. {}, type is '{}')", action, method.getName(), model.value(), i, Types.getAsString(type));
+			throw new DeploymentException("Primitive types are not supported as @In parameters (action " + action + ", method " + method.getName() + ": check parameter '" + model.value() + "'  no. " + i + ", type is '" + Types.getAsString(type) + "')");
 		}
 		
 		if(Types.isGeneric(type) && Types.isOfClass(type, $.class))	{		
-			logger.error("input-only model parameters must not be wrapped in typed reference holders ($) (check parameter no. {})", i);
-			throw new DeploymentException("Input-only model parameters must not be wrapped in typed reference holders ($): check parameter no. " + i);									
+			logger.error("input-only model parameters must not be wrapped in typed reference holders ($) (action {}, method {}: check parameter no. {})", action, method.getName(), i);
+			throw new DeploymentException("Input-only model parameters must not be wrapped in typed reference holders ($) (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ")");									
 		}		
 		
 		if(!Strings.isValid(model.value())) {
-			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (check parameter {}: @Model's pattern is '{}')", i, model.value());
-			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value: check parameter no. " + i + " (@Model's pattern is '" + model.value() + "')");									
+			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (action {}, method {}: check parameter {}: @Model's pattern is '{}')", action, method.getName(), i, model.value());
+			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ", @Model's pattern is '" + model.value() + "')");									
 		}
 		
 		// double back-slashes become single in code generation!
@@ -1084,29 +1084,29 @@ public class ActionProxyFactory {
 		return variable;
 	}
 
-	private String prepareInputOutputModelArgument(int i, Type type, Model model, Out out, String action, Method method, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {		
+	private String prepareInputOutputModelArgument(String action, Method method, int i, Type type, Model model, Out out, StringBuilder preCode, StringBuilder postCode, boolean doValidation) throws DeploymentException {		
 		
 		//
 		// TODO: implement from here!!!!! 
 		//
 		if(!Types.isGeneric(type)) {
-			logger.error("output model parameters must be generic, and of reference type $<?> (check parameter no. {}: type is '{}'", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output model parameters must generic, and of reference type $<?> (check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
+			logger.error("output model parameters must be generic, and of reference type $<?> (action {}, method {}: check parameter no. {}: type is '{}'", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output model parameters must generic, and of reference type $<?> (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ": type is '" + ((Class<?>)type).getCanonicalName() + " '");
 		}
 		
 		if(!Types.isOfClass(type, $.class))	{		
-			logger.error("output model parameters must be wrapped in typed reference holders ($) (check parameter {}: type is '{}')", i, ((Class<?>)type).getCanonicalName());
-			throw new DeploymentException("Output model parameters must be wrapped in typed reference holders ($): check parameter no. " + i + " (type is '" + ((Class<?>)type).getCanonicalName() + "')");									
+			logger.error("output model parameters must be wrapped in typed reference holders ($) (action {}, method {}: check parameter {}: type is '{}')", action, method.getName(), i, ((Class<?>)type).getCanonicalName());
+			throw new DeploymentException("Output model parameters must be wrapped in typed reference holders ($) (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ", type is '" + ((Class<?>)type).getCanonicalName() + "')");									
 		}
 				
 		if(!Strings.isValid(model.value())) {
-			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (check parameter {}: @Model's pattern is '{}')", i, model.value());
-			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value: check parameter no. " + i + " (@Model's pattern is '" + model.value() + "')");									
+			logger.error("model's parameters' pattern must be explicitly specified through the @Model annotation's value (action {}, method {}: check parameter {}: @Model's pattern is '{}')", action, method.getName(), i, model.value());
+			throw new DeploymentException("Model's parameters pattern must be explicitly specified through the @Model annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ", @Model's pattern is '" + model.value() + "')");									
 		}
 		
 		if(out.value().trim().length() == 0) {
-			logger.error("output model parameters' storage name must be explicitly specified through the @Out annotation's value (check parameter {}: @Out's value is '{}')", i, out.value());
-			throw new DeploymentException("Output model parameters's name must be explicitly specified through the @Out annotation's value: check parameter no. " + i + " (@Out value is '" + out.value() + "')");									
+			logger.error("output model parameters' storage name must be explicitly specified through the @Out annotation's value (action {}, method {}: check parameter {}: @Out's value is '{}')", action, method.getName(), i, out.value());
+			throw new DeploymentException("Output model parameters's name must be explicitly specified through the @Out annotation's value (action " + action + ", method " + method.getName() + ": check parameter no. " + i + ", @Out value is '" + out.value() + "')");									
 		}		
 		
 		// double back-slashes become single in code generation!
@@ -1218,7 +1218,7 @@ public class ActionProxyFactory {
 	}
 	
 	
-	private String prepareNonAnnotatedArgument(int i, Class<?> type, StringBuilder code, boolean doValidation) throws DeploymentException {
+	private String prepareNonAnnotatedArgument(String action, Method method, int i, Class<?> type, StringBuilder code, boolean doValidation) throws DeploymentException {
 		
 		code.append("\t//\n\t// preparing non-annotated argument no. ").append(i).append(" (").append(Types.getAsString(type)).append(")\n\t//\n");
 		
