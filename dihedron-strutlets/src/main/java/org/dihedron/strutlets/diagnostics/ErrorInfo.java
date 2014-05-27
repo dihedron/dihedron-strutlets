@@ -19,6 +19,7 @@
 package org.dihedron.strutlets.diagnostics;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 
 /**
@@ -26,8 +27,16 @@ import java.io.StringWriter;
  * 
  * @author Andrea Funto'
  */
-public class ErrorInfo {
+public class ErrorInfo implements Serializable {
 
+	/**
+	 * Serial version id.
+	 */
+	private static final long serialVersionUID = -7519593294271451377L;
+	
+	/**
+	 * The actual exception being shown.
+	 */
 	private Throwable error;
 	
 	/**
