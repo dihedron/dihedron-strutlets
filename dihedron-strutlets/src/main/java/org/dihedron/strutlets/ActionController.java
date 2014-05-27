@@ -27,9 +27,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -1111,21 +1108,42 @@ public class ActionController extends GenericPortlet {
 				
 		// check if directory is writable
 		if(!repository.canWrite()) {
-			logger.error("upload directory {} is not writable", repository.getAbsolutePath());
-			throw new DeploymentException("Directory at path '" + repository.getAbsolutePath() + "' is not a writable");			
+			logger.warn("upload directory {} is not writable, using system temporary directory instead!", repository.getAbsolutePath());
+			
+			String systemTempDir = System.getenv("TMP");
+			if(!Strings.isValid(systemTempDir)) {
+				systemTempDir = System.getenv("TEMP");				
+			}
+			if(!Strings.isValid(systemTempDir)) {
+				systemTempDir = System.getProperty("java.io.tmpdir");
+			}
+			if(!Strings.isValid(systemTempDir)) {
+				systemTempDir = System.getProperty(Strutlets.STRUTLETS_UPLOAD_DIR);
+			}			
+			if(!Strings.isValid(systemTempDir)) {
+				throw new DeploymentException("No temporary directory for uploading files found on system: you can specify it via environment variables TMP or TEMP, or system property '" + Strutlets.STRUTLETS_UPLOAD_DIR + "'");
+			}
+			repository = new File(systemTempDir);
+			if(!repository.canWrite()) {
+				throw new DeploymentException("Directory at path '" + repository.getAbsolutePath() + "' is not writable");
+			}
 		}
 		
-		// remove all pre-existing files
-		try {
+		// remove all pre-existing files (commented code is for Java7+)
+//		try {
 			logger.trace("removing all existing files from directory '{}'...", repository.getAbsolutePath());
-			DirectoryStream<Path> files = Files.newDirectoryStream(repository.toPath());
-			for(Path file : files) {
+			for(File file : repository.listFiles()) {
 				logger.trace("...removing '{}'", file);
-				file.toFile().delete();
+				file.delete();				
 			}
-		} catch(IOException e) {
-			logger.warn("error deleting all files from upload directory", e);
-		}
+//			DirectoryStream<Path> files = Files.newDirectoryStream(repository.toPath());
+//			for(Path file : files) {
+//				logger.trace("...removing '{}'", file);
+//				file.toFile().delete();
+//			}
+//		} catch(IOException e) {
+//			logger.warn("error deleting all files from upload directory", e);
+//		}
 		
 		logger.info("upload directory '{}' ready", repository.getAbsolutePath());
 		

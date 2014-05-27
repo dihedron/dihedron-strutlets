@@ -31,6 +31,12 @@ import javax.portlet.ActionRequest;
  * @author Andrea Funto'
  */
 public final class Strutlets {
+	
+	/**
+	 * The name of the system property through which the strutlets framework 
+	 * upload directory can be specified.
+	 */
+	public static final String STRUTLETS_UPLOAD_DIR = "strutlets.upload.dir";
 		
 	/**
 	 * A map containing the library properties, partially populated by the build
