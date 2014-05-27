@@ -36,7 +36,8 @@ public abstract class Liferay implements PortalServer {
 	 */
 	@Override
 	public HttpServletRequest getHTTPServletRequest(PortletRequest request) {
-		return PortalUtil.getHttpServletRequest(request);
+		HttpServletRequest hr = PortalUtil.getHttpServletRequest(request);
+		return PortalUtil.getOriginalServletRequest(hr);
 	}
 	
 	/**
