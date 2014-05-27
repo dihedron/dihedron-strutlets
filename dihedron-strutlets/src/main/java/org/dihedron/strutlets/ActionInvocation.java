@@ -293,13 +293,13 @@ public class ActionInvocation {
 			return (String)proxy.invoke(null, action);
 		} catch (IllegalArgumentException e) {
 			logger.error("illegal argument to proxy method invocation", e);
-			throw new StrutletsException("illegal argument to proxy method invocation", e);
+			throw new StrutletsException("Illegal argument to proxy method invocation", e);
 		} catch (IllegalAccessException e) {
 			logger.error("illegal access to proxy method during invocation", e);
-			throw new StrutletsException("illegal access to proxy method during invocation", e);
+			throw new StrutletsException("Illegal access to proxy method during invocation", e);
 		} catch (InvocationTargetException e) {
 			logger.error("invocation target error calling proxy method", e);
-			throw new StrutletsException("invocation target error calling proxy method", e);
+			throw new StrutletsException("Invocation target error calling proxy method", e);
 		}
 	}
 	

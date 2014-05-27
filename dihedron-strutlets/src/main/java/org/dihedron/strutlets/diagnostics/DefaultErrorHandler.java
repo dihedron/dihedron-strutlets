@@ -75,7 +75,7 @@ public class DefaultErrorHandler extends ErrorHandler {
 	 */
 	@Override
 	public String onActionPhaseError(ActionRequest request, ActionResponse response, Throwable error) throws PortletException {
-		ActionContext.setAttribute(Strutlets.STRUTLETS_ERROR_INFO, new ErrorInfo(error), Scope.REQUEST);
+		ActionContext.setAttribute(Strutlets.STRUTLETS_ERROR_INFO, new Error(error), Scope.REQUEST);
 		return errorJsp;
 	}
 
@@ -101,7 +101,7 @@ public class DefaultErrorHandler extends ErrorHandler {
 	@Override
 	public String onRenderPhaseError(RenderRequest request, RenderResponse response, Throwable error) throws PortletException {
 		logger.trace("handling an exception of class {}", error.getClass().getName());
-		ActionContext.setAttribute(Strutlets.STRUTLETS_ERROR_INFO, new ErrorInfo(error), Scope.REQUEST);
+		ActionContext.setAttribute(Strutlets.STRUTLETS_ERROR_INFO, new Error(error), Scope.REQUEST);
 		return errorJsp;
 //		ErrorInfo info = new ErrorInfo(error);
 //		PrintWriter writer;

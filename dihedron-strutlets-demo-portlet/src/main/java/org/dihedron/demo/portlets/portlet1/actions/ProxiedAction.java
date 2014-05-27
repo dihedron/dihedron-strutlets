@@ -72,6 +72,7 @@ public class ProxiedAction {
 		description.set("a very good person");
 		gender.set(true);
 		age.set(100);
+		
 		return Action.SUCCESS;
 	}
 	
@@ -145,6 +146,8 @@ public class ProxiedAction {
 		} else {
 			result.set(buffer.toString());
 		}		
+		
+		
 		return Action.SUCCESS;
 	}	
 }

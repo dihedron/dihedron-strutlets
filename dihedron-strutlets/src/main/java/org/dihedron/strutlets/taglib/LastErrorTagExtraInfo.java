@@ -23,17 +23,17 @@ import javax.servlet.jsp.tagext.TagData;
 import javax.servlet.jsp.tagext.TagExtraInfo;
 import javax.servlet.jsp.tagext.VariableInfo;
 
-import org.dihedron.strutlets.diagnostics.ErrorInfo;
+import org.dihedron.strutlets.diagnostics.Error;
 
 /**
  * @author Andrea Funto'
  */
-public class ErrorInfoTagExtraInfo extends TagExtraInfo {
+public class LastErrorTagExtraInfo extends TagExtraInfo {
 
 	/**
 	 * Returns the characteristics of the defined variable: its name is taken from 
 	 * the "var" tag attribute, its class is that of the error info class (see
-	 * {@link ErrorInfo}), with a page scope (from declaration to the end
+	 * {@link Error}), with a page scope (from declaration to the end
 	 * of the JSP). 
 	 * 
 	 * @see javax.servlet.jsp.tagext.TagExtraInfo#getVariableInfo(javax.servlet.jsp.tagext.TagData)
@@ -44,7 +44,7 @@ public class ErrorInfoTagExtraInfo extends TagExtraInfo {
 				// the name of the variable is in "var"
 				data.getAttributeString("var"), 
 				// its type is that of the ErrorInfo class (or a subclass thereof)
-				ErrorInfo.class.getName(),
+				Error.class.getName(),
 				// variable will be declared
 				true,
 				// and it's available until the end of the page

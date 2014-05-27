@@ -1095,7 +1095,7 @@ public class ActionController extends GenericPortlet {
 			
 			if(!repository.isDirectory()) {
 				logger.error("filesystem object {} is not a directory", repository.getAbsolutePath());
-				throw new DeploymentException("Filesystem object at path '" + repository.getAbsolutePath() + "' is not a directory");
+				throw new DeploymentException("File system object at path '" + repository.getAbsolutePath() + "' is not a directory");
 			}			
 		} else {
 			// section PLT.10.3 of the portlet 2.0 specification (on page 67) specifies 

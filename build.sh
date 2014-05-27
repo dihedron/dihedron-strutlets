@@ -1,6 +1,6 @@
 #!/bin/bash
 PORTAL_DIR=/opt/liferay-6.2.0-ce-ga1/portal/tomcat-7.0.42
-WAR_FILE=dihedron-strutlets-demo-portlet-1.0.2-SNAPSHOT.war
+WAR_FILE=dihedron-strutlets-demo-portlet-1.0.3-SNAPSHOT.war
 
 if [ "$1" = "--undeploy" -o "$2" = "--undeploy" ]; then
 	echo "undeploying existing portlets"

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class ErrorInfoTag extends TagSupport {
+public class LastErrorTag extends TagSupport {
 	
 	/**
 	 * Serial version id.
@@ -47,7 +47,7 @@ public class ErrorInfoTag extends TagSupport {
 	/**
 	 * The logger.
 	 */
-	private static final Logger logger = LoggerFactory.getLogger(ErrorInfoTag.class);
+	private static final Logger logger = LoggerFactory.getLogger(LastErrorTag.class);
 		
 	/**
 	 * The name of the destination variable.

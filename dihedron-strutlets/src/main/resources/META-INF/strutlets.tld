@@ -63,14 +63,14 @@
 	</tag>
 	
 	<tag>
-		<name>errorInfo</name>
+		<name>lastError</name>
 		<description>
-			Picks the diagnostic context from the request scope, if present, and
-			makes it available to the page context for use in the JSP and through 
-			the EL.
+			Picks the last error from the request scope, if present, and makes 
+			it available to the page context for use in the JSP and through	the 
+			EL.
 		</description>		
-		<tag-class>org.dihedron.strutlets.taglib.ErrorInfoTag</tag-class> 
-		<tei-class>org.dihedron.strutlets.taglib.ErrorInfoTagExtraInfo</tei-class>
+		<tag-class>org.dihedron.strutlets.taglib.LastErrorTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.LastErrorTagExtraInfo</tei-class>
 		<body-content>JSP</body-content>
 		<attribute>
 			<name>var</name>
