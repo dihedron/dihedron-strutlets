@@ -428,6 +428,19 @@ public class ActionContext {
         	}		        
     	}
 	}
+	
+	/**
+	 * Returns a reference to the action controller; for private use only, do not
+	 * mess around with the action controller or you might end up with unpredictable 
+	 * results.
+	 *   
+	 * @return
+	 *   a reference to the action controller.
+	 */
+	@Deprecated
+	public static ActionController getActionController() {
+		return (ActionController)getContext().portlet;
+	}	
 
 	/**
 	 * Cleans up the internal status of the <code>ActionContextImpl</code> in order to
@@ -473,7 +486,7 @@ public class ActionContext {
 //		}
 		context.remove();
 	}
-	
+		
 	/**
 	 * Returns a reference to the current portal-server-specific plug-in, if 
 	 * available. If no plug-in was loaded, returns null.

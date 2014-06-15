@@ -100,7 +100,7 @@ public final class Strutlets {
 	 * further intervention by the framework. 
 	 */
 	public static final String STRUTLETS_ERROR_JSP = "org.dihedron.strutlets.errorjsp";
-	
+		
 	/**
 	 * The name of the request scope attribute under which exception information
 	 * is made available to the error JSP.

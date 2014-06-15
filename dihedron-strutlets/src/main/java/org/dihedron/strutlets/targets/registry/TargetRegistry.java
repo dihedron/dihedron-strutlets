@@ -19,10 +19,12 @@
 
 package org.dihedron.strutlets.targets.registry;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 
@@ -45,7 +47,12 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Andrea Funto'
  */
-public class TargetRegistry {
+public class TargetRegistry implements Serializable {
+	
+	/**
+	 * Serial version id.
+	 */
+	private static final long serialVersionUID = -1904121214568348128L;
 	
 	/**
 	 * The logger.
@@ -230,6 +237,16 @@ public class TargetRegistry {
 	 */
 	public Target getTarget(String action, String method) throws StrutletsException {			
 		return getTarget(new TargetId(action, method));
+	}
+	
+	/**
+	 * Returns the set of all registered targets.
+	 * 
+	 * @return
+	 *   the set of all registered targets.
+	 */
+	public Set<TargetId> getTargetIds() {
+		return store.keySet();
 	}
 		
 	/**

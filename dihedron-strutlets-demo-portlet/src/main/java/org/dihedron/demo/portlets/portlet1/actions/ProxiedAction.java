@@ -73,6 +73,9 @@ public class ProxiedAction {
 		gender.set(true);
 		age.set(100);
 		
+		String boom = null;
+		boom.length();
+		
 		return Action.SUCCESS;
 	}
 	

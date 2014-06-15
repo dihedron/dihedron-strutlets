@@ -199,7 +199,12 @@ public enum InitParameter {
 	/**
 	 * The default page to be shown when an internal error occurs.
 	 */
-	ERROR_JSP_PATH("strutlets:error-default-page", "");	
+	ERROR_JSP_PATH("strutlets:error-default-page", ""),
+	
+	/**
+	 * Enables the Strutlets Administrative Console (default: "false").
+	 */
+	ENABLE_ADMIN_CONSOLE("strutlets:enable-admin-console", "");	
 			
 	/**
 	 * Constructor.

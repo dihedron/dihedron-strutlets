@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -138,7 +137,7 @@ public class Error implements Serializable {
 	 * @return
 	 *   the list of nested exceptions.
 	 */
-	public Error[] getCauses() {
+	public List<Error> getCauses() {
 		List<Error> causes = new ArrayList<Error>();
 		Throwable current = error;
 		while(current.getCause() != null) {
@@ -146,6 +145,6 @@ public class Error implements Serializable {
 			causes.add(new Error(current.getCause()));
 			current = current.getCause();
 		}
-		return causes.toArray(new Error[0]);		
+		return causes;		
 	}	
 }

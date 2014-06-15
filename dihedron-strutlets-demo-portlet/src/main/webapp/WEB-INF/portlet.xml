@@ -28,7 +28,7 @@
 			<name>strutlets:enable-validation</name>
 			<value>true</value>
 		</init-param>
-
+		
 		<init-param>
 			<name>strutlets:view-home</name>
 			<!-- by specifying an action method, you are instructing the framework 
@@ -47,6 +47,11 @@
 		<init-param>
 			<name>strutlets:default-error-page</name>
 			<value>/html/error.jsp</value>
+		</init-param>
+
+		<init-param>
+			<name>strutlets:enable-admin-console</name>
+			<value>true</value>
 		</init-param>
 
 		<expiration-cache>0</expiration-cache>

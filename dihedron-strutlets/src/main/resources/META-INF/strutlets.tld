@@ -79,6 +79,52 @@
 		</attribute> 		
 	</tag>
 	
+	<tag>
+		<name>request</name>
+		<description>
+			Picks the current portlet request and stores it into the page context,
+			under the given variable name.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.RequestTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.RequestTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
+	<tag>
+		<name>response</name>
+		<description>
+			Picks the current portlet response and stores it into the page context,
+			under the given variable name.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.ResponseTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.ResponseTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
+	<tag>
+		<name>adminConsoleURL</name>
+		<description>
+			Returns a render URL pointing to the Strutlets Administrative Console.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.AdminConsoleURLTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.AdminConsoleURLTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
 
 	<tag>
 		<name>version</name>

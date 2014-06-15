@@ -203,6 +203,8 @@ public class ActionController extends GenericPortlet {
         	
         	initialiseRenderersRegistry();
         	
+        	initialiseAdminConsole();
+        	
 			logger.info("action controller for portlet '{}' open for business", getPortletName());
 			
 		} catch (StrutletsException e) {
@@ -226,6 +228,28 @@ public class ActionController extends GenericPortlet {
     		logger.trace("... cleaning up error handler");
     		errorHandler.cleanup();
     	}
+    }
+    
+    /**
+     * Returns the current configuration; it can be used to read, update or
+     * drop values.
+     * 
+     * @return
+     *   the current configuration.
+     */
+    public Properties getConfiguration() {
+    	return configuration;
+    }
+    
+    /**
+     * Returns the current targets registry; it can be used to nable/disable some 
+     * targets or to change some wirings.
+     * 
+     * @return
+     *   the current targets registry.
+     */
+    public TargetRegistry getTargetRegistry() {
+    	return registry;
     }
 
     /**
@@ -1218,6 +1242,32 @@ public class ActionController extends GenericPortlet {
 		} else {
 			logger.info("using default error handler");
 			this.errorHandler = new DefaultErrorHandler(this);
+		}
+	}
+	
+	private void initialiseAdminConsole() throws StrutletsException {
+		String value = InitParameter.ENABLE_ADMIN_CONSOLE.getValueForPortlet(this);
+		if(Strings.isValid(value) && value.equalsIgnoreCase("true")) {
+			
+			logger.info("activating the administrative console...");
+			
+			// scan admin console actions
+			TargetFactory loader = new TargetFactory();
+			
+			boolean generateValidationCode = false;
+			value = InitParameter.ACTIONS_ENABLE_VALIDATION.getValueForPortlet(this);
+			if(Strings.isValid(value) && value.equalsIgnoreCase("true")) {
+				logger.info("enabling JSR-349 bean validation code generation for administrative console");
+				generateValidationCode = true;
+			} else {
+				logger.info("JSR-349 bean validation code generation will be disabled for administrative console");
+				generateValidationCode = false;
+			}
+			
+			loader.makeFromJavaPackage(registry, "org.dihedron.strutlets.adminconsole", generateValidationCode);
+
+			logger.trace("... administrative console loaded");    	
+			
 		}
 	}
 	
