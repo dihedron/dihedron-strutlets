@@ -19,10 +19,12 @@
 
 package org.dihedron.strutlets.aop;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 
 /**
- * A holder class, providing a safe mechanism to pass results out of action 
- * methods.
+ * A holder class, providing a safe mechanism to atomically update and pass 
+ * results in and out of action methods.
  * This class provides also a mechanism to keep track of a possible ambiguity
  * with the semantics of the {@code null} value: as a matter of fact in the 
  * context of target invocation, a {@code null} value may mean two different 
@@ -38,9 +40,9 @@ package org.dihedron.strutlets.aop;
 public class $<T> {
 
 	/**
-	 * The reference to the underlying object. 
+	 * The atomic reference to the underlying object. 
 	 */
-	private T reference;
+	private AtomicReference<T> reference = new AtomicReference<T>(null);
 	
 	/**
 	 * Whether the {@code null} value should override a valid value in the
@@ -62,11 +64,11 @@ public class $<T> {
 	 *   the referenced object.
 	 */
 	public $(T reference) {
-		this.reference = reference;
+		set(reference);
 	}
 		
 	/**
-	 * Sets the reference to the wrapped object.
+	 * Atomically sets the reference to the wrapped object.
 	 * 
 	 * @param reference
 	 *   the new reference to the wrapped object.
@@ -74,7 +76,25 @@ public class $<T> {
 	 *   a reference to this very object wrapper, for method chaining.
 	 */
 	public $<T> set(T reference) {
-		this.reference = reference;
+		this.reference.set(reference);
+		return this;
+	}
+	
+	/**
+	 * Atomically compares the current reference value with the expected value,
+	 * and if the two match sets the reference to the wrapped object to the new 
+	 * value.
+	 * 
+	 * @param expected
+	 *   the value of the reference to test aagainst: if the two match, the 
+	 *   reference is updated to the new value. 
+	 * @param newValue
+	 *   the new reference to the wrapped object.
+	 * @return
+	 *   a reference to this very object wrapper, for method chaining.
+	 */
+	public $<T> compareAndSet(T expected, T newValue) {
+		this.reference.compareAndSet(expected, newValue);
 		return this;
 	}
 	
@@ -85,7 +105,20 @@ public class $<T> {
 	 *   the reference to the wrapped object.
 	 */
 	public T get() {
-		return this.reference;
+		return this.reference.get();
+	}
+	
+	/**
+	 * Returns the reference to the wrapped object and replaces it with the new
+	 * value atomically.
+	 * 
+	 * @param newValue
+	 *   the new value to be swapped with the original one.
+	 * @return
+	 *   the old value.
+	 */
+	public T getAndSet(T newValue) {
+		return this.reference.getAndSet(newValue);
 	}
 	
 	/**
@@ -127,7 +160,7 @@ public class $<T> {
 	 *   whether the reference point to a valid object.
 	 */
 	public boolean isBound() {
-		return this.reference != null;
+		return this.reference.get() != null;
 	}
 	
 	/**
@@ -138,7 +171,7 @@ public class $<T> {
 	 *   whether the internal reference does not point to a valid object yet.
 	 */
 	public boolean isUnbound() {
-		return this.reference == null;
+		return this.reference.get() == null;
 	}
 	
 	/**
@@ -182,6 +215,6 @@ public class $<T> {
 	
 	@Override
 	public String toString() {
-		return (isReset() ? "overriding " : "") + "reference: " + (isBound() ? this.reference.toString() : "unbound");
+		return (isReset() ? "overriding " : "") + "reference: " + (isBound() ? this.reference.get().toString() : "unbound");
 	}
 }
