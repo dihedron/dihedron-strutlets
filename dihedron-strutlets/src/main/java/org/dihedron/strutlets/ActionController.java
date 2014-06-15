@@ -281,6 +281,14 @@ public class ActionController extends GenericPortlet {
 	    		    	
 	    	// check if the target is contained in the request
 	    	TargetId targetId = TargetId.makeFromRequest(request);
+	    	
+	    	// TODO: if the target is NOT idempotent, then we must check if there
+	    	// is already the result of processing the same form in a custom field
+	    	// on portlet scope; if so, then we simply return it without doing
+	    	// anything, because this is a double submit; if not so, then we reset
+	    	// all request parameters (unfortunately we have no control over 
+	    	// render parameters, though) and let the action process its input.
+	    	// TODO: ActionContext.clearRequestAttributes must be moved down here
 	    	    	
 	    	String result = invokeBusinessLogic(targetId, request, response);
 	    	
@@ -1059,9 +1067,6 @@ public class ActionController extends GenericPortlet {
 		}    	
     }
 
-    
-    
-    
     /**
      * Initialises the registry of view renderers.
      * @throws StrutletsException

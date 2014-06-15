@@ -112,6 +112,16 @@ public class Error implements Serializable {
 	}
 	
 	/**
+	 * Returns whether the error occurred in a native method.
+	 * 
+	 * @return
+	 *   whether the error occurred in a native method.
+	 */
+	public boolean isInNativeMethod() {
+		return error.getStackTrace()[0].isNativeMethod();
+	}
+	
+	/**
 	 * Returns the name of the source file where the error occurred.
 	 * 
 	 * @return

@@ -72,9 +72,11 @@ public class ProxiedAction {
 		description.set("a very good person");
 		gender.set(true);
 		age.set(100);
-		
+
+		/*
 		String boom = null;
 		boom.length();
+		*/
 		
 		return Action.SUCCESS;
 	}

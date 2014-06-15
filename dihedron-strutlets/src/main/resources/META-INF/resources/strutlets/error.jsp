@@ -13,12 +13,13 @@
 	}
 	
 	.strutlets-error-frame {
-		border-top: 1px solid #555555;
-		padding-top: 5px;
+		border-top: 1px solid rgba(0, 0, 0, 0.15);
+		margin-top: 5px;
+		margin-bottom: 5px;
 	}
 	
 	.strutlets-code {
-		font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+		font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
 	}
 	
 	#container {
@@ -26,14 +27,15 @@
 	}
 
 	.strutlets-left {
+		margin: 10px;
 		float: left;
 		width: 48px;
-		height: 48px;
+		height: 48px;		
 	}
 	
 	.strutlets-right {
 		margin: auto;
-		margin-left: 10px;
+		/*margin-left: 10px;*/
 		width: 100%;
 	}	
 </style>
@@ -69,11 +71,12 @@
 	</div>
 </div>
 
-
+<%--
 <strutlets:adminConsoleURL var="adminConsoleURL" />
 <p> 
 	Click <a href="${adminConsoleURL}">here</a> to open the Administrative Console.
 </p>
+--%>
 
 <div id="<portlet:namespace />error-info" class="strutlets-error-hidden">
 
@@ -81,11 +84,18 @@
 		<legend>Error Information</legend>
 				
 		<p>
-			<span class="strutlets-code">${error.type}</span> in method 
-			<span class="strutlets-code">${error.className}#${error.methodName}()</span> 
+			Exception <span class="strutlets-code">${error.type}</span> in method 
+			<span class="strutlets-code">${error.className}#${error.methodName}()</span>
+			<% if(!error.isInNativeMethod()) {%> 
 			(source file <span class="strutlets-code">${error.sourceFileName}</span>
-			at line <span class="strutlets-code">${error.sourceLineNumber}</span>):<br>
+			at line <span class="strutlets-code">${error.sourceLineNumber}</span>)
+			<% } else { %>
+			(native method)
+			<% } %>
+			<%if (error.getMessage() != null && error.getMessage().length() > 0) { %>
+			:<br>
 			<pre>${error.message}</pre>
+			<% } %>
 		</p> 
 		
 		<% 
@@ -94,13 +104,17 @@
 		%>
 			<p class="strutlets-error-frame">
 				caused by <span class="strutlets-code">${cause.type}</span> in method 
-				<span class="strutlets-code">${cause.className}#${cause.methodName}()</span> 
+				<span class="strutlets-code">${cause.className}#${cause.methodName}()</span>
+				<% if(!cause.isInNativeMethod()) {%> 
 				(source file <span class="strutlets-code">${cause.sourceFileName}</span>
 				at line <span class="strutlets-code">${cause.sourceLineNumber}</span>)
-			<%if (cause.getMessage() != null && cause.getMessage().length() > 0) { %>
-			:<br>
-			<pre>${cause.message}</pre>
-			<% } %>
+				<% } else { %>
+				(native method)
+				<% } %>
+				<%if (cause.getMessage() != null && cause.getMessage().length() > 0) { %>
+				:<br>
+				<pre>${cause.message}</pre>
+				<% } %>
 			</p> 
 		<%
 			}
