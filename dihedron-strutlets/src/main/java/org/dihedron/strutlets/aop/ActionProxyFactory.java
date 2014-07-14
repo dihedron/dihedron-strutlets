@@ -22,6 +22,7 @@ package org.dihedron.strutlets.aop;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
@@ -488,15 +489,27 @@ public class ActionProxyFactory {
 						
 				if(types.length > 0) {					
 					code.append(", new Class[] {\n");
-					boolean first = true;
+					int counter = 0;
 					for(Type type : types) {
-						code.append(first ? "\t\t\t" : ",\n\t\t\t");
+						code.append(counter == 0 ? "\t\t\t" : ",\n\t\t\t");
 						if(Types.isSimple(type)) {
+							logger.trace("handling simple type '{}'", Types.getAsString(type));
 							code.append(Types.getAsString(type)).append(".class");
 						} else if(Types.isGeneric(type)) {
-							code.append(Types.getAsRawType(type)).append(".class");
+							logger.trace("handling generic type '{}' (annotations: {})", Types.getAsRawType(type), annotations[counter]);
+//							if(isInOutParameter(type, annotations[counter])) {
+//								logger.trace("performing validation on @InOut or @In @Out parameter");
+//								Type[] generics = Types.getParameterTypes(type);
+//								if(generics != null && generics.length > 0) {
+//									code.append(Types.getAsRawType(generics[0])).append(".class");
+//								} else {
+//									code.append("Object.class");
+//								}
+//							} else {
+								code.append(Types.getAsRawType(type)).append(".class");	
+//							}
 						}
-						first = false;
+						counter++;
 					}
 					code.append("\n\t\t}");
 				} else {
@@ -746,7 +759,8 @@ public class ActionProxyFactory {
 		if(doValidation) {
 			preCode.append("\n");
 			preCode.append("\t// in parameter\n");
-			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+//			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(").append(variable).append(");\n");
 		}
 		
 		preCode.append("\n");
@@ -888,7 +902,9 @@ public class ActionProxyFactory {
 		if(doValidation) {
 			preCode.append("\n");
 			preCode.append("\t// in+out parameter\n");
-			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+//			preCode.append("\tif(validationValues != null) validationValues.add(null);\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(").append(variable).append(");\n");
+			
 		}
 		
 		preCode.append("\n");
@@ -944,7 +960,7 @@ public class ActionProxyFactory {
 		//		
 		preCode.append("\t//\n\t// preparing input/output argument '").append(parameter).append("' (no. ").append(i).append(", ").append(Types.getAsString(wrapped)).append(")\n\t//\n");				
 		
-		logger.trace("{}-th parameter is annotated with @InOut('{}') and @Out('{}')", i, inout.value());
+		logger.trace("{}-th parameter is annotated with @InOut('{}')", i, inout.value());
 		preCode.append("\tvalue = org.dihedron.strutlets.ActionContext.findValueInScopes(\"").append(parameter).append("\", new org.dihedron.strutlets.annotations.Scope[] {");
 		boolean first = true;
 		for(Scope scope : inout.from()) {
@@ -970,7 +986,8 @@ public class ActionProxyFactory {
 		if(doValidation) {
 			preCode.append("\n");
 			preCode.append("\t// inout parameter\n");
-			preCode.append("\tif(validationValues != null) validationValues.add(value);\n");
+//			preCode.append("\tif(validationValues != null) validationValues.add(null);\n");
+			preCode.append("\tif(validationValues != null) validationValues.add(").append(variable).append(");\n");
 		}
 		
 		preCode.append("\n");
@@ -1301,6 +1318,43 @@ public class ActionProxyFactory {
 		}
 		code.append("\n");
 		return "arg" + i;
+	}
+
+	/**
+	 * Checks if a parameter is an &at;In &at;Out or an &at;InOut parameter, and
+	 * is of the propert {@code $<>} type.
+	 * 
+	 * @param type
+	 *   the type of the parameter.
+	 * @param annotations
+	 *   the parameter annotations.
+	 * @return
+	 *   whether the type if of type {@code $<>}, and annotated with both &at;In 
+	 *   and &at;Out, or with &at;InOut.
+	 */
+	@SuppressWarnings("unused")
+	private boolean isInOutParameter(Type type, Annotation[] annotations) {
+		boolean inFound = false;
+		boolean outFound = false;		
+		if(((Class<?>)((ParameterizedType)type).getRawType()) == $.class) {
+			if(annotations != null) {
+				for(Annotation annotation : annotations) {
+					if(annotation instanceof In) {
+						logger.trace("in annotation found");
+						inFound = true;
+					} else if(annotation instanceof Out) {
+						logger.trace("out annotation found");						
+						outFound = true;
+					} else if(annotation instanceof InOut) {
+						logger.trace("inout annotation found");						
+						inFound = true;
+						outFound = true;
+					}
+				}
+			}
+		}
+		logger.trace("parameter {} an in+out parameter", inFound && outFound ? "is" : "is not");
+		return inFound && outFound;
 	}
 
 	private static String getActionAlias(Class<?> action) {

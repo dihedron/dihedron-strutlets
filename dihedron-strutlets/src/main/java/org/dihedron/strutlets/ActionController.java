@@ -54,6 +54,7 @@ import org.dihedron.commons.url.URLFactory;
 import org.dihedron.commons.variables.EnvironmentValueProvider;
 import org.dihedron.commons.variables.SystemPropertyValueProvider;
 import org.dihedron.commons.variables.Variables;
+import org.dihedron.strutlets.ActionContext.Scope;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
 import org.dihedron.strutlets.containers.portlet.PortalServer;
@@ -274,13 +275,13 @@ public class ActionController extends GenericPortlet {
     		logger.trace("binding context to thread-local storage");
 	    	ActionContext.bindContext(this, request, response, configuration, server, portal, uploadInfo);
 	    	
-	    	// request attributes are removed upon a brand new action request 
-	    	ActionContext.clearRequestAttributes();
 
 	    	logger.trace("processing action...");
 	    		    	
 	    	// check if the target is contained in the request
 	    	TargetId targetId = TargetId.makeFromRequest(request);
+	    	
+	    	String result = null;
 	    	
 	    	// TODO: if the target is NOT idempotent, then we must check if there
 	    	// is already the result of processing the same form in a custom field
@@ -289,8 +290,28 @@ public class ActionController extends GenericPortlet {
 	    	// all request parameters (unfortunately we have no control over 
 	    	// render parameters, though) and let the action process its input.
 	    	// TODO: ActionContext.clearRequestAttributes must be moved down here
-	    	    	
-	    	String result = invokeBusinessLogic(targetId, request, response);
+	    	Target target = this.registry.getTarget(targetId);
+	    	String [] timestamps = (String[])ActionContext.getParameterValues(Strutlets.STRUTLETS_FORM_TIMESTAMP);
+	    	if(!target.isIdempotent()) {	    			    		
+	    		if(timestamps != null && timestamps.length > 0) {
+	    			String timestamp = (String)ActionContext.getAttribute(Strutlets.STRUTLETS_LAST_FORM_TIMESTAMP, Scope.REQUEST);
+	    			if(timestamp.equalsIgnoreCase(timestamps[0])) {
+	    				result = (String)ActionContext.getAttribute(Strutlets.STRUTLETS_LAST_FORM_RESULT, Scope.REQUEST); 
+	    				logger.warn("a form with timestamp {} has already been submitted, with result {}", timestamp, result);
+	    			}
+	    		}
+	    	}
+	    	
+	    	if(result == null) {
+		    	// request attributes are removed upon a brand new action request 
+		    	ActionContext.clearRequestAttributes();
+		    	
+	    		result = invokeBusinessLogic(targetId, request, response);
+	    		if(timestamps != null && timestamps.length > 0) {
+	    			ActionContext.setAttribute(Strutlets.STRUTLETS_LAST_FORM_TIMESTAMP, timestamps[0], Scope.REQUEST);
+	    			ActionContext.setAttribute(Strutlets.STRUTLETS_LAST_FORM_RESULT, result, Scope.REQUEST);
+	    		}
+	    	}
 	    	
 	    	if(result != null) {
 	    		logger.trace("... action processing done with result '{}'", result);

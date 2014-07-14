@@ -33,6 +33,7 @@ import javax.validation.constraints.Size;
 import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
+import org.dihedron.strutlets.annotations.InOut;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.annotations.Out;
 import org.dihedron.strutlets.annotations.Result;
@@ -119,7 +120,7 @@ public class ProxiedAction {
 			@In(value="genderAttribute", from = Scope.APPLICATION) Boolean gender,
 			String aString,
 			double aDouble,
-			@Out(value = "result", to = Scope.RENDER) $<String> result   
+			@InOut(value = "result", from = Scope.FORM, to = Scope.RENDER) $<String> result   
 	) throws InvalidPhaseException {
 		logger.debug("dumping input parameters from session & form");
 		StringBuilder buffer = new StringBuilder("{\n");
@@ -134,9 +135,9 @@ public class ProxiedAction {
 			// and all REQUEST-scoped parameters are erased when a new action phase fires!
 			buffer.append("\t'friends' : '").append(friends).append("' (").append(friends.getClass().getName()).append("),\n");
 		}
-		buffer.append("\t'description' : '").append(description).append("' (").append(description.getClass().getName()).append("),\n");
-		buffer.append("\t'age' : '").append(age).append("' (").append(age.getClass().getName()).append("),\n");
-		buffer.append("\t'gender' : '").append(gender).append("' (").append(gender.getClass().getName()).append("),\n");
+		buffer.append("\t'description' : '").append(description).append("' (").append(description != null ? description.getClass().getName() : "<null>").append("),\n");
+		buffer.append("\t'age' : '").append(age).append("' (").append(age != null ? age.getClass().getName() : "<null>").append("),\n");
+		buffer.append("\t'gender' : '").append(gender).append("' (").append(gender != null ? gender.getClass().getName() : "<null>").append("),\n");
 		buffer.append("}");
 		
 		// you can decide if you want the portlet to redirect to another page 

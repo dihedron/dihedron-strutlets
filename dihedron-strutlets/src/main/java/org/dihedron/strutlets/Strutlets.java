@@ -99,13 +99,19 @@ public final class Strutlets {
 	 * user an then pass over the rendering responsibility to the JSP without 
 	 * further intervention by the framework. 
 	 */
-	public static final String STRUTLETS_ERROR_JSP = "org.dihedron.strutlets.errorjsp";
+	public static final String STRUTLETS_ERROR_JSP = "org.dihedron.strutlets.error-jsp";
 		
 	/**
 	 * The name of the request scope attribute under which exception information
 	 * is made available to the error JSP.
 	 */
-	public static final String STRUTLETS_ERROR_INFO = "org.dihedron.strutlets.errorinfo";
+	public static final String STRUTLETS_ERROR_INFO = "org.dihedron.strutlets.error-info";
+	
+	public static final String STRUTLETS_FORM_TIMESTAMP = "formDate";
+	
+	public static final String STRUTLETS_LAST_FORM_TIMESTAMP = "org.dihedron.strutlets.last-form-timestamp";
+	
+	public static final String STRUTLETS_LAST_FORM_RESULT = "org.dihedron.strutlets.last-form-result";
 	
 	/**
 	 * Returns the framework's version (as per the project's POM).
