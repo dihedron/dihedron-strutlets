@@ -19,6 +19,7 @@
 
 package org.dihedron.strutlets.targets;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import javax.portlet.PortletRequest;
@@ -36,8 +37,13 @@ import org.slf4j.LoggerFactory;
  *  
  * @author Andrea Funto'
  */
-public class TargetId {
+public class TargetId implements Serializable {
 	
+	/**
+	 * Serial version id.
+	 */
+	private static final long serialVersionUID = -8421583323942135542L;
+
 	/**
 	 * The logger.
 	 */
