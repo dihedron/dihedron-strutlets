@@ -290,6 +290,8 @@ public class ActionController extends GenericPortlet {
 	    	// all request parameters (unfortunately we have no control over 
 	    	// render parameters, though) and let the action process its input.
 	    	// TODO: ActionContext.clearRequestAttributes must be moved down here
+	    	
+	    	// TODO: the check should be on timestamp and target id!
 	    	Target target = this.registry.getTarget(targetId);
 	    	String [] timestamps = (String[])ActionContext.getParameterValues(Strutlets.STRUTLETS_FORM_TIMESTAMP);
 	    	if(target.isCacheable()) {	    			    		
