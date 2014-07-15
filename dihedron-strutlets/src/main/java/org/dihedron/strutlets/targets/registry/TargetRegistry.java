@@ -165,6 +165,7 @@ public class TargetRegistry implements Serializable {
 		data.setActionMethod(actionMethod);
 		data.setProxyMethod(proxyMethod);
 		data.setIdempotent(invocable.idempotent());
+		data.setCacheable(invocable.cacheable());
 		data.setInterceptorsStackId(interceptors);
 		data.setJspUrlPattern(pattern);
 		data.addDeclaredResults(invocable);

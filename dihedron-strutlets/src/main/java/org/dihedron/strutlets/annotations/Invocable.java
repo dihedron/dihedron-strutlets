@@ -68,6 +68,22 @@ public @interface Invocable {
 	 * 
 	 */
 	boolean idempotent() default false;
+	
+	/**
+	 * Indicates whether the (non-idempotent) target result should be considered 
+	 * cacheable; if cacheable, the framework will store the result and replay it 
+	 * when the same submit is repeated multiple times; this effectively bypasses 
+	 * the non-idempotent code execution and always presents the user with the 
+	 * same result. By default an action is assumed to be non cacheable, and 
+	 * effectively is if it happens to manipulates the output stream or is 
+	 * non-deterministic (e.g the result depends on the time at which it was 
+	 * executed).
+	 * @return
+	 *   whether the result of the (non-idempotent) action may be considered 
+	 *   cacheable and be stored by the framework, e.g. to avoid problems with 
+	 *   double form submissions. 
+	 */
+	boolean cacheable() default false;
 			
 	/**
 	 * The array of portlet events that the annotated action method is declared 

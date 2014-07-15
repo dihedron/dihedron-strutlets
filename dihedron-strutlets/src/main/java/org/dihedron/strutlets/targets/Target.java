@@ -58,6 +58,18 @@ public class Target {
 	private boolean idempotent = DEFAULT_IDEMPOTENT;
 	
 	/**
+  	 * Whether the (non-idempotent) target result should be considered cacheable;
+	 * by setting this flag to {@code true} you are telling the framework that it
+	 * can cache the result and replay it when the same submit is repeated multiple
+	 * times; this effectively bypasses the non-idempotent code execution and
+	 * always presents the user with the same result. By default an action is 
+	 * assumed to be non cacheable, and effectively is if it maanipulates the 
+	 * output stream or is non-deterministic (e.g the result depends on the time
+	 * at which it was executed).	
+	 */
+	private boolean cacheable = DEFAULT_CACHEABLE;
+	
+	/**
 	 * The class object of the Action class containing the executable code (the
 	 * method) implementing the target's business logic.
 	 */
@@ -246,6 +258,44 @@ public class Target {
 	}
 	
 	/**
+	 * Returns whether the (non-idempotent) target result should be considered 
+	 * cacheable; if cacheable, the framework will store the result and replay it 
+	 * when the same submit is repeated multiple times; this effectively bypasses 
+	 * the non-idempotent code execution and always presents the user with the 
+	 * same result. By default an action is assumed to be non cacheable, and 
+	 * effectively is if it happens to manipulates the output stream or is 
+	 * non-deterministic (e.g the result depends on the time at which it was 
+	 * executed).
+	 * 
+	 * @return
+	 *   whether the result of the action is cacheable.
+	 */
+	public boolean isCacheable() {
+		return !idempotent && cacheable;
+	}
+	
+	/**
+	 * Sets whether the (non-idempotent) target result should be considered 
+	 * cacheable; if cacheable, the framework will store the result and replay it 
+	 * when the same submit is repeated multiple times; this effectively bypasses 
+	 * the non-idempotent code execution and always presents the user with the 
+	 * same result. By default an action is assumed to be non cacheable, and 
+	 * effectively is if it happens to manipulates the output stream or is 
+	 * non-deterministic (e.g the result depends on the time at which it was 
+	 * executed).
+	 * 
+	 * @param cacheable
+	 *   whether the result of the action is cacheable.
+	 * @return
+	 *   the object itself, for method chaining.
+	 */
+	public Target setCacheable(boolean cacheable) {
+		this.cacheable = cacheable;
+		logger.trace("target '{}' {} cacheable", id, cacheable ? "is" : "is not");
+		return this;
+	}
+	
+	/**
 	 * Returns the pattern used to create JSP URLs for JSP-rendered results
 	 * that have not been declared in the annotation.
 	 * 
@@ -376,6 +426,7 @@ public class Target {
 		buffer.append("  method      ('").append(id.getMethodName()).append("')\n");
 		buffer.append("  proxy       ('").append(proxy.getName()).append("')\n");
 		buffer.append("  idempotent  ('").append(this.isIdempotent()).append("')\n");
+		buffer.append("  cacheable   ('").append(this.isCacheable()).append("')\n");
 		buffer.append("  url pattern ('").append(this.getJspUrlPattern()).append("')\n");
 		buffer.append("  stack       ('").append(interceptors).append("')\n");
 		buffer.append("  javaclass   ('").append(action.getCanonicalName()).append("')\n");
@@ -428,6 +479,18 @@ public class Target {
 	 * book.
 	 */
 	private static final boolean DEFAULT_IDEMPOTENT = false;
+	
+	/**
+	 * Whether the (non-idempotent) target result should be considered cacheable;
+	 * by setting this flag to {@code true} you are telling the framework that it
+	 * can cache the result and replay it when the same submit is repeated multiple
+	 * times; this effectively bypasses the non-idempotent code execution and
+	 * always presents the user with the same result. By default an action is 
+	 * assumed to be non cacheable, and effectively is if it maanipulates the 
+	 * output stream or is non-deterministic (e.g the result depends on the time
+	 * at which it was executed). 
+	 */
+	private static final boolean DEFAULT_CACHEABLE = false;
 	
 	/**
 	 * The default renderer, to be used when no renderer is specified.

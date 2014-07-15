@@ -292,10 +292,10 @@ public class ActionController extends GenericPortlet {
 	    	// TODO: ActionContext.clearRequestAttributes must be moved down here
 	    	Target target = this.registry.getTarget(targetId);
 	    	String [] timestamps = (String[])ActionContext.getParameterValues(Strutlets.STRUTLETS_FORM_TIMESTAMP);
-	    	if(!target.isIdempotent()) {	    			    		
+	    	if(target.isCacheable()) {	    			    		
 	    		if(timestamps != null && timestamps.length > 0) {
 	    			String timestamp = (String)ActionContext.getAttribute(Strutlets.STRUTLETS_LAST_FORM_TIMESTAMP, Scope.REQUEST);
-	    			if(timestamp.equalsIgnoreCase(timestamps[0])) {
+	    			if(timestamp != null && timestamps[0] != null && timestamp.equalsIgnoreCase(timestamps[0])) {
 	    				result = (String)ActionContext.getAttribute(Strutlets.STRUTLETS_LAST_FORM_RESULT, Scope.REQUEST); 
 	    				logger.warn("a form with timestamp {} has already been submitted, with result {}", timestamp, result);
 	    			}
@@ -307,7 +307,7 @@ public class ActionController extends GenericPortlet {
 		    	ActionContext.clearRequestAttributes();
 		    	
 	    		result = invokeBusinessLogic(targetId, request, response);
-	    		if(timestamps != null && timestamps.length > 0) {
+	    		if(target.isCacheable() && timestamps != null && timestamps.length > 0) {
 	    			ActionContext.setAttribute(Strutlets.STRUTLETS_LAST_FORM_TIMESTAMP, timestamps[0], Scope.REQUEST);
 	    			ActionContext.setAttribute(Strutlets.STRUTLETS_LAST_FORM_RESULT, result, Scope.REQUEST);
 	    		}
