@@ -292,6 +292,9 @@ public class Target {
 	public Target setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 		logger.trace("target '{}' {} cacheable", id, cacheable ? "is" : "is not");
+		if(idempotent && this.cacheable) {
+			logger.warn("idempotent target {} is also cacheable, which it should not be", id);
+		}
 		return this;
 	}
 	
