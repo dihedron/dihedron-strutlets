@@ -293,7 +293,7 @@ public class Target {
 		this.cacheable = cacheable;
 		logger.trace("target '{}' {} cacheable", id, cacheable ? "is" : "is not");
 		if(idempotent && this.cacheable) {
-			logger.warn("idempotent target {} is also cacheable, which it should not be", id);
+			logger.warn("target {} is idempotent and also cacheable, but it should not be: check your @Invocable annotation", id);
 		}
 		return this;
 	}
