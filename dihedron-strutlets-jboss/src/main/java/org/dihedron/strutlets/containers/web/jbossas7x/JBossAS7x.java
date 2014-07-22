@@ -68,6 +68,7 @@ public class JBossAS7x implements ApplicationServer {
 	@Override
 	public boolean initialise() {
 		logger.info("initialising JBoss 7.x runtime environment...");
+		
 		Vfs.addDefaultURLTypes(new Vfs.UrlType() {
 			
 			public boolean matches(URL url) {
