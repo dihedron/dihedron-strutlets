@@ -66,7 +66,7 @@ public class ClassPathScanner {
 	 */
 	public ClassPathScanner(ClassLoader classloader) {
 		this.classloader = classloader;
-		logger.trace("classloader is of class '{}'", classloader.getClass().getName());
+		logger.info("classloader is of class '{}'", classloader.getClass().getName());
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class ClassPathScanner {
 				name = name.substring(0, name.length() - ".class".length()).replace('/', '.');
 				if(recurse || name.substring(0, name.lastIndexOf('.')).equals(packageName)) {
 					classes.add(Class.forName(name));
-					logger.trace("class '{}' is valid, added to list", name);
+					logger.info("class '{}' is valid, added to list", name);
 				}
 			}
 		}
@@ -123,7 +123,7 @@ public class ClassPathScanner {
 	private List<Class<?>> getClassesInDirectory(File directory, String packageName, boolean recurse) throws ClassNotFoundException {
 		List<Class<?>> classes = new ArrayList<Class<?>>(); 
 	    if (directory.exists() && directory.isDirectory()) {
-	    	logger.trace("directory '{}' exists and is a valid directory");
+	    	logger.info("directory '{}' exists and is a valid directory");
 	    	File tmpDirectory = null;
 	        for (String filename : directory.list()) {
 	            if (filename.endsWith(".class")) {
@@ -154,7 +154,6 @@ public class ClassPathScanner {
 	 * @throws ClassNotFoundException
 	 *   if something went wrong.
 	 */
-	@SuppressWarnings("restriction")
 	public List<Class<?>> getClassesForPackage(String packageName, boolean recurse) throws ClassNotFoundException {
 		
 		try {
@@ -163,28 +162,31 @@ public class ClassPathScanner {
 				throw new ClassNotFoundException("Invalid package name.");
 			}
 			
-			logger.trace("looking for classes under package name '{}'", packageName);
+			logger.info("looking for classes under package name '{}'", packageName);
 			
 			// get all the resources with the given package name
 			Enumeration<URL> resources = classloader.getResources(packageName.replace('.', '/'));
 
 			List<Class<?>> classes = new ArrayList<Class<?>>();
 			for (URL url = null; resources.hasMoreElements() && ((url = resources.nextElement()) != null);) {
-				logger.trace("cheking URL '{}' ({})", url.toExternalForm(), url.getPath());
+				logger.info("cheking URL '{}' ({})", url.toExternalForm(), url.getPath());
 				URLConnection connection = url.openConnection();
 
 				if (connection instanceof JarURLConnection) {
-					logger.trace("connection is of type JAR");
+					logger.info("connection is of type JAR");
 					classes.addAll(getClassesInJar((JarURLConnection) connection, packageName, recurse));
-				} else if(connection instanceof sun.net.www.protocol.file.FileURLConnection) {
-					logger.trace("connection is of type Directory");
+				} else if(
+						connection.getClass().getName().equals("sun.net.www.protocol.file.FileURLConnection") ||
+						connection.getClass().getName().equals("org.jboss.vfs.protocol.VirtualFileURLConnection")						
+						) {
+					logger.info("connection is of type Directory");
 					try {
 						classes.addAll(getClassesInDirectory(new File(URLDecoder.decode(url.getPath(), "UTF-8")), packageName, recurse));
                     } catch (final UnsupportedEncodingException e) {
-                        throw new ClassNotFoundException(packageName + " does not appear to be a valid package (Unsupported encoding)", e);
+                        throw new ClassNotFoundException(packageName + " does not appear to be a valid package (unsupported encoding)", e);
                     }					
 				} else {
-					logger.trace("connection is of an unsupported type '{}'", connection.getClass().getName());
+					logger.info("connection is of an unsupported type '{}'", connection.getClass().getName());
 					throw new ClassNotFoundException(packageName + " (" + url.getPath() + ") does not appear to be a valid package");
 				}
 			}

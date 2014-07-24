@@ -22,14 +22,20 @@ package org.dihedron.strutlets.targets.registry;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
+import java.util.Set;
 
 import org.dihedron.commons.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.aop.ActionProxy;
 import org.dihedron.strutlets.aop.ActionProxyFactory;
-import org.dihedron.strutlets.classpath.ClassPathScanner;
+//import org.dihedron.strutlets.classpath.ClassPathScanner;
 import org.dihedron.strutlets.exceptions.StrutletsException;
+import org.reflections.Reflections;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +76,23 @@ public class TargetFactory {
     public void makeFromJavaPackage(TargetRegistry registry, String javaPackage, boolean doValidation) throws StrutletsException {
     	
     	if(Strings.isValid(javaPackage)) {
-    		int counter = 0;
+    		logger.trace("looking for action classes in package '{}'", javaPackage);
+
+    		// use this approach because it seems to be consistently faster
+    		// than the much simpler new Reflections(javaPackage) 
+    		Reflections reflections = 
+    				new Reflections(new ConfigurationBuilder()
+    					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix(javaPackage)))
+    					.setUrls(ClasspathHelper.forPackage(javaPackage))
+    					//.setScanners(new SubTypesScanner()));
+    					.setScanners(new TypeAnnotationsScanner()));
+//    		Set<Class<? extends AbstractAction>> actionClasses = reflections.getSubTypesOf(AbstractAction.class);
+    		Set<Class<?>> actions = reflections.getTypesAnnotatedWith(Action.class);
+	        for(Class<?> action : actions) {
+	        	makeFromJavaClass(registry, action, doValidation);
+	        }
+/*    		
+			int counter = 0;
 			try {
 				logger.trace("looking up action classes under '{}'...", javaPackage);				
 				ClassPathScanner scanner = new ClassPathScanner();
@@ -85,6 +107,7 @@ public class TargetFactory {
 				logger.error("error scanning class path for actions");
 			}
 			logger.trace("found {} actions under '{}'", counter, javaPackage);
+*/			
      	}
     }
     

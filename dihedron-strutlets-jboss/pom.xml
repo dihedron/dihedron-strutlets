@@ -17,31 +17,6 @@
 	<dependencies>
 		
 		<dependency>
-			<groupId>org.reflections</groupId>
-			<artifactId>reflections</artifactId>
-			<version>0.9.9-RC1</version>			
-			<scope>provided</scope>
-   			<exclusions>
-     			<exclusion>
-       				<groupId>xml-apis</groupId>
-       				<artifactId>xml-apis</artifactId>
-     			</exclusion>
-     			<exclusion>
-     				<groupId>com.google.guava</groupId>
-     				<artifactId>guava</artifactId>
-     			</exclusion>
-     			<exclusion>
-     				<groupId>org.javassist</groupId>
-     				<artifactId>javassist</artifactId>
-     			</exclusion>
-     			<exclusion>
-     				<groupId>dom4j</groupId>
-     				<artifactId>dom4j</artifactId>
-     			</exclusion>
-   			</exclusions>
-		</dependency>
-		
-		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-vfs</artifactId>
 			<version>3.2.2.Final</version>
