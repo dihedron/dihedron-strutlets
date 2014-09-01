@@ -154,7 +154,6 @@ public class ClassPathScanner {
 	 * @throws ClassNotFoundException
 	 *   if something went wrong.
 	 */
-	@SuppressWarnings("restriction")
 	public List<Class<?>> getClassesForPackage(String packageName, boolean recurse) throws ClassNotFoundException {
 		
 		try {
@@ -176,20 +175,22 @@ public class ClassPathScanner {
 				if (connection instanceof JarURLConnection) {
 					logger.trace("connection is of type JAR");
 					classes.addAll(getClassesInJar((JarURLConnection) connection, packageName, recurse));
-				} else if(connection instanceof sun.net.www.protocol.file.FileURLConnection) {
+				} else if(connection.getClass().getName().equals("sun.net.www.protocol.file.FileURLConnection")) {
 					logger.trace("connection is of type Directory");
 					try {
 						classes.addAll(getClassesInDirectory(new File(URLDecoder.decode(url.getPath(), "UTF-8")), packageName, recurse));
                     } catch (final UnsupportedEncodingException e) {
-                        throw new ClassNotFoundException(packageName + " does not appear to be a valid package (Unsupported encoding)", e);
+                    	logger.error(packageName + " does not appear to be avalid package (unsupported encoding)", e);
+                        throw new ClassNotFoundException(packageName + " does not appear to be a valid package (unsupported encoding)", e);
                     }					
 				} else {
-					logger.trace("connection is of an unsupported type '{}'", connection.getClass().getName());
+					logger.error("connection is of an unsupported type '{}'", connection.getClass().getName());
 					throw new ClassNotFoundException(packageName + " (" + url.getPath() + ") does not appear to be a valid package");
 				}
 			}
 			return classes;
 		} catch (IOException e) {
+			logger.error("IOException was thrown when trying to get all resources for " + packageName, e);
 			throw new ClassNotFoundException("IOException was thrown when trying to get all resources for " + packageName, e);
 		}
 	}

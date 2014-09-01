@@ -552,7 +552,9 @@ public class ActionController extends GenericPortlet {
 			if(Strings.isValid(jsp)) {
 				logger.trace("forwarding error to default error page");
 				Renderer renderer = renderers.getRenderer(JspRenderer.ID);
-				renderer.render(request, response, jsp);
+				if(renderer != null) {
+					renderer.render(request, response, jsp);
+				}
 			} else {
 				logger.trace("no last-resort error handling page, rethrowing...");
 				if(e instanceof RuntimeException) {
