@@ -26,7 +26,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>true</value>
+			<value>false</value>
 		</init-param>
 		
 		<init-param>
@@ -116,7 +116,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>true</value>
+			<value>false</value>
 		</init-param>
 		
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
@@ -213,7 +213,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>true</value>
+			<value>false</value>
 		</init-param>
 
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
@@ -324,7 +324,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>true</value>
+			<value>false</value>
 		</init-param>
 		
 
@@ -592,7 +592,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>true</value>
+			<value>false</value>
 		</init-param>
 
 		<init-param>

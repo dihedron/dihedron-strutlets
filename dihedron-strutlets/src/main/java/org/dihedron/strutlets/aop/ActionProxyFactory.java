@@ -1073,27 +1073,29 @@ public class ActionProxyFactory {
 		// end of loop on values
 		preCode.append("\t}\n\n");	
 		
-		// now perform bean validation, if available
-		preCode.append("\tif(beanValidator != null) {\n");
-		preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
-		
-		preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(", new java.lang.Class[] { javax.validation.groups.Default.class });\n");
-		
-		preCode.append("\t\tif(violations.size() > 0) {\n");
-		preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
-		
-		// now grab the ValidationHandler 
-		Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
-		preCode.append("\t\t\tif(handler == null) {\n");
-		preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
-		preCode.append("\t\t\t}\n");
-		preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsRawType(type)).append(".class, violations);\n");
-		preCode.append("\t\t\tif(result != null) {\n");
-		preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
-		preCode.append("\t\t\t\treturn result;\n");
-		preCode.append("\t\t\t}\n");
-		preCode.append("\t\t}\n");
-		preCode.append("\t}\n\n");
+		if(doValidation) {
+			// now perform bean validation, if available
+			preCode.append("\tif(beanValidator != null) {\n");
+			preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
+			
+			preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(", new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+			
+			preCode.append("\t\tif(violations.size() > 0) {\n");
+			preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+			
+			// now grab the ValidationHandler 
+			Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+			preCode.append("\t\t\tif(handler == null) {\n");
+			preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+			preCode.append("\t\t\t}\n");
+			preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsRawType(type)).append(".class, violations);\n");
+			preCode.append("\t\t\tif(result != null) {\n");
+			preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
+			preCode.append("\t\t\t\treturn result;\n");
+			preCode.append("\t\t\t}\n");
+			preCode.append("\t\t}\n");
+			preCode.append("\t}\n\n");
+		}
 		
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(").append(\"', \");\n");
 		
@@ -1184,27 +1186,29 @@ public class ActionProxyFactory {
 		// end of loop on values
 		preCode.append("\t}\n\n");	
 		
-		// now perform bean validation, if available
-		preCode.append("\tif(beanValidator != null) {\n");
-		preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
-		
-		preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(".get(), new java.lang.Class[] { javax.validation.groups.Default.class });\n");
-		
-		preCode.append("\t\tif(violations.size() > 0) {\n");
-		preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
-		
-		// now grab the ValidationHandler 
-		Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
-		preCode.append("\t\t\tif(handler == null) {\n");
-		preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
-		preCode.append("\t\t\t}\n");
-		preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsString(wrapped)).append(".class, violations);\n");
-		preCode.append("\t\t\tif(result != null) {\n");
-		preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
-		preCode.append("\t\t\t\treturn result;\n");
-		preCode.append("\t\t\t}\n");
-		preCode.append("\t\t}\n");
-		preCode.append("\t}\n\n");
+		if(doValidation) {
+			// now perform bean validation, if available
+			preCode.append("\tif(beanValidator != null) {\n");
+			preCode.append("\t\t// JSR-349 (or JSR-303) bean validation code\n");
+			
+			preCode.append("\t\tjava.util.Set violations = beanValidator.validate(").append(variable).append(".get(), new java.lang.Class[] { javax.validation.groups.Default.class });\n");
+			
+			preCode.append("\t\tif(violations.size() > 0) {\n");
+			preCode.append("\t\t\tlogger.warn(\"{} constraint violations detected in input model\", new java.lang.Object[] { new java.lang.Integer(violations.size()) });\n");
+			
+			// now grab the ValidationHandler 
+			Invocable invocable = (Invocable)method.getAnnotation(Invocable.class);
+			preCode.append("\t\t\tif(handler == null) {\n");
+			preCode.append("\t\t\t\thandler = new ").append(invocable.validator().getCanonicalName()).append("();\n");
+			preCode.append("\t\t\t}\n");
+			preCode.append("\t\t\tjava.lang.String result = handler.onModelViolations(").append("\"").append(action).append("\", \"").append(method.getName()).append("\", ").append(i).append(", ").append(Types.getAsString(wrapped)).append(".class, violations);\n");
+			preCode.append("\t\t\tif(result != null) {\n");
+			preCode.append("\t\t\t\tlogger.debug(\"violation handler forced return value to be '{}'\", result);\n");
+			preCode.append("\t\t\t\treturn result;\n");
+			preCode.append("\t\t\t}\n");
+			preCode.append("\t\t}\n");
+			preCode.append("\t}\n\n");
+		}
 		
 		preCode.append("\ttrace.append(\"").append(variable).append("\").append(\" => '\").append(").append(variable).append(".get()).append(\"', \");\n");
 		

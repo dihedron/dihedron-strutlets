@@ -162,7 +162,7 @@ public class ClassPathScanner {
 				throw new ClassNotFoundException("Invalid package name.");
 			}
 			
-			logger.trace("looking for classes under package name '{}'", packageName);
+			logger.info("looking for classes under package name '{}'", packageName);
 			
 			// get all the resources with the given package name
 			Enumeration<URL> resources = classloader.getResources(packageName.replace('.', '/'));
@@ -175,8 +175,12 @@ public class ClassPathScanner {
 				if (connection instanceof JarURLConnection) {
 					logger.trace("connection is of type JAR");
 					classes.addAll(getClassesInJar((JarURLConnection) connection, packageName, recurse));
-				} else if(connection.getClass().getName().equals("sun.net.www.protocol.file.FileURLConnection")) {
-					logger.trace("connection is of type Directory");
+				} else if(
+						connection.getClass().getName().equals("sun.net.www.protocol.file.FileURLConnection") ||
+						connection.getClass().getName().equals("org.jboss.vfs.protocol.VirtualFileURLConnection")						
+						) {
+					logger.info("connection is of type Directory");
+
 					try {
 						classes.addAll(getClassesInDirectory(new File(URLDecoder.decode(url.getPath(), "UTF-8")), packageName, recurse));
                     } catch (final UnsupportedEncodingException e) {
@@ -184,7 +188,7 @@ public class ClassPathScanner {
                         throw new ClassNotFoundException(packageName + " does not appear to be a valid package (unsupported encoding)", e);
                     }					
 				} else {
-					logger.error("connection is of an unsupported type '{}'", connection.getClass().getName());
+					logger.info("connection is of an unsupported type '{}'", connection.getClass().getName());
 					throw new ClassNotFoundException(packageName + " (" + url.getPath() + ") does not appear to be a valid package");
 				}
 			}

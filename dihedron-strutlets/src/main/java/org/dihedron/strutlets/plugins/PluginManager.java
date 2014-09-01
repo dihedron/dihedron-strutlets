@@ -25,7 +25,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.dihedron.strutlets.classpath.ClassPathScanner;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
+//import org.dihedron.strutlets.classpath.ClassPathScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,6 +169,18 @@ public class PluginManager {
 	private static Set<Class<? extends PluginFactory>> findPluginFactories(String... paths) {
 		Set<Class<? extends PluginFactory>> classes = new HashSet<Class<? extends PluginFactory>>();
 		for(String path : paths) {
+			
+			logger.trace("looking up plugin factory under '{}'...", path);		
+			Reflections reflections = 
+					new Reflections(new ConfigurationBuilder()
+						.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
+						.setUrls(ClasspathHelper.forPackage(path))
+						.setScanners(new SubTypesScanner())
+					);
+			Set<Class<? extends PluginFactory>> found = reflections.getSubTypesOf(PluginFactory.class);			
+			logger.trace("... found {} plugin factory under '{}'", found.size(), path);
+			classes.addAll(found);
+			/*
 			try {
 				logger.trace("looking up plugin factories under '{}'...", path);				
 				ClassPathScanner scanner = new ClassPathScanner();
@@ -176,6 +193,7 @@ public class PluginManager {
 			} catch(Exception e) {
 				logger.error("error scanning class path for plugin factories");
 			}
+			*/
 		}
 		logger.trace("found {} plugin factory under given paths", classes.size());
 		return classes;
