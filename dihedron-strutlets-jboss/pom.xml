@@ -13,7 +13,7 @@
 	<packaging>jar</packaging>
 	<name>Strutlets - Plug-in for JBossAS 7+</name>
 	<description>A plugin to provide access to JBossAS-specific functionalities through Strutlets.</description>
-	
+		
 	<dependencies>
 		
 		<dependency>

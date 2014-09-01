@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib 
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+	version="2.1">
+	<jsp-version>2.1</jsp-version>
+	<tlib-version>1.0</tlib-version>
+	<short-name>strutlets</short-name>
+	<display-name>Strutlets Tag Library</display-name>
+	<description>
+		The Strutlets framework tag library.
+	</description>
+	<uri>http://www.dihedron.org/strutlets</uri>
+
+	<tag>
+		<name>defineObjects</name>
+		<description>
+			Makes all strutlets-related objects available to the page context and to the EL.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.DefineObjectsTag</tag-class>
+		<!-- 
+		<tei-class>org.dihedron.strutlets.taglib.DefineObjectsTei</tei-class>
+		-->
+		<body-content>empty</body-content>
+	</tag>
+	
+	<tag>
+		<name>useBean</name>
+		<description>
+			Picks a bean from the given scope (render parameters, request, session or
+			application attributes) and makes it available to the current page context 
+			and	to the JSP EL.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.UseBeanTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.UseBeanTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>name</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>		
+		<attribute>
+			<name>scopes</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>	
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+		<attribute>
+			<name>type</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>	
+		<attribute>
+			<name>visibility</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>	
+	</tag>
+	
+	<tag>
+		<name>lastError</name>
+		<description>
+			Picks the last error from the request scope, if present, and makes 
+			it available to the page context for use in the JSP and through	the 
+			EL.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.LastErrorTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.LastErrorTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
+	<tag>
+		<name>request</name>
+		<description>
+			Picks the current portlet request and stores it into the page context,
+			under the given variable name.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.RequestTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.RequestTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
+	<tag>
+		<name>response</name>
+		<description>
+			Picks the current portlet response and stores it into the page context,
+			under the given variable name.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.ResponseTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.ResponseTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+	
+	<tag>
+		<name>adminConsoleURL</name>
+		<description>
+			Returns a render URL pointing to the Strutlets Administrative Console.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.AdminConsoleURLTag</tag-class> 
+		<tei-class>org.dihedron.strutlets.taglib.AdminConsoleURLTagExtraInfo</tei-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<name>var</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute> 		
+	</tag>
+
+	<tag>
+		<name>version</name>
+		<description>
+			Prints out the current Strutlets library version.
+		</description>		
+		<tag-class>org.dihedron.strutlets.taglib.VersionTag</tag-class>
+		<body-content>empty</body-content>
+	</tag>	
+</taglib>

@@ -47,6 +47,7 @@
 
 	<modules>
 		<module>./dihedron-strutlets</module>
+		<module>./dihedron-strutlets-taglib</module>
 		<module>./dihedron-strutlets-tomcat</module>
 		<module>./dihedron-strutlets-jboss</module>
 		<module>./dihedron-strutlets-liferay</module>
@@ -88,6 +89,27 @@
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
+
+			<!-- do not place POM and other Maven stuff in generated binaries (JARs and WARs) -->
+			<plugin>				
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+				</configuration>
+			</plugin>		
+			<plugin>				
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+				</configuration>
+			</plugin>		
+
 		</plugins>
 
 		<resources>

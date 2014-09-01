@@ -5,9 +5,6 @@
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/webapp"/>
-        <dependent-module archiveName="strutlets-1.1.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets/dihedron-strutlets">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
         <dependent-module archiveName="strutlets-liferay-1.1.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dihedron-strutlets-liferay/dihedron-strutlets-liferay">
             <dependency-type>uses</dependency-type>
         </dependent-module>
