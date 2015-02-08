@@ -35,7 +35,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.dihedron.commons.streams.Streams;
+import org.dihedron.core.streams.Streams;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;

@@ -38,8 +38,8 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 
-import org.dihedron.commons.strings.Strings;
-import org.dihedron.commons.reflection.Types;
+import org.dihedron.core.reflection.Types;
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.In;
 import org.dihedron.strutlets.annotations.InOut;
@@ -1053,7 +1053,7 @@ public class ActionProxyFactory {
 		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
 		
 		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
-		preCode.append("\torg.dihedron.commons.regex.Regex regex = new org.dihedron.commons.regex.Regex(\"").append(pattern).append("\");\n");
+		preCode.append("\torg.dihedron.core.regex.Regex regex = new org.dihedron.core.regex.Regex(\"").append(pattern).append("\");\n");
 		preCode.append("\twhile(entries.hasNext()) {\n");
 		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
 		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
@@ -1158,7 +1158,7 @@ public class ActionProxyFactory {
 		preCode.append("\tjava.util.Iterator entries = map.entrySet().iterator();\n");
 		
 		// now loop on the available parameters, remove the mask (if necessary), and inject them into the model
-		preCode.append("\torg.dihedron.commons.regex.Regex regex = new org.dihedron.commons.regex.Regex(\"").append(pattern).append("\");\n");
+		preCode.append("\torg.dihedron.core.regex.Regex regex = new org.dihedron.core.regex.Regex(\"").append(pattern).append("\");\n");
 		preCode.append("\twhile(entries.hasNext()) {\n");
 		preCode.append("\t\tjava.util.Map.Entry entry = (java.util.Map.Entry)entries.next();\n");
 		preCode.append("\t\tjava.lang.String key = (java.lang.String)entry.getKey();\n"); 
@@ -1170,7 +1170,7 @@ public class ActionProxyFactory {
 		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");
 		
 //		// if there is a mask, remove it from the key name
-//		preCode.append("\t\tif(org.dihedron.commons.utils.Strings.isValid(\"").append(mask).append("\")) {\n");
+//		preCode.append("\t\tif(org.dihedron.core.strings.Strings.isValid(\"").append(mask).append("\")) {\n");
 //		preCode.append("\t\t\t// remove the mask if specified\n");
 //		preCode.append("\t\t\tkey = key.replaceFirst(\"").append(mask).append("\", \"\");\n");	
 //		preCode.append("\t\t\tlogger.trace(\"key after masking out is '{}'\", key);\n");

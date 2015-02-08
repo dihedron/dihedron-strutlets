@@ -20,7 +20,8 @@ package org.dihedron.strutlets.adminconsole;
 
 
 
-import org.dihedron.commons.properties.Properties;
+
+import org.dihedron.core.properties.Properties;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionController;
 import org.dihedron.strutlets.annotations.Action;

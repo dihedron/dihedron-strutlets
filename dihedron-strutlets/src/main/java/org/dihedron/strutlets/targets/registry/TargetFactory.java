@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 
-import org.dihedron.commons.strings.Strings;
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;
 import org.dihedron.strutlets.aop.ActionProxy;
@@ -32,6 +32,7 @@ import org.dihedron.strutlets.aop.ActionProxyFactory;
 //import org.dihedron.strutlets.classpath.ClassPathScanner;
 import org.dihedron.strutlets.exceptions.StrutletsException;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -85,7 +86,8 @@ public class TargetFactory {
     					.filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix(javaPackage)))
     					.setUrls(ClasspathHelper.forPackage(javaPackage))
     					//.setScanners(new SubTypesScanner()));
-    					.setScanners(new TypeAnnotationsScanner()));
+//    					.setScanners(new TypeAnnotationsScanner()));
+    					.setScanners(new TypeAnnotationsScanner(), new SubTypesScanner()));
 //    		Set<Class<? extends AbstractAction>> actionClasses = reflections.getSubTypesOf(AbstractAction.class);
     		Set<Class<?>> actions = reflections.getTypesAnnotatedWith(Action.class);
 	        for(Class<?> action : actions) {

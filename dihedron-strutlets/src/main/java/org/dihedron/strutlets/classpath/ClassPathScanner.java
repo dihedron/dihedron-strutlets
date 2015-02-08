@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.dihedron.commons.strings.Strings;
+import org.dihedron.core.strings.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

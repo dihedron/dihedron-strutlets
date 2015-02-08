@@ -31,7 +31,7 @@ import java.util.Map;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemHeaders;
 import org.apache.commons.fileupload.disk.DiskFileItem;
-import org.dihedron.commons.strings.Strings;
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.ActionContext;
 
 /**

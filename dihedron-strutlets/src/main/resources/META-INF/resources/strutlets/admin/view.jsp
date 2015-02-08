@@ -1,7 +1,7 @@
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 <%@ taglib uri="http://www.dihedron.org/strutlets" prefix="strutlets" %>
 
-<%@ page import="org.dihedron.commons.properties.Properties" %>
+<%@ page import="org.dihedron.core.properties.Properties" %>
 <%@ page import="org.dihedron.strutlets.diagnostics.Error" %>
 <%@ page import="org.dihedron.strutlets.targets.Target" %>
 <%@ page import="org.dihedron.strutlets.targets.TargetId" %>

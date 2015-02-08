@@ -1,6 +1,6 @@
 analyseLocally=false
 eclipse.preferences.version=1
-extraProperties=sonar.jdbc.username\=sonar\r\nsonar.host.url\=http\://localhost\:9000\r\nsonar.jdbc.password\=sonar\r\nsonar.jdbc.url\=jdbc\:mysql\://localhost\:3306/sonar?useUnicode\=true&characterEncoding\=utf8\r\nsonar.language\=java
+extraProperties=sonar.jdbc.password\=sonar\r\nsonar.host.url\=http\://localhost\:9000\r\nsonar.jdbc.username\=sonar\r\nsonar.jdbc.url\=jdbc\:mysql\://localhost\:3306/sonar?useUnicode\=true&characterEncoding\=utf8\r\nsonar.language\=java
 lastAnalysisDate=1368134835319
 projectKey=org.dihedron.strutlets\:strutlets-liferay
 serverUrl=http\://localhost\:9000

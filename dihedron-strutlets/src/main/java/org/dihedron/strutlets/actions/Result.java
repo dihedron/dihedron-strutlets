@@ -19,8 +19,11 @@
 
 package org.dihedron.strutlets.actions;
 
-import org.dihedron.commons.strings.Strings;
+
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.renderers.impl.JspRenderer;
+
+
 
 
 

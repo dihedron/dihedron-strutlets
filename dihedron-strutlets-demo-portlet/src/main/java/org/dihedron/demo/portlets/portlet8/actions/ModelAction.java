@@ -35,7 +35,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import org.dihedron.commons.regex.Regex;
+import org.dihedron.core.regex.Regex;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.annotations.Action;
 import org.dihedron.strutlets.annotations.Invocable;

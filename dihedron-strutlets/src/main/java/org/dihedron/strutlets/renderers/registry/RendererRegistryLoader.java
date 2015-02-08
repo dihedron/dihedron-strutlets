@@ -19,10 +19,9 @@
 
 package org.dihedron.strutlets.renderers.registry;
 
-import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import org.dihedron.commons.strings.Strings;
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.annotations.Alias;
 //import org.dihedron.strutlets.classpath.ClassPathScanner;
 import org.dihedron.strutlets.exceptions.StrutletsException;

@@ -26,7 +26,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 		
 		<init-param>
@@ -116,7 +116,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 		
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
@@ -129,7 +129,7 @@
 			indicated otherwise, each action gets the "default" stack, as defined in 
 			the framework's internal files. -->
 		<init-param>
-			<name>strutlkets:interceptors-default-stack</name>
+			<name>strutlets:interceptors-default-stack</name>
 			<value>default</value>
 		</init-param>
 
@@ -213,7 +213,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 
 		<!-- Use this parameter to provide your custom interceptor stacks. -->
@@ -324,7 +324,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 		
 
@@ -592,7 +592,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 
 		<init-param>
@@ -663,7 +663,7 @@
 		 -->
 		<init-param>
 			<name>strutlets:enable-validation</name>
-			<value>false</value>
+			<value>true</value>
 		</init-param>
 
 		<init-param>

@@ -47,13 +47,13 @@ import javax.portlet.StateAwareResponse;
 import javax.portlet.WindowState;
 import javax.xml.namespace.QName;
 
-import org.dihedron.commons.properties.Properties;
-import org.dihedron.commons.properties.PropertiesException;
-import org.dihedron.commons.strings.Strings;
-import org.dihedron.commons.url.URLFactory;
-import org.dihedron.commons.variables.EnvironmentValueProvider;
-import org.dihedron.commons.variables.SystemPropertyValueProvider;
-import org.dihedron.commons.variables.Variables;
+import org.dihedron.core.properties.Properties;
+import org.dihedron.core.properties.PropertiesException;
+import org.dihedron.core.strings.Strings;
+import org.dihedron.core.url.URLFactory;
+import org.dihedron.core.variables.EnvironmentValueProvider;
+import org.dihedron.core.variables.SystemPropertyValueProvider;
+import org.dihedron.core.variables.Variables;
 import org.dihedron.strutlets.ActionContext.Scope;
 import org.dihedron.strutlets.actions.Result;
 import org.dihedron.strutlets.actions.factory.ActionFactory;
@@ -1061,13 +1061,15 @@ public class ActionController extends GenericPortlet {
 		
 		// load the default interceptors stacks ("default" and others)
 		logger.info("loading default interceptors stacks: '{}'", InterceptorsRegistry.DEFAULT_INTERCEPTORS_CONFIG_XML);
-		interceptors.loadFromClassPath(InterceptorsRegistry.DEFAULT_INTERCEPTORS_CONFIG_XML);
+		interceptors.load(InterceptorsRegistry.DEFAULT_INTERCEPTORS_CONFIG_XML);
 		logger.trace("pre-configured interceptors stacks:\n{}", interceptors.toString());
 		
 		// load the custom interceptors configuration
 		String value = InitParameter.INTERCEPTORS_DECLARATION.getValueForPortlet(this);
 		if(Strings.isValid(value)) {			
-    		logger.debug("loading interceptors' configuration from '{}'", value);
+//    		logger.debug("loading interceptors' configuration from '{}'", value);
+    		interceptors.load(value);
+    		/*
     		InputStream stream = null;
     		try {
 	    		URL url = URLFactory.makeURL(value);
@@ -1088,7 +1090,8 @@ public class ActionController extends GenericPortlet {
 						logger.error("error closing input stream", e);
 					}
 				}
-			}			
+			}
+			*/			
 		}    	
     }
 

@@ -29,7 +29,7 @@ import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
-import org.dihedron.commons.strings.Strings;
+import org.dihedron.core.strings.Strings;
 import org.dihedron.strutlets.ActionContext;
 import org.dihedron.strutlets.ActionContext.Scope;
 import org.dihedron.strutlets.InitParameter;
