@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2012-2015, Andrea Funto'. All rights reserved. See LICENSE for details.
+ */ 
 package org.dihedron.strutlets.aop;
 
 import org.dihedron.strutlets.annotations.Action;

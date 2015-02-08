@@ -1,6 +1,6 @@
-/**
- * 
- */
+/*
+ * Copyright (c) 2012-2015, Andrea Funto'. All rights reserved. See LICENSE for details.
+ */ 
 package org.dihedron.demo.portlets.portlet6.actions;
 
 import org.dihedron.strutlets.ActionContext;
