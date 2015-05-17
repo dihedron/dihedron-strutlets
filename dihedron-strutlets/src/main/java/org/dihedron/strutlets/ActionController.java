@@ -1113,7 +1113,7 @@ public class ActionController extends GenericPortlet {
 	/**
 	 * Initialises support for file uploads.
 	 * 
-	 * @throws ZephyrException
+	 * @throws StrutletsException
 	 *   if it cannot create or access the uploaded files repository.
 	 */
 	private void initialiseFileUploadConfiguration() throws StrutletsException {

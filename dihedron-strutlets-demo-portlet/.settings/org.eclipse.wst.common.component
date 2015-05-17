@@ -18,6 +18,6 @@
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <property name="java-output-path" value="/dihedron-strutlets-demo-portlet/target/classes"/>
-        <property name="context-root" value="dihedron-strutlets-demo-portlet-1.1.0-SNAPSHOT"/>
+        <property name="context-root" value="dihedron-strutlets-demo-portlet-2.0.0-SNAPSHOT"/>
     </wb-module>
 </project-modules>
